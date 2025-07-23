@@ -1,0 +1,193 @@
+﻿@{
+    ViewData["Title"] = "Trang chủ";
+}
+
+<div class="container-fluid">
+    <!-- Hero Section -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="jumbotron bg-primary text-white rounded p-5 text-center">
+                <h1 class="display-4 fw-bold">
+                    <i class="fas fa-book me-3"></i>
+                    Chào mừng đến với BookStore
+                </h1>
+                <p class="lead">Hệ thống quản lý sách hiện đại và dễ sử dụng</p>
+                <hr class="my-4 bg-white">
+                <p>Quản lý sách, tác giả và thể loại một cách hiệu quả</p>
+                @if (Context.Session.GetString("Token") != null)
+                {
+                    <div class="mb-0">
+                        <p class="mb-2">
+                            <i class="fas fa-user me-2"></i>
+                            Xin chào, <strong>@Context.Session.GetString("FullName")</strong>!
+                        </p>
+                        @if (Context.Session.GetString("IsAdmin") == "True")
+                        {
+                            <p class="mb-0">
+                                <span class="badge bg-warning text-dark">
+                                    <i class="fas fa-crown me-1"></i>Administrator
+                                </span>
+                                - Bạn có quyền truy cập đầy đủ hệ thống
+                            </p>
+                        }
+                        else
+                        {
+                            <p class="mb-0">
+                                <span class="badge bg-info">
+                                    <i class="fas fa-user me-1"></i>User
+                                </span>
+                                - Liên hệ Admin để được cấp quyền truy cập
+                            </p>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="mt-3">
+                        <a asp-controller="Account" asp-action="Login" class="btn btn-light btn-lg me-2">
+                            <i class="fas fa-sign-in-alt me-1"></i>Đăng nhập
+                        </a>
+                        <a asp-controller="Account" asp-action="Register" class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-user-plus me-1"></i>Đăng ký
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h2 class="mb-4">
+                <i class="fas fa-bolt me-2"></i>Thao tác nhanh
+            </h2>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body text-center">
+                    <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center mx-auto mb-3"
+                         style="width: 80px; height: 80px;">
+                        <i class="fas fa-book fa-2x text-white"></i>
+                    </div>
+                    <h5 class="card-title">Quản lý sách</h5>
+                    <p class="card-text">Thêm, sửa, xóa và tìm kiếm sách trong hệ thống</p>
+                    <div class="btn-group w-100" role="group">
+                        <a asp-controller="Books" asp-action="Index" class="btn btn-outline-primary">
+                            <i class="fas fa-list me-1"></i>Danh sách
+                        </a>
+                        <a asp-controller="Books" asp-action="Create" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>Thêm mới
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body text-center">
+                    <div class="rounded-circle bg-success d-flex align-items-center justify-content-center mx-auto mb-3"
+                         style="width: 80px; height: 80px;">
+                        <i class="fas fa-user-edit fa-2x text-white"></i>
+                    </div>
+                    <h5 class="card-title">Quản lý tác giả</h5>
+                    <p class="card-text">Quản lý thông tin tác giả và tiểu sử</p>
+                    <div class="btn-group w-100" role="group">
+                        <a asp-controller="Authors" asp-action="Index" class="btn btn-outline-success">
+                            <i class="fas fa-list me-1"></i>Danh sách
+                        </a>
+                        <a asp-controller="Authors" asp-action="Create" class="btn btn-success">
+                            <i class="fas fa-plus me-1"></i>Thêm mới
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body text-center">
+                    <div class="rounded-circle bg-warning d-flex align-items-center justify-content-center mx-auto mb-3"
+                         style="width: 80px; height: 80px;">
+                        <i class="fas fa-tags fa-2x text-white"></i>
+                    </div>
+                    <h5 class="card-title">Quản lý thể loại</h5>
+                    <p class="card-text">Phân loại sách theo chủ đề và thể loại</p>
+                    <div class="btn-group w-100" role="group">
+                        <a asp-controller="Categories" asp-action="Index" class="btn btn-outline-warning">
+                            <i class="fas fa-list me-1"></i>Danh sách
+                        </a>
+                        <a asp-controller="Categories" asp-action="Create" class="btn btn-warning">
+                            <i class="fas fa-plus me-1"></i>Thêm mới
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h2 class="mb-4">
+                <i class="fas fa-star me-2"></i>Tính năng nổi bật
+            </h2>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-search text-primary me-2"></i>Tìm kiếm thông minh
+                    </h5>
+                    <p class="card-text">Tìm kiếm sách theo tên, tác giả, ISBN hoặc thể loại một cách nhanh chóng và chính xác.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-mobile-alt text-success me-2"></i>Giao diện responsive
+                    </h5>
+                    <p class="card-text">Thiết kế thân thiện với mọi thiết bị, từ máy tính để bàn đến điện thoại di động.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-shield-alt text-warning me-2"></i>Bảo mật cao
+                    </h5>
+                    <p class="card-text">Hệ thống bảo mật đa lớp đảm bảo an toàn cho dữ liệu và thông tin người dùng.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-chart-line text-info me-2"></i>Báo cáo thống kê
+                    </h5>
+                    <p class="card-text">Theo dõi và phân tích dữ liệu với các báo cáo chi tiết và trực quan.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- API Information -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card bg-light border-0">
+                <div class="card-body text-center">
+                    <h5 class="card-title">
+                        <i class="fas fa-code me-2"></i>API Documentation
+                    </h5>
+                    <p class="card-text">Khám phá và test các API endpoints của hệ thống</p>
+                    <a href="http://localhost:5274/swagger" target="_blank" class="btn btn-outline-primary">
+                        <i class="fas fa-external-link-alt me-1"></i>Mở Swagger UI
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,174 @@
+@using BookStore.Core.DTOs
+@model OrderDto
+@{
+    ViewData["Title"] = "Xác nhận đơn hàng";
+}
+
+<div class="container my-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Success Message -->
+            <div class="text-center mb-4">
+                <div class="mb-3">
+                    <i class="fas fa-check-circle fa-5x text-success"></i>
+                </div>
+                <h2 class="text-success mb-2">Đặt hàng thành công!</h2>
+                <p class="lead">Cảm ơn bạn đã mua sắm tại BookStore</p>
+                <div class="alert alert-success">
+                    <strong>Mã đơn hàng: #@Model.Id</strong>
+                </div>
+            </div>
+
+            <!-- Order Details -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Thông tin đơn hàng
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Mã đơn hàng:</strong> #@Model.Id</p>
+                            <p><strong>Ngày đặt:</strong> @Model.OrderDate.ToString("dd/MM/yyyy HH:mm")</p>
+                            <p><strong>Trạng thái:</strong> 
+                                <span class="badge bg-warning">@(Model.Status == "Pending" ? "Chờ xử lý" : Model.Status)</span>
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Phương thức thanh toán:</strong> @Model.PaymentMethod</p>
+                            <p><strong>Tổng tiền:</strong> 
+                                <strong class="text-success">@Model.TotalAmount.ToString("N0") VNĐ</strong>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    <h6><i class="fas fa-map-marker-alt me-1"></i> Địa chỉ giao hàng:</h6>
+                    <div class="bg-light p-3 rounded">
+                        @Model.ShippingAddress
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Items -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>Chi tiết sản phẩm
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.OrderDetails.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Sản phẩm</th>
+                                        <th class="text-center">Số lượng</th>
+                                        <th class="text-end">Đơn giá</th>
+                                        <th class="text-end">Thành tiền</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.OrderDetails)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    @if (!string.IsNullOrEmpty(item.BookImageUrl))
+                                                    {
+                                                        <img src="@item.BookImageUrl" alt="@item.BookTitle" 
+                                                             class="me-3 rounded" style="width: 50px; height: 60px; object-fit: cover;">
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="bg-light d-flex align-items-center justify-content-center me-3 rounded" 
+                                                             style="width: 50px; height: 60px;">
+                                                            <i class="fas fa-book text-muted"></i>
+                                                        </div>
+                                                    }
+                                                    <div>
+                                                        <h6 class="mb-0">@item.BookTitle</h6>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-info">@item.Quantity</span>
+                                            </td>
+                                            <td class="text-end">@item.UnitPrice.ToString("N0") VNĐ</td>
+                                            <td class="text-end"><strong>@item.TotalPrice.ToString("N0") VNĐ</strong></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot class="table-light">
+                                    <tr>
+                                        <th colspan="3" class="text-end">Tổng cộng:</th>
+                                        <th class="text-end text-success">@Model.TotalAmount.ToString("N0") VNĐ</th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Next Steps -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clock me-2"></i>Bước tiếp theo
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center mb-3">
+                            <div class="mb-2">
+                                <i class="fas fa-check-circle fa-2x text-success"></i>
+                            </div>
+                            <h6>1. Xác nhận đơn hàng</h6>
+                            <small class="text-muted">Đơn hàng đã được tiếp nhận</small>
+                        </div>
+                        <div class="col-md-4 text-center mb-3">
+                            <div class="mb-2">
+                                <i class="fas fa-box fa-2x text-warning"></i>
+                            </div>
+                            <h6>2. Chuẩn bị hàng</h6>
+                            <small class="text-muted">Chúng tôi sẽ chuẩn bị hàng trong 1-2 ngày</small>
+                        </div>
+                        <div class="col-md-4 text-center mb-3">
+                            <div class="mb-2">
+                                <i class="fas fa-shipping-fast fa-2x text-info"></i>
+                            </div>
+                            <h6>3. Giao hàng</h6>
+                            <small class="text-muted">Giao hàng trong 3-5 ngày làm việc</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="text-center">
+                <a asp-controller="User" asp-action="Orders" class="btn btn-primary me-2">
+                    <i class="fas fa-list me-1"></i>Xem đơn hàng của tôi
+                </a>
+                <a asp-action="Index" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-shopping-cart me-1"></i>Tiếp tục mua sắm
+                </a>
+                <a asp-controller="User" asp-action="Dashboard" class="btn btn-outline-secondary">
+                    <i class="fas fa-home me-1"></i>Về trang chủ
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Auto redirect after 30 seconds (optional)
+        // setTimeout(function() {
+        //     window.location.href = '@Url.Action("Index", "Shop")';
+        // }, 30000);
+    </script>
+}

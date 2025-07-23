@@ -1,0 +1,169 @@
+@model BookViewModel
+@{
+    ViewData["Title"] = "Thêm Sách Mới";
+}
+
+<div class="container-fluid px-4">
+    <h1 class="mt-4">@ViewData["Title"]</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Home" asp-action="Index">Dashboard</a></li>
+        <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Books" asp-action="Index">Sách</a></li>
+        <li class="breadcrumb-item active">Thêm mới</li>
+    </ol>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card">
+        <div class="card-header">
+            <i class="fas fa-plus me-1"></i>
+            Thông tin Sách Mới
+        </div>
+        <div class="card-body">
+            <form asp-action="Create" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="Title" class="form-label">Tiêu đề <span class="text-danger">*</span></label>
+                            <input asp-for="Title" class="form-control" placeholder="Nhập tiêu đề sách">
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="AuthorId" class="form-label">Tác giả <span class="text-danger">*</span></label>
+                            <select asp-for="AuthorId" class="form-select" asp-items="ViewBag.AuthorId">
+                                <option value="">-- Chọn tác giả --</option>
+                            </select>
+                            <span asp-validation-for="AuthorId" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="CategoryId" class="form-label">Danh mục <span class="text-danger">*</span></label>
+                            <select asp-for="CategoryId" class="form-select" asp-items="ViewBag.CategoryId">
+                                <option value="">-- Chọn danh mục --</option>
+                            </select>
+                            <span asp-validation-for="CategoryId" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Price" class="form-label">Giá (VNĐ) <span class="text-danger">*</span></label>
+                                    <input asp-for="Price" class="form-control" type="number" min="0" step="1000" placeholder="0">
+                                    <span asp-validation-for="Price" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Quantity" class="form-label">Số lượng <span class="text-danger">*</span></label>
+                                    <input asp-for="Quantity" class="form-control" type="number" min="0" placeholder="0">
+                                    <span asp-validation-for="Quantity" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="ISBN" class="form-label">ISBN</label>
+                            <input asp-for="ISBN" class="form-control" placeholder="Nhập mã ISBN">
+                            <span asp-validation-for="ISBN" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="Publisher" class="form-label">Nhà xuất bản</label>
+                            <input asp-for="Publisher" class="form-control" placeholder="Nhập tên nhà xuất bản">
+                            <span asp-validation-for="Publisher" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="PublicationYear" class="form-label">Năm xuất bản</label>
+                            <input asp-for="PublicationYear" class="form-control" type="number" min="1900" max="@DateTime.Now.Year" placeholder="@DateTime.Now.Year">
+                            <span asp-validation-for="PublicationYear" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="ImageUrl" class="form-label">URL Hình ảnh</label>
+                            <input asp-for="ImageUrl" class="form-control" type="url" placeholder="https://example.com/image.jpg">
+                            <span asp-validation-for="ImageUrl" class="text-danger"></span>
+                            <div class="form-text">Nhập URL của hình ảnh bìa sách</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label">Mô tả</label>
+                            <textarea asp-for="Description" class="form-control" rows="5" placeholder="Nhập mô tả về sách..."></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Quay lại
+                            </a>
+                            <div>
+                                <button type="reset" class="btn btn-outline-secondary me-2">
+                                    <i class="fas fa-undo"></i> Đặt lại
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Lưu sách
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        // Preview image when URL is entered
+        document.getElementById('ImageUrl').addEventListener('input', function() {
+            const url = this.value;
+            const preview = document.getElementById('imagePreview');
+            
+            if (url && isValidUrl(url)) {
+                if (!preview) {
+                    const previewDiv = document.createElement('div');
+                    previewDiv.id = 'imagePreview';
+                    previewDiv.className = 'mt-2';
+                    previewDiv.innerHTML = '<img id="previewImg" class="img-thumbnail" style="max-width: 200px; max-height: 200px;">';
+                    this.parentNode.appendChild(previewDiv);
+                }
+                document.getElementById('previewImg').src = url;
+            } else if (preview) {
+                preview.remove();
+            }
+        });
+
+        function isValidUrl(string) {
+            try {
+                new URL(string);
+                return true;
+            } catch (_) {
+                return false;
+            }
+        }
+
+        // Format price input
+        document.getElementById('Price').addEventListener('input', function() {
+            let value = this.value.replace(/\D/g, '');
+            if (value) {
+                this.value = parseInt(value);
+            }
+        });
+    </script>
+}

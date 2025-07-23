@@ -1,0 +1,295 @@
+@model BookStore.Web.Models.UserManagementViewModel
+@{
+    ViewData["Title"] = "Quản lý người dùng";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Quản lý người dùng</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Home" asp-action="Index">Dashboard</a></li>
+        <li class="breadcrumb-item active">Người dùng</li>
+    </ol>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-primary text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-75 small">Tổng người dùng</div>
+                            <div class="text-lg fw-bold">@Model.TotalUsers</div>
+                        </div>
+                        <div class="fa-3x opacity-25">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a class="small text-white stretched-link" asp-action="Statistics">Xem thống kê</a>
+                    <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-success text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-75 small">Admin</div>
+                            <div class="text-lg fw-bold">@Model.Users.Count(u => u.IsAdmin)</div>
+                        </div>
+                        <div class="fa-3x opacity-25">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-info text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-75 small">User thường</div>
+                            <div class="text-lg fw-bold">@Model.Users.Count(u => !u.IsAdmin)</div>
+                        </div>
+                        <div class="fa-3x opacity-25">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-warning text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-75 small">Mới tháng này</div>
+                            <div class="text-lg fw-bold">@Model.Users.Count(u => u.CreatedAt >= DateTime.Now.AddDays(-30))</div>
+                        </div>
+                        <div class="fa-3x opacity-25">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-search me-1"></i>
+            Tìm kiếm và lọc
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="search" class="form-label">Tìm kiếm</label>
+                    <input type="text" class="form-control" id="search" name="search" value="@Model.Search" 
+                           placeholder="Tên đăng nhập, email, họ tên...">
+                </div>
+                <div class="col-md-3">
+                    <label for="sortBy" class="form-label">Sắp xếp theo</label>
+                    <select class="form-select" id="sortBy" name="sortBy">
+                        <option value="username" selected="@(Model.SortBy == "username")">Tên đăng nhập</option>
+                        <option value="email" selected="@(Model.SortBy == "email")">Email</option>
+                        <option value="fullname" selected="@(Model.SortBy == "fullname")">Họ tên</option>
+                        <option value="createdat" selected="@(Model.SortBy == "createdat")">Ngày tạo</option>
+                        <option value="isadmin" selected="@(Model.SortBy == "isadmin")">Quyền</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="sortOrder" class="form-label">Thứ tự</label>
+                    <select class="form-select" id="sortOrder" name="sortOrder">
+                        <option value="asc" selected="@(Model.SortOrder == "asc")">Tăng dần</option>
+                        <option value="desc" selected="@(Model.SortOrder == "desc")">Giảm dần</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="pageSize" class="form-label">Hiển thị</label>
+                    <select class="form-select" id="pageSize" name="pageSize">
+                        <option value="10" selected="@(Model.PageSize == 10)">10</option>
+                        <option value="25" selected="@(Model.PageSize == 25)">25</option>
+                        <option value="50" selected="@(Model.PageSize == 50)">50</option>
+                        <option value="100" selected="@(Model.PageSize == 100)">100</option>
+                    </select>
+                </div>
+                <div class="col-md-1 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-table me-1"></i>
+            Danh sách người dùng (@Model.StartItem - @Model.EndItem của @Model.TotalUsers)
+        </div>
+        <div class="card-body">
+            @if (Model.Users.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Tên đăng nhập</th>
+                                <th>Email</th>
+                                <th>Họ tên</th>
+                                <th>Quyền</th>
+                                <th>Ngày tạo</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var user in Model.Users)
+                            {
+                                <tr>
+                                    <td>@user.Id</td>
+                                    <td>
+                                        <strong>@user.Username</strong>
+                                    </td>
+                                    <td>@user.Email</td>
+                                    <td>@user.FullName</td>
+                                    <td>
+                                        @if (user.IsAdmin)
+                                        {
+                                            <span class="badge bg-danger">Admin</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">User</span>
+                                        }
+                                    </td>
+                                    <td>@user.CreatedAt.ToString("dd/MM/yyyy")</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a asp-action="Details" asp-route-id="@user.Id" 
+                                               class="btn btn-sm btn-info" title="Xem chi tiết">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a asp-action="Edit" asp-route-id="@user.Id" 
+                                               class="btn btn-sm btn-warning" title="Chỉnh sửa">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            @if (user.Id.ToString() != Context.Session.GetString("UserId"))
+                                            {
+                                                <button type="button" class="btn btn-sm btn-danger" 
+                                                        onclick="confirmDelete(@user.Id, '@user.Username')" title="Xóa">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                @if (Model.TotalPages > 1)
+                {
+                    <nav aria-label="User pagination">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
+                                <a class="page-link" asp-action="Index" 
+                                   asp-route-page="@(Model.CurrentPage - 1)"
+                                   asp-route-search="@Model.Search"
+                                   asp-route-sortBy="@Model.SortBy"
+                                   asp-route-sortOrder="@Model.SortOrder"
+                                   asp-route-pageSize="@Model.PageSize">Trước</a>
+                            </li>
+
+                            @for (int i = Math.Max(1, Model.CurrentPage - 2); i <= Math.Min(Model.TotalPages, Model.CurrentPage + 2); i++)
+                            {
+                                <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                                    <a class="page-link" asp-action="Index" 
+                                       asp-route-page="@i"
+                                       asp-route-search="@Model.Search"
+                                       asp-route-sortBy="@Model.SortBy"
+                                       asp-route-sortOrder="@Model.SortOrder"
+                                       asp-route-pageSize="@Model.PageSize">@i</a>
+                                </li>
+                            }
+
+                            <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
+                                <a class="page-link" asp-action="Index" 
+                                   asp-route-page="@(Model.CurrentPage + 1)"
+                                   asp-route-search="@Model.Search"
+                                   asp-route-sortBy="@Model.SortBy"
+                                   asp-route-sortOrder="@Model.SortOrder"
+                                   asp-route-pageSize="@Model.PageSize">Sau</a>
+                            </li>
+                        </ul>
+                    </nav>
+                }
+            }
+            else
+            {
+                <div class="text-center py-4">
+                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Không tìm thấy người dùng nào</h5>
+                    <p class="text-muted">Thử thay đổi điều kiện tìm kiếm hoặc bộ lọc.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Xác nhận xóa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa người dùng <strong id="deleteUsername"></strong>?</p>
+                <p class="text-danger"><small>Hành động này không thể hoàn tác!</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <form id="deleteForm" method="post" style="display: inline;">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger">Xóa</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmDelete(userId, username) {
+            document.getElementById('deleteUsername').textContent = username;
+            document.getElementById('deleteForm').action = '@Url.Action("Delete", "Users", new { area = "Admin" })/' + userId;
+            new bootstrap.Modal(document.getElementById('deleteModal')).show();
+        }
+    </script>
+}

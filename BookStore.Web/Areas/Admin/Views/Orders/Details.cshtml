@@ -1,0 +1,246 @@
+@model BookStore.Web.Areas.Admin.Controllers.OrderViewModel
+@{
+    ViewData["Title"] = "Chi tiết Đơn hàng";
+}
+
+<div class="container-fluid px-4">
+    <h1 class="mt-4">@ViewData["Title"] #@Model.Id</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Home" asp-action="Index">Dashboard</a></li>
+        <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Orders" asp-action="Index">Đơn hàng</a></li>
+        <li class="breadcrumb-item active">Chi tiết</li>
+    </ol>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row">
+        <!-- Order Information -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Thông tin Đơn hàng
+                    <div class="float-end">
+                        <span class="badge @Model.StatusBadgeClass fs-6">@Model.StatusText</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Mã đơn:</dt>
+                                <dd class="col-sm-8"><strong>#@Model.Id</strong></dd>
+
+                                <dt class="col-sm-4">Ngày đặt:</dt>
+                                <dd class="col-sm-8">@Model.OrderDateFormatted</dd>
+
+                                <dt class="col-sm-4">Khách hàng:</dt>
+                                <dd class="col-sm-8">
+                                    <strong>@Model.UserFullName</strong>
+                                    <br><small class="text-muted">@Model.UserName</small>
+                                </dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Tổng tiền:</dt>
+                                <dd class="col-sm-8"><strong class="text-success fs-5">@Model.TotalAmountFormatted</strong></dd>
+
+                                <dt class="col-sm-4">Thanh toán:</dt>
+                                <dd class="col-sm-8">@Model.PaymentMethod</dd>
+
+                                <dt class="col-sm-4">Cập nhật:</dt>
+                                <dd class="col-sm-8">@(Model.UpdatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "Chưa cập nhật")</dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h6><i class="fas fa-map-marker-alt me-1"></i> Địa chỉ giao hàng:</h6>
+                    <div class="bg-light p-3 rounded">
+                        @Model.ShippingAddress
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Items -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-list me-1"></i>
+                    Chi tiết Đơn hàng (@Model.OrderDetails.Count sản phẩm)
+                </div>
+                <div class="card-body">
+                    @if (Model.OrderDetails.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Sản phẩm</th>
+                                        <th class="text-center">Số lượng</th>
+                                        <th class="text-end">Đơn giá</th>
+                                        <th class="text-end">Thành tiền</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.OrderDetails)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    @if (!string.IsNullOrEmpty(item.BookImageUrl))
+                                                    {
+                                                        <img src="@item.BookImageUrl" alt="@item.BookTitle" class="me-3 rounded" style="width: 50px; height: 60px; object-fit: cover;">
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="bg-light d-flex align-items-center justify-content-center me-3 rounded" style="width: 50px; height: 60px;">
+                                                            <i class="fas fa-book text-muted"></i>
+                                                        </div>
+                                                    }
+                                                    <div>
+                                                        <strong>@item.BookTitle</strong>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-info">@item.Quantity</span>
+                                            </td>
+                                            <td class="text-end">@item.UnitPriceFormatted</td>
+                                            <td class="text-end"><strong>@item.TotalPriceFormatted</strong></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot class="table-light">
+                                    <tr>
+                                        <th colspan="3" class="text-end">Tổng cộng:</th>
+                                        <th class="text-end text-success fs-5">@Model.TotalAmountFormatted</th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-3">
+                            <i class="fas fa-box-open fa-2x text-muted mb-2"></i>
+                            <p class="text-muted">Không có sản phẩm nào trong đơn hàng này.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions Panel -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-cogs me-1"></i>
+                    Thao tác
+                </div>
+                <div class="card-body">
+                    @if (Model.Status != "Completed" && Model.Status != "Cancelled")
+                    {
+                        <h6 class="mb-3">Cập nhật trạng thái:</h6>
+                        
+                        @if (Model.Status == "Pending")
+                        {
+                            <form asp-action="UpdateStatus" method="post" class="mb-2">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@Model.Id" />
+                                <input type="hidden" name="status" value="Processing" />
+                                <button type="submit" class="btn btn-info w-100">
+                                    <i class="fas fa-play"></i> Bắt đầu xử lý
+                                </button>
+                            </form>
+                        }
+                        
+                        @if (Model.Status == "Processing")
+                        {
+                            <form asp-action="UpdateStatus" method="post" class="mb-2">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@Model.Id" />
+                                <input type="hidden" name="status" value="Completed" />
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="fas fa-check"></i> Hoàn thành
+                                </button>
+                            </form>
+                        }
+                        
+                        <form asp-action="UpdateStatus" method="post" class="mb-3">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <input type="hidden" name="status" value="Cancelled" />
+                            <button type="submit" class="btn btn-warning w-100" 
+                                    onclick="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')">
+                                <i class="fas fa-times"></i> Hủy đơn hàng
+                            </button>
+                        </form>
+                        
+                        <hr>
+                    }
+                    
+                    <div class="d-grid gap-2">
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Quay lại danh sách
+                        </a>
+                        
+                        <button type="button" class="btn btn-danger" onclick="confirmDelete(@Model.Id, '#@Model.Id')">
+                            <i class="fas fa-trash"></i> Xóa đơn hàng
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Xác nhận xóa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa đơn hàng <strong id="orderCode"></strong>?</p>
+                <p class="text-danger"><i class="fas fa-exclamation-triangle"></i> Hành động này không thể hoàn tác!</p>
+                <p class="text-warning"><i class="fas fa-info-circle"></i> Lưu ý: Xóa đơn hàng sẽ khôi phục lại số lượng sách trong kho.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <form id="deleteForm" method="post" style="display: inline;">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger">Xóa</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmDelete(orderId, orderCode) {
+            document.getElementById('orderCode').textContent = orderCode;
+            document.getElementById('deleteForm').action = '@Url.Action("Delete", "Orders", new { area = "Admin" })/' + orderId;
+            
+            var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            deleteModal.show();
+        }
+    </script>
+}

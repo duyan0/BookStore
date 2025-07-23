@@ -1,0 +1,165 @@
+@model BookStore.Web.Models.EditUserViewModel
+@{
+    ViewData["Title"] = "Chỉnh sửa người dùng";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Chỉnh sửa người dùng</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Home" asp-action="Index">Dashboard</a></li>
+        <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Users" asp-action="Index">Người dùng</a></li>
+        <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Users" asp-action="Details" asp-route-id="@Model.Id">@Model.Username</a></li>
+        <li class="breadcrumb-item active">Chỉnh sửa</li>
+    </ol>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-user-edit me-1"></i>
+                    Chỉnh sửa thông tin người dùng
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post">
+                        @Html.AntiForgeryToken()
+                        <input asp-for="Id" type="hidden" />
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <!-- Username (Read-only) -->
+                                <div class="mb-3">
+                                    <label asp-for="Username" class="form-label"></label>
+                                    <input asp-for="Username" class="form-control" readonly />
+                                    <div class="form-text">Tên đăng nhập không thể thay đổi</div>
+                                </div>
+
+                                <!-- Email (Read-only) -->
+                                <div class="mb-3">
+                                    <label asp-for="Email" class="form-label"></label>
+                                    <input asp-for="Email" class="form-control" readonly />
+                                    <div class="form-text">Email không thể thay đổi</div>
+                                </div>
+
+                                <!-- First Name -->
+                                <div class="mb-3">
+                                    <label asp-for="FirstName" class="form-label"></label>
+                                    <input asp-for="FirstName" class="form-control" />
+                                    <span asp-validation-for="FirstName" class="text-danger"></span>
+                                </div>
+
+                                <!-- Last Name -->
+                                <div class="mb-3">
+                                    <label asp-for="LastName" class="form-label"></label>
+                                    <input asp-for="LastName" class="form-control" />
+                                    <span asp-validation-for="LastName" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <!-- Phone -->
+                                <div class="mb-3">
+                                    <label asp-for="Phone" class="form-label"></label>
+                                    <input asp-for="Phone" class="form-control" />
+                                    <span asp-validation-for="Phone" class="text-danger"></span>
+                                </div>
+
+                                <!-- Address -->
+                                <div class="mb-3">
+                                    <label asp-for="Address" class="form-label"></label>
+                                    <textarea asp-for="Address" class="form-control" rows="3"></textarea>
+                                    <span asp-validation-for="Address" class="text-danger"></span>
+                                </div>
+
+                                <!-- Admin Status (Read-only info) -->
+                                <div class="mb-3">
+                                    <label class="form-label">Quyền hiện tại</label>
+                                    <div class="form-control-plaintext">
+                                        @if (Model.IsAdmin)
+                                        {
+                                            <span class="badge bg-danger fs-6">Admin</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary fs-6">User</span>
+                                        }
+                                    </div>
+                                    <div class="form-text">
+                                        Để thay đổi quyền, sử dụng chức năng "Thăng/Hạ cấp" trong trang chi tiết
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-save me-2"></i>Lưu thay đổi
+                                        </button>
+                                        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">
+                                            <i class="fas fa-times me-2"></i>Hủy
+                                        </a>
+                                    </div>
+                                    <div>
+                                        <a asp-action="Index" class="btn btn-outline-primary">
+                                            <i class="fas fa-list me-2"></i>Quay lại danh sách
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Additional Information Card -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Thông tin bổ sung
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="fw-bold">Có thể chỉnh sửa:</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success me-2"></i>Họ và tên</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Số điện thoại</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Địa chỉ</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="fw-bold">Không thể chỉnh sửa:</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-times text-danger me-2"></i>Tên đăng nhập</li>
+                                <li><i class="fas fa-times text-danger me-2"></i>Email</li>
+                                <li><i class="fas fa-times text-danger me-2"></i>Mật khẩu (cần đặt lại riêng)</li>
+                                <li><i class="fas fa-times text-danger me-2"></i>Quyền Admin (cần thay đổi riêng)</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        <strong>Lưu ý:</strong> Để thay đổi mật khẩu hoặc quyền Admin, vui lòng sử dụng các chức năng tương ứng trong trang chi tiết người dùng.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

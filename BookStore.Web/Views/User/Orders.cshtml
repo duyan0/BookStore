@@ -1,0 +1,109 @@
+@model List<UserOrderViewModel>
+@{
+    ViewData["Title"] = "Lịch sử đơn hàng";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="fas fa-history me-2 text-primary"></i>Lịch sử đơn hàng
+                </h2>
+                <a href="@Url.Action("Dashboard", "User")" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Quay lại
+                </a>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (Model.Any())
+    {
+        <div class="row">
+            @foreach (var order in Model)
+            {
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">Đơn hàng #@order.Id</h6>
+                            <span class="badge @order.StatusBadgeClass">@order.StatusText</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-6">
+                                    <small class="text-muted">Ngày đặt:</small>
+                                    <div>@order.OrderDateFormatted</div>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">Tổng tiền:</small>
+                                    <div class="text-success fw-bold">@order.TotalAmountFormatted</div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <small class="text-muted">Thanh toán:</small>
+                                <div>@order.PaymentMethod</div>
+                            </div>
+
+                            @if (order.OrderDetails.Any())
+                            {
+                                <div class="mb-3">
+                                    <small class="text-muted">Sản phẩm (@order.OrderDetails.Count):</small>
+                                    <div class="mt-1">
+                                        @foreach (var item in order.OrderDetails.Take(2))
+                                        {
+                                            <div class="d-flex align-items-center mb-1">
+                                                <img src="@item.BookImageUrl" alt="@item.BookTitle"
+                                                     class="me-2 rounded" style="width: 30px; height: 40px; object-fit: cover;">
+                                                <small>@item.BookTitle (@item.Quantity)</small>
+                                            </div>
+                                        }
+                                        @if (order.OrderDetails.Count > 2)
+                                        {
+                                            <small class="text-muted">... và @(order.OrderDetails.Count - 2) sản phẩm khác</small>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        <div class="card-footer">
+                            <a asp-action="OrderDetails" asp-route-id="@order.Id" class="btn btn-primary btn-sm">
+                                <i class="fas fa-eye me-1"></i>Xem chi tiết
+                            </a>
+                            @if (order.Status == "Pending")
+                            {
+                                <button class="btn btn-outline-danger btn-sm ms-2"
+                                        onclick="alert('Chức năng hủy đơn hàng sẽ được cập nhật sớm!')">
+                                    <i class="fas fa-times me-1"></i>Hủy đơn
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="fas fa-shopping-bag fa-5x text-muted mb-4"></i>
+                    <h4 class="text-muted">Bạn chưa có đơn hàng nào</h4>
+                    <p class="text-muted">Hãy khám phá cửa hàng và tìm những cuốn sách yêu thích!</p>
+                    <a href="@Url.Action("Index", "Shop")" class="btn btn-primary btn-lg">
+                        <i class="fas fa-shopping-cart me-2"></i>Bắt đầu mua sắm
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+</div>

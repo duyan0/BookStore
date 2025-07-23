@@ -1,0 +1,284 @@
+@model UserOrderViewModel
+@{
+    ViewData["Title"] = $"Chi tiết đơn hàng #{Model.Id}";
+}
+
+<div class="container my-4">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-controller="User" asp-action="Dashboard">Trang chủ</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Orders">Đơn hàng của tôi</a></li>
+                    <li class="breadcrumb-item active">Chi tiết đơn hàng #@Model.Id</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="fas fa-receipt me-2 text-primary"></i>Chi tiết đơn hàng #@Model.Id
+                </h2>
+                <a asp-action="Orders" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Quay lại
+                </a>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row">
+        <!-- Order Information -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Thông tin đơn hàng
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Mã đơn hàng:</strong> #@Model.Id</p>
+                            <p><strong>Ngày đặt:</strong> @Model.OrderDateFormatted</p>
+                            <p><strong>Trạng thái:</strong> 
+                                <span class="badge @Model.StatusBadgeClass">@Model.StatusText</span>
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Phương thức thanh toán:</strong> @Model.PaymentMethod</p>
+                            <p><strong>Tổng tiền:</strong> 
+                                <strong class="text-success">@Model.TotalAmountFormatted</strong>
+                            </p>
+                            @if (Model.UpdatedAt.HasValue)
+                            {
+                                <p><strong>Cập nhật lần cuối:</strong> @Model.UpdatedAt.Value.ToString("dd/MM/yyyy HH:mm")</p>
+                            }
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    <h6><i class="fas fa-map-marker-alt me-1"></i> Địa chỉ giao hàng:</h6>
+                    <div class="bg-light p-3 rounded">
+                        @Model.ShippingAddress
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Items -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>Chi tiết sản phẩm
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.OrderDetails.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Sản phẩm</th>
+                                        <th class="text-center">Số lượng</th>
+                                        <th class="text-end">Đơn giá</th>
+                                        <th class="text-end">Thành tiền</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.OrderDetails)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    @if (!string.IsNullOrEmpty(item.BookImageUrl))
+                                                    {
+                                                        <img src="@item.BookImageUrl" alt="@item.BookTitle" 
+                                                             class="me-3 rounded" style="width: 60px; height: 80px; object-fit: cover;">
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="bg-light d-flex align-items-center justify-content-center me-3 rounded" 
+                                                             style="width: 60px; height: 80px;">
+                                                            <i class="fas fa-book text-muted"></i>
+                                                        </div>
+                                                    }
+                                                    <div>
+                                                        <h6 class="mb-0">@item.BookTitle</h6>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-info fs-6">@item.Quantity</span>
+                                            </td>
+                                            <td class="text-end">@item.UnitPriceFormatted</td>
+                                            <td class="text-end"><strong>@item.TotalPriceFormatted</strong></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot class="table-light">
+                                    <tr>
+                                        <th colspan="3" class="text-end">Tổng cộng:</th>
+                                        <th class="text-end text-success">@Model.TotalAmountFormatted</th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Không có sản phẩm nào trong đơn hàng này.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Status & Actions -->
+        <div class="col-lg-4">
+            <div class="card sticky-top" style="top: 20px;">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-truck me-2"></i>Trạng thái đơn hàng
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        <div class="timeline-item @(Model.Status == "Pending" || Model.Status == "Processing" || Model.Status == "Completed" ? "active" : "")">
+                            <div class="timeline-marker">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <h6>Đơn hàng đã được tiếp nhận</h6>
+                                <small class="text-muted">@Model.OrderDateFormatted</small>
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-item @(Model.Status == "Processing" || Model.Status == "Completed" ? "active" : "")">
+                            <div class="timeline-marker">
+                                <i class="fas fa-box"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <h6>Đang chuẩn bị hàng</h6>
+                                <small class="text-muted">
+                                    @if (Model.Status == "Processing" || Model.Status == "Completed")
+                                    {
+                                        @(Model.UpdatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "Đang xử lý")
+                                    }
+                                    else
+                                    {
+                                        <span>Chờ xử lý</span>
+                                    }
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-item @(Model.Status == "Completed" ? "active" : "")">
+                            <div class="timeline-marker">
+                                <i class="fas fa-shipping-fast"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <h6>Đã giao hàng</h6>
+                                <small class="text-muted">
+                                    @if (Model.Status == "Completed")
+                                    {
+                                        @(Model.UpdatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "Đã hoàn thành")
+                                    }
+                                    else
+                                    {
+                                        <span>Chưa giao</span>
+                                    }
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="d-grid gap-2">
+                        @if (Model.Status == "Pending")
+                        {
+                            <button class="btn btn-outline-danger" 
+                                    onclick="alert('Chức năng hủy đơn hàng sẽ được cập nhật sớm!')">
+                                <i class="fas fa-times me-1"></i>Hủy đơn hàng
+                            </button>
+                        }
+                        
+                        <a asp-action="Orders" class="btn btn-outline-primary">
+                            <i class="fas fa-list me-1"></i>Xem tất cả đơn hàng
+                        </a>
+                        
+                        <a asp-controller="Shop" asp-action="Index" class="btn btn-primary">
+                            <i class="fas fa-shopping-cart me-1"></i>Tiếp tục mua sắm
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #dee2e6;
+        }
+        
+        .timeline-item {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .timeline-item.active .timeline-marker {
+            background: #198754;
+            color: white;
+        }
+        
+        .timeline-item.active::before {
+            background: #198754;
+        }
+        
+        .timeline-marker {
+            position: absolute;
+            left: -22px;
+            top: 0;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #dee2e6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #6c757d;
+        }
+        
+        .timeline-content h6 {
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+    </style>
+}

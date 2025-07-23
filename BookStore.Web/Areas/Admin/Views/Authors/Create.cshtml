@@ -1,0 +1,168 @@
+@model AuthorViewModel
+@{
+    ViewData["Title"] = "Thêm Tác giả Mới";
+}
+
+<div class="container-fluid px-4">
+    <h1 class="mt-4">@ViewData["Title"]</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Home" asp-action="Index">Dashboard</a></li>
+        <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Authors" asp-action="Index">Tác giả</a></li>
+        <li class="breadcrumb-item active">Thêm mới</li>
+    </ol>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card">
+        <div class="card-header">
+            <i class="fas fa-plus me-1"></i>
+            Thông tin Tác giả Mới
+        </div>
+        <div class="card-body">
+            <form asp-action="Create" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="FirstName" class="form-label">Tên <span class="text-danger">*</span></label>
+                            <input asp-for="FirstName" class="form-control" placeholder="Nhập tên tác giả">
+                            <span asp-validation-for="FirstName" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="LastName" class="form-label">Họ <span class="text-danger">*</span></label>
+                            <input asp-for="LastName" class="form-control" placeholder="Nhập họ tác giả">
+                            <span asp-validation-for="LastName" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="BirthDate" class="form-label">Ngày sinh</label>
+                            <input asp-for="BirthDate" class="form-control" type="date">
+                            <span asp-validation-for="BirthDate" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="ImageUrl" class="form-label">URL Hình ảnh</label>
+                            <input asp-for="ImageUrl" class="form-control" type="url" placeholder="https://example.com/image.jpg">
+                            <span asp-validation-for="ImageUrl" class="text-danger"></span>
+                            <div class="form-text">Nhập URL của hình ảnh tác giả</div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="Biography" class="form-label">Tiểu sử</label>
+                            <textarea asp-for="Biography" class="form-control" rows="10" placeholder="Nhập tiểu sử của tác giả..."></textarea>
+                            <span asp-validation-for="Biography" class="text-danger"></span>
+                            <div class="form-text">Mô tả về cuộc đời và sự nghiệp của tác giả</div>
+                        </div>
+
+                        <!-- Preview area for image -->
+                        <div id="imagePreviewContainer" class="mb-3" style="display: none;">
+                            <label class="form-label">Xem trước hình ảnh:</label>
+                            <div class="text-center">
+                                <img id="imagePreview" class="img-thumbnail rounded-circle" style="max-width: 200px; max-height: 200px;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Quay lại
+                            </a>
+                            <div>
+                                <button type="reset" class="btn btn-outline-secondary me-2">
+                                    <i class="fas fa-undo"></i> Đặt lại
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Lưu tác giả
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        // Preview image when URL is entered
+        document.getElementById('ImageUrl').addEventListener('input', function() {
+            const url = this.value;
+            const previewContainer = document.getElementById('imagePreviewContainer');
+            const previewImg = document.getElementById('imagePreview');
+            
+            if (url && isValidUrl(url)) {
+                previewImg.src = url;
+                previewContainer.style.display = 'block';
+                
+                // Handle image load error
+                previewImg.onerror = function() {
+                    previewContainer.style.display = 'none';
+                };
+            } else {
+                previewContainer.style.display = 'none';
+            }
+        });
+
+        function isValidUrl(string) {
+            try {
+                new URL(string);
+                return true;
+            } catch (_) {
+                return false;
+            }
+        }
+
+        // Auto-generate full name preview
+        function updateFullNamePreview() {
+            const firstName = document.getElementById('FirstName').value.trim();
+            const lastName = document.getElementById('LastName').value.trim();
+            const fullNamePreview = document.getElementById('fullNamePreview');
+            
+            if (firstName || lastName) {
+                const fullName = `${firstName} ${lastName}`.trim();
+                if (fullNamePreview) {
+                    fullNamePreview.textContent = fullName;
+                } else {
+                    // Create preview element if it doesn't exist
+                    const previewDiv = document.createElement('div');
+                    previewDiv.id = 'fullNamePreview';
+                    previewDiv.className = 'alert alert-info mt-2';
+                    previewDiv.innerHTML = `<strong>Tên đầy đủ:</strong> <span>${fullName}</span>`;
+                    document.getElementById('LastName').parentNode.appendChild(previewDiv);
+                }
+            } else if (fullNamePreview) {
+                fullNamePreview.remove();
+            }
+        }
+
+        document.getElementById('FirstName').addEventListener('input', updateFullNamePreview);
+        document.getElementById('LastName').addEventListener('input', updateFullNamePreview);
+
+        // Reset form handler
+        document.querySelector('button[type="reset"]').addEventListener('click', function() {
+            setTimeout(function() {
+                document.getElementById('imagePreviewContainer').style.display = 'none';
+                const fullNamePreview = document.getElementById('fullNamePreview');
+                if (fullNamePreview) {
+                    fullNamePreview.remove();
+                }
+            }, 10);
+        });
+    </script>
+}

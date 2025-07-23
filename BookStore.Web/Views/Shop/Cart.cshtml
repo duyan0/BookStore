@@ -1,0 +1,170 @@
+@model CartViewModel
+@{
+    ViewData["Title"] = "Giỏ hàng";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="fas fa-shopping-cart me-2 text-primary"></i>Giỏ hàng của bạn
+                </h2>
+                <a href="@Url.Action("Index", "Shop")" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left me-1"></i>Tiếp tục mua sắm
+                </a>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.IsEmpty)
+    {
+        <div class="row">
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="fas fa-shopping-cart fa-5x text-muted mb-4"></i>
+                    <h4 class="text-muted">Giỏ hàng của bạn đang trống</h4>
+                    <p class="text-muted">Hãy khám phá cửa hàng và thêm những cuốn sách yêu thích vào giỏ hàng!</p>
+                    <a href="@Url.Action("Index", "Shop")" class="btn btn-primary btn-lg">
+                        <i class="fas fa-shopping-bag me-2"></i>Bắt đầu mua sắm
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <!-- Cart Items -->
+            <div class="col-lg-8">
+                <div class="card shadow">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list me-2"></i>Danh sách sản phẩm (@Model.TotalItemsText)
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        @foreach (var item in Model.Items)
+                        {
+                            <div class="row align-items-center p-3 border-bottom">
+                                <div class="col-md-2">
+                                    <img src="@item.BookImageUrl" alt="@item.BookTitle" class="img-fluid rounded" style="height: 80px; object-fit: cover;">
+                                </div>
+                                <div class="col-md-4">
+                                    <h6 class="mb-1">@item.BookTitle</h6>
+                                    <p class="text-muted small mb-0">Đơn giá: @item.BookPriceFormatted</p>
+                                    @if (item.IsOutOfStock)
+                                    {
+                                        <span class="badge bg-danger">Hết hàng</span>
+                                    }
+                                    else if (item.ExceedsStock)
+                                    {
+                                        <span class="badge bg-warning">Vượt quá số lượng có sẵn</span>
+                                    }
+                                </div>
+                                <div class="col-md-3">
+                                    <form asp-action="UpdateCart" method="post" class="d-flex align-items-center">
+                                        <input type="hidden" name="bookId" value="@item.BookId" />
+                                        <input type="number" name="quantity" value="@item.Quantity" min="1" max="@item.MaxQuantity" class="form-control form-control-sm me-2" style="width: 80px;" onchange="this.form.submit()">
+                                        <small class="text-muted">/ @item.MaxQuantity</small>
+                                    </form>
+                                </div>
+                                <div class="col-md-2">
+                                    <strong class="text-primary">@item.TotalPriceFormatted</strong>
+                                </div>
+                                <div class="col-md-1">
+                                    <form asp-action="RemoveFromCart" method="post" class="d-inline">
+                                        <input type="hidden" name="bookId" value="@item.BookId" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Bạn có chắc muốn xóa sách này khỏi giỏ hàng?')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cart Summary -->
+            <div class="col-lg-4">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-calculator me-2"></i>Tổng kết đơn hàng
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Tổng số lượng:</span>
+                            <strong>@Model.TotalItems sản phẩm</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>Tạm tính:</span>
+                            <strong>@Model.TotalAmountFormatted</strong>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="h5">Tổng cộng:</span>
+                            <strong class="h5 text-primary">@Model.TotalAmountFormatted</strong>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <a asp-action="Checkout" class="btn btn-success btn-lg">
+                                <i class="fas fa-credit-card me-2"></i>Thanh toán
+                            </a>
+                            <a href="@Url.Action("Index", "Shop")" class="btn btn-outline-primary">
+                                <i class="fas fa-plus me-1"></i>Thêm sản phẩm khác
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cart Tips -->
+                <div class="card shadow mt-4">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0">
+                            <i class="fas fa-lightbulb me-2"></i>Gợi ý
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled mb-0">
+                            <li class="mb-2">
+                                <i class="fas fa-truck text-success me-2"></i>
+                                <small>Miễn phí vận chuyển cho đơn hàng trên 500,000 VNĐ</small>
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-shield-alt text-primary me-2"></i>
+                                <small>Đảm bảo chất lượng sách 100%</small>
+                            </li>
+                            <li class="mb-0">
+                                <i class="fas fa-undo text-warning me-2"></i>
+                                <small>Hỗ trợ đổi trả trong 7 ngày</small>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // Auto-submit form when quantity changes
+        document.addEventListener('DOMContentLoaded', function() {
+            const quantityInputs = document.querySelectorAll('input[name="quantity"]');
+            quantityInputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    if (this.value < 1) {
+                        this.value = 1;
+                    }
+                    if (this.value > parseInt(this.getAttribute('max'))) {
+                        this.value = this.getAttribute('max');
+                        alert('Số lượng không được vượt quá số lượng có sẵn!');
+                    }
+                });
+            });
+        });
+    </script>
+}

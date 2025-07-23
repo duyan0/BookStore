@@ -1,0 +1,196 @@
+@model List<BookStore.Web.Areas.Admin.Controllers.OrderViewModel>
+@{
+    ViewData["Title"] = "Quản lý Đơn hàng";
+}
+
+<div class="container-fluid px-4">
+    <h1 class="mt-4">@ViewData["Title"]</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Home" asp-action="Index">Dashboard</a></li>
+        <li class="breadcrumb-item active">Đơn hàng</li>
+    </ol>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-shopping-cart me-1"></i>
+            Danh sách Đơn hàng
+            <div class="float-end">
+                <a asp-action="Statistics" class="btn btn-info btn-sm">
+                    <i class="fas fa-chart-bar"></i> Thống kê
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            @if (Model.Any())
+            {
+                <table id="ordersTable" class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Mã đơn</th>
+                            <th>Khách hàng</th>
+                            <th>Ngày đặt</th>
+                            <th>Tổng tiền</th>
+                            <th>Trạng thái</th>
+                            <th>Thanh toán</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var order in Model)
+                        {
+                            <tr>
+                                <td><strong>#@order.Id</strong></td>
+                                <td>
+                                    <div>
+                                        <strong>@order.UserFullName</strong>
+                                        <br><small class="text-muted">@order.UserName</small>
+                                    </div>
+                                </td>
+                                <td>@order.OrderDateFormatted</td>
+                                <td><strong class="text-success">@order.TotalAmountFormatted</strong></td>
+                                <td>
+                                    <span class="badge @order.StatusBadgeClass">@order.StatusText</span>
+                                </td>
+                                <td>
+                                    <small>@order.PaymentMethod</small>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a asp-action="Details" asp-route-id="@order.Id" class="btn btn-info btn-sm" title="Chi tiết">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        @if (order.Status != "Completed" && order.Status != "Cancelled")
+                                        {
+                                            <div class="dropdown">
+                                                <button class="btn btn-warning btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    @if (order.Status == "Pending")
+                                                    {
+                                                        <li>
+                                                            <form asp-action="UpdateStatus" method="post" class="d-inline">
+                                                                @Html.AntiForgeryToken()
+                                                                <input type="hidden" name="id" value="@order.Id" />
+                                                                <input type="hidden" name="status" value="Processing" />
+                                                                <button type="submit" class="dropdown-item">
+                                                                    <i class="fas fa-play text-info"></i> Xử lý
+                                                                </button>
+                                                            </form>
+                                                        </li>
+                                                    }
+                                                    @if (order.Status == "Processing")
+                                                    {
+                                                        <li>
+                                                            <form asp-action="UpdateStatus" method="post" class="d-inline">
+                                                                @Html.AntiForgeryToken()
+                                                                <input type="hidden" name="id" value="@order.Id" />
+                                                                <input type="hidden" name="status" value="Completed" />
+                                                                <button type="submit" class="dropdown-item">
+                                                                    <i class="fas fa-check text-success"></i> Hoàn thành
+                                                                </button>
+                                                            </form>
+                                                        </li>
+                                                    }
+                                                    <li>
+                                                        <form asp-action="UpdateStatus" method="post" class="d-inline">
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="hidden" name="id" value="@order.Id" />
+                                                            <input type="hidden" name="status" value="Cancelled" />
+                                                            <button type="submit" class="dropdown-item text-danger" 
+                                                                    onclick="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')">
+                                                                <i class="fas fa-times"></i> Hủy đơn
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        }
+                                        <button type="button" class="btn btn-danger btn-sm" title="Xóa" 
+                                                onclick="confirmDelete(@order.Id, '#@order.Id')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Chưa có đơn hàng nào</h5>
+                    <p class="text-muted">Các đơn hàng sẽ hiển thị ở đây khi có khách hàng đặt hàng.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Xác nhận xóa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa đơn hàng <strong id="orderCode"></strong>?</p>
+                <p class="text-danger"><i class="fas fa-exclamation-triangle"></i> Hành động này không thể hoàn tác!</p>
+                <p class="text-warning"><i class="fas fa-info-circle"></i> Lưu ý: Xóa đơn hàng sẽ khôi phục lại số lượng sách trong kho.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <form id="deleteForm" method="post" style="display: inline;">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger">Xóa</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('#ordersTable').DataTable({
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.13.7/i18n/vi.json"
+                },
+                "order": [[2, "desc"]], // Sort by date descending
+                "pageLength": 25,
+                "responsive": true,
+                "columnDefs": [
+                    { "orderable": false, "targets": [6] } // Disable sorting for action column
+                ]
+            });
+        });
+
+        function confirmDelete(orderId, orderCode) {
+            document.getElementById('orderCode').textContent = orderCode;
+            document.getElementById('deleteForm').action = '@Url.Action("Delete", "Orders", new { area = "Admin" })/' + orderId;
+            
+            var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            deleteModal.show();
+        }
+    </script>
+}

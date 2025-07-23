@@ -1,0 +1,215 @@
+@{
+    ViewData["Title"] = "API Connection Debug";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h2><i class="fas fa-bug me-2"></i>API Connection Debug Tool</h2>
+            <p class="text-muted">Tool để debug vấn đề kết nối giữa BookStore.Web và BookStore.API</p>
+            
+            <!-- API Routes Check -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">1. Kiểm Tra API Routes</h5>
+                </div>
+                <div class="card-body">
+                    <button id="checkRoutesBtn" class="btn btn-primary">Check API Routes</button>
+                    <div id="routesResult" class="mt-3"></div>
+                </div>
+            </div>
+
+            <!-- Login Test -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">2. Test Login Endpoint</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="testUsername" class="form-label">Username:</label>
+                                <input type="text" id="testUsername" class="form-control" value="admintest" placeholder="Enter username">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="testPassword" class="form-label">Password:</label>
+                                <input type="password" id="testPassword" class="form-control" value="admin123" placeholder="Enter password">
+                            </div>
+                        </div>
+                    </div>
+                    <button id="testLoginBtn" class="btn btn-success">Test Login</button>
+                    <div id="loginResult" class="mt-3"></div>
+                </div>
+            </div>
+
+            <!-- Configuration Info -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">3. Configuration Info</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <td><strong>API Base URL:</strong></td>
+                            <td><code>http://localhost:5274/api</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Expected Login Endpoint:</strong></td>
+                            <td><code>http://localhost:5274/api/auth/login</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Current Time:</strong></td>
+                            <td>@DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Instructions -->
+            <div class="alert alert-info">
+                <h6><i class="fas fa-info-circle me-2"></i>Hướng dẫn sử dụng:</h6>
+                <ol>
+                    <li><strong>Check API Routes:</strong> Kiểm tra xem API có đang chạy và các endpoints có tồn tại không</li>
+                    <li><strong>Test Login:</strong> Test trực tiếp login endpoint với credentials</li>
+                    <li><strong>Xem kết quả:</strong> Phân tích response để tìm nguyên nhân lỗi</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Check API Routes
+        document.getElementById('checkRoutesBtn').addEventListener('click', async function() {
+            const btn = this;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Checking...';
+            
+            try {
+                const response = await fetch('/Debug/CheckApiRoutes');
+                const data = await response.json();
+                
+                let html = '<div class="alert alert-' + (data.success ? 'success' : 'danger') + '">';
+                html += '<h6>Results:</h6>';
+                
+                if (data.success) {
+                    html += '<p><strong>Base URL:</strong> ' + data.baseUrl + '</p>';
+                    html += '<table class="table table-sm mt-2">';
+                    html += '<thead><tr><th>Route</th><th>Full URL</th><th>Status</th><th>Content Preview</th></tr></thead><tbody>';
+                    
+                    data.results.forEach(result => {
+                        const statusClass = result.statusCode === 200 ? 'success' : 
+                                          result.statusCode === 404 ? 'warning' : 'danger';
+                        html += '<tr class="table-' + statusClass + '">';
+                        html += '<td><code>' + result.route + '</code></td>';
+                        html += '<td><small>' + result.fullUrl + '</small></td>';
+                        html += '<td>' + (result.statusCode || 'Error') + ' ' + (result.statusDescription || '') + '</td>';
+                        html += '<td><small>' + (result.contentPreview || result.error || '') + '</small></td>';
+                        html += '</tr>';
+                    });
+                    
+                    html += '</tbody></table>';
+                } else {
+                    html += '<p><strong>Error:</strong> ' + data.error + '</p>';
+                }
+                
+                html += '</div>';
+                document.getElementById('routesResult').innerHTML = html;
+                
+            } catch (error) {
+                document.getElementById('routesResult').innerHTML = 
+                    '<div class="alert alert-danger">Error: ' + error.message + '</div>';
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Check API Routes';
+            }
+        });
+
+        // Test Login
+        document.getElementById('testLoginBtn').addEventListener('click', async function() {
+            const btn = this;
+            const username = document.getElementById('testUsername').value;
+            const password = document.getElementById('testPassword').value;
+            
+            if (!username || !password) {
+                alert('Please enter both username and password');
+                return;
+            }
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Testing...';
+            
+            try {
+                const response = await fetch('/Debug/TestLogin', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+                });
+                
+                const data = await response.json();
+                
+                let html = '<div class="alert alert-' + (data.success ? 'success' : 'danger') + '">';
+                html += '<h6>Login Test Results:</h6>';
+                
+                if (data.success) {
+                    html += '<p><strong>Base URL:</strong> ' + data.baseUrl + '</p>';
+                    
+                    // Health Check Results
+                    html += '<h6 class="mt-3">Health Check:</h6>';
+                    if (data.healthCheck.success) {
+                        html += '<p class="text-success">✅ API is reachable (Status: ' + data.healthCheck.statusCode + ')</p>';
+                    } else {
+                        html += '<p class="text-danger">❌ API not reachable: ' + data.healthCheck.error + '</p>';
+                    }
+                    
+                    // Login Test Results
+                    html += '<h6 class="mt-3">Login Endpoint Test:</h6>';
+                    if (data.loginTest.success) {
+                        html += '<p class="text-success">✅ Login successful!</p>';
+                        html += '<p><strong>Response:</strong></p>';
+                        html += '<pre class="bg-light p-2">' + JSON.stringify(JSON.parse(data.loginTest.responseContent), null, 2) + '</pre>';
+                    } else {
+                        html += '<p class="text-danger">❌ Login failed (Status: ' + data.loginTest.statusCode + ' ' + data.loginTest.statusDescription + ')</p>';
+                        html += '<p><strong>Request URL:</strong> ' + data.loginTest.requestUrl + '</p>';
+                        html += '<p><strong>Request Body:</strong></p>';
+                        html += '<pre class="bg-light p-2">' + data.loginTest.requestBody + '</pre>';
+                        html += '<p><strong>Response:</strong></p>';
+                        html += '<pre class="bg-light p-2">' + data.loginTest.responseContent + '</pre>';
+                        
+                        if (data.loginTest.error) {
+                            html += '<p><strong>Error:</strong> ' + data.loginTest.error + '</p>';
+                        }
+                    }
+                } else {
+                    html += '<p><strong>Error:</strong> ' + data.error + '</p>';
+                    if (data.stackTrace) {
+                        html += '<details><summary>Stack Trace</summary><pre>' + data.stackTrace + '</pre></details>';
+                    }
+                }
+                
+                html += '</div>';
+                document.getElementById('loginResult').innerHTML = html;
+                
+            } catch (error) {
+                document.getElementById('loginResult').innerHTML = 
+                    '<div class="alert alert-danger">Error: ' + error.message + '</div>';
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Test Login';
+            }
+        });
+
+        // Auto-check routes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('checkRoutesBtn').click();
+        });
+    </script>
+}

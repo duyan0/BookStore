@@ -1,0 +1,164 @@
+@{
+    ViewData["Title"] = "JWT Token Test";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h2><i class="fas fa-key me-2"></i>JWT Token Authentication Test</h2>
+            
+            <!-- Token Info Section -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Current Session Token Info</h5>
+                </div>
+                <div class="card-body">
+                    <button id="checkTokenBtn" class="btn btn-primary">Check Current Token</button>
+                    <div id="tokenInfo" class="mt-3"></div>
+                </div>
+            </div>
+
+            <!-- Manual Token Test -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Manual Token Test</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="testToken" class="form-label">JWT Token (with or without Bearer prefix):</label>
+                        <textarea id="testToken" class="form-control" rows="3" 
+                                  placeholder="Paste your JWT token here..."></textarea>
+                    </div>
+                    <button id="setTokenBtn" class="btn btn-success">Set Token & Parse</button>
+                    <div id="setTokenResult" class="mt-3"></div>
+                </div>
+            </div>
+
+            <!-- API Test Section -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">API Call Test</h5>
+                </div>
+                <div class="card-body">
+                    <button id="testApiBtn" class="btn btn-warning">Test API Call (GET /api/books)</button>
+                    <div id="apiTestResult" class="mt-3"></div>
+                </div>
+            </div>
+
+            <!-- Pre-filled Test Token -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Test with Your Token</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Click to test with the token you provided:</p>
+                    <button id="useProvidedTokenBtn" class="btn btn-info">
+                        Use Provided Token
+                    </button>
+                    <div id="providedTokenResult" class="mt-3"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const providedToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiIyIiwidW5pcXVlX25hbWUiOiJhZG1pbnRlc3QiLCJlbWFpbCI6ImFkbWludGVzdEBib29rc3RvcmUuY29tIiwicm9sZSI6IkFkbWluIiwibmJmIjoxNzUzMjc5NTE3LCJleHAiOjE3NTM4ODQzMTcsImlhdCI6MTc1MzI3OTUxNywiaXNzIjoiQm9va1N0b3JlQVBJIiwiYXVkIjoiQm9va1N0b3JlQ2xpZW50In0.Tfywaus-T_vfty_NWn45fzjuxlWcabFuFqhZiCEUHfg";
+
+        // Check current token
+        document.getElementById('checkTokenBtn').addEventListener('click', async function() {
+            try {
+                const response = await fetch('/TestAuth/TokenInfo');
+                const data = await response.json();
+                document.getElementById('tokenInfo').innerHTML = 
+                    '<pre class="bg-light p-3">' + JSON.stringify(data, null, 2) + '</pre>';
+            } catch (error) {
+                document.getElementById('tokenInfo').innerHTML = 
+                    '<div class="alert alert-danger">Error: ' + error.message + '</div>';
+            }
+        });
+
+        // Set manual token
+        document.getElementById('setTokenBtn').addEventListener('click', async function() {
+            const token = document.getElementById('testToken').value.trim();
+            if (!token) {
+                alert('Please enter a token');
+                return;
+            }
+
+            try {
+                const response = await fetch('/TestAuth/SetTestToken', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ token: token })
+                });
+                const data = await response.json();
+                document.getElementById('setTokenResult').innerHTML = 
+                    '<pre class="bg-light p-3">' + JSON.stringify(data, null, 2) + '</pre>';
+                
+                if (data.success) {
+                    document.getElementById('setTokenResult').innerHTML += 
+                        '<div class="alert alert-success mt-2">Token set successfully! You can now test API calls.</div>';
+                }
+            } catch (error) {
+                document.getElementById('setTokenResult').innerHTML = 
+                    '<div class="alert alert-danger">Error: ' + error.message + '</div>';
+            }
+        });
+
+        // Test API call
+        document.getElementById('testApiBtn').addEventListener('click', async function() {
+            try {
+                const response = await fetch('/TestAuth/TestApiCall');
+                const data = await response.json();
+                document.getElementById('apiTestResult').innerHTML = 
+                    '<pre class="bg-light p-3">' + JSON.stringify(data, null, 2) + '</pre>';
+                
+                if (data.success) {
+                    document.getElementById('apiTestResult').innerHTML += 
+                        '<div class="alert alert-success mt-2">API call successful!</div>';
+                } else {
+                    document.getElementById('apiTestResult').innerHTML += 
+                        '<div class="alert alert-warning mt-2">API call failed. Status: ' + data.status_code + '</div>';
+                }
+            } catch (error) {
+                document.getElementById('apiTestResult').innerHTML = 
+                    '<div class="alert alert-danger">Error: ' + error.message + '</div>';
+            }
+        });
+
+        // Use provided token
+        document.getElementById('useProvidedTokenBtn').addEventListener('click', async function() {
+            document.getElementById('testToken').value = providedToken;
+            
+            try {
+                const response = await fetch('/TestAuth/SetTestToken', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ token: providedToken })
+                });
+                const data = await response.json();
+                document.getElementById('providedTokenResult').innerHTML = 
+                    '<pre class="bg-light p-3">' + JSON.stringify(data, null, 2) + '</pre>';
+                
+                if (data.success) {
+                    document.getElementById('providedTokenResult').innerHTML += 
+                        '<div class="alert alert-success mt-2">Your token has been set! Now try the API test above.</div>';
+                }
+            } catch (error) {
+                document.getElementById('providedTokenResult').innerHTML = 
+                    '<div class="alert alert-danger">Error: ' + error.message + '</div>';
+            }
+        });
+
+        // Auto-check token on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('checkTokenBtn').click();
+        });
+    </script>
+}

@@ -1,0 +1,249 @@
+@model BookStore.Core.DTOs.UserStatisticsDto
+@{
+    ViewData["Title"] = "Thống kê người dùng";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Thống kê người dùng</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Home" asp-action="Index">Dashboard</a></li>
+        <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Users" asp-action="Index">Người dùng</a></li>
+        <li class="breadcrumb-item active">Thống kê</li>
+    </ol>
+
+    <!-- Overview Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-primary text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-75 small">Tổng người dùng</div>
+                            <div class="text-2xl fw-bold">@Model.TotalUsers</div>
+                        </div>
+                        <div class="fa-3x opacity-25">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a class="small text-white stretched-link" asp-action="Index">Xem danh sách</a>
+                    <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-danger text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-75 small">Admin</div>
+                            <div class="text-2xl fw-bold">@Model.AdminUsers</div>
+                        </div>
+                        <div class="fa-3x opacity-25">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <span class="small text-white">@(Model.TotalUsers > 0 ? Math.Round((double)Model.AdminUsers / Model.TotalUsers * 100, 1) : 0)% tổng số</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-success text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-75 small">User thường</div>
+                            <div class="text-2xl fw-bold">@Model.RegularUsers</div>
+                        </div>
+                        <div class="fa-3x opacity-25">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <span class="small text-white">@(Model.TotalUsers > 0 ? Math.Round((double)Model.RegularUsers / Model.TotalUsers * 100, 1) : 0)% tổng số</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-info text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-75 small">Hoạt động hôm nay</div>
+                            <div class="text-2xl fw-bold">@Model.ActiveUsersToday</div>
+                        </div>
+                        <div class="fa-3x opacity-25">
+                            <i class="fas fa-user-clock"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <span class="small text-white">@(Model.TotalUsers > 0 ? Math.Round((double)Model.ActiveUsersToday / Model.TotalUsers * 100, 1) : 0)% tổng số</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Growth Statistics -->
+    <div class="row mb-4">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-chart-line me-1"></i>
+                    Tăng trưởng người dùng
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="border-end">
+                                <div class="fs-2 fw-bold text-warning">@Model.NewUsersThisWeek</div>
+                                <div class="text-muted">Tuần này</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="fs-2 fw-bold text-info">@Model.NewUsersThisMonth</div>
+                            <div class="text-muted">Tháng này</div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="small text-muted text-center">
+                        <i class="fas fa-calendar me-1"></i>
+                        Cập nhật lần cuối: @Model.LastUpdated.ToString("dd/MM/yyyy HH:mm")
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-chart-pie me-1"></i>
+                    Phân bố quyền
+                </div>
+                <div class="card-body">
+                    <div class="progress mb-3" style="height: 25px;">
+                        @{
+                            var adminPercentage = Model.TotalUsers > 0 ? (double)Model.AdminUsers / Model.TotalUsers * 100 : 0;
+                            var userPercentage = 100 - adminPercentage;
+                        }
+                        <div class="progress-bar bg-danger" role="progressbar" 
+                             style="width: @adminPercentage%" 
+                             aria-valuenow="@adminPercentage" aria-valuemin="0" aria-valuemax="100">
+                            Admin (@Math.Round(adminPercentage, 1)%)
+                        </div>
+                        <div class="progress-bar bg-success" role="progressbar" 
+                             style="width: @userPercentage%" 
+                             aria-valuenow="@userPercentage" aria-valuemin="0" aria-valuemax="100">
+                            User (@Math.Round(userPercentage, 1)%)
+                        </div>
+                    </div>
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <span class="badge bg-danger">Admin: @Model.AdminUsers</span>
+                        </div>
+                        <div class="col-6">
+                            <span class="badge bg-success">User: @Model.RegularUsers</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Statistics -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-table me-1"></i>
+                    Chi tiết thống kê
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Chỉ số</th>
+                                    <th>Giá trị</th>
+                                    <th>Phần trăm</th>
+                                    <th>Mô tả</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><i class="fas fa-users text-primary me-2"></i>Tổng người dùng</td>
+                                    <td><strong>@Model.TotalUsers</strong></td>
+                                    <td>100%</td>
+                                    <td>Tổng số người dùng đã đăng ký</td>
+                                </tr>
+                                <tr>
+                                    <td><i class="fas fa-user-shield text-danger me-2"></i>Admin</td>
+                                    <td><strong>@Model.AdminUsers</strong></td>
+                                    <td>@(Model.TotalUsers > 0 ? Math.Round((double)Model.AdminUsers / Model.TotalUsers * 100, 1) : 0)%</td>
+                                    <td>Người dùng có quyền quản trị</td>
+                                </tr>
+                                <tr>
+                                    <td><i class="fas fa-user text-success me-2"></i>User thường</td>
+                                    <td><strong>@Model.RegularUsers</strong></td>
+                                    <td>@(Model.TotalUsers > 0 ? Math.Round((double)Model.RegularUsers / Model.TotalUsers * 100, 1) : 0)%</td>
+                                    <td>Người dùng thông thường</td>
+                                </tr>
+                                <tr>
+                                    <td><i class="fas fa-user-plus text-warning me-2"></i>Mới tuần này</td>
+                                    <td><strong>@Model.NewUsersThisWeek</strong></td>
+                                    <td>@(Model.TotalUsers > 0 ? Math.Round((double)Model.NewUsersThisWeek / Model.TotalUsers * 100, 1) : 0)%</td>
+                                    <td>Đăng ký trong 7 ngày qua</td>
+                                </tr>
+                                <tr>
+                                    <td><i class="fas fa-calendar-plus text-info me-2"></i>Mới tháng này</td>
+                                    <td><strong>@Model.NewUsersThisMonth</strong></td>
+                                    <td>@(Model.TotalUsers > 0 ? Math.Round((double)Model.NewUsersThisMonth / Model.TotalUsers * 100, 1) : 0)%</td>
+                                    <td>Đăng ký trong tháng hiện tại</td>
+                                </tr>
+                                <tr>
+                                    <td><i class="fas fa-user-clock text-secondary me-2"></i>Hoạt động hôm nay</td>
+                                    <td><strong>@Model.ActiveUsersToday</strong></td>
+                                    <td>@(Model.TotalUsers > 0 ? Math.Round((double)Model.ActiveUsersToday / Model.TotalUsers * 100, 1) : 0)%</td>
+                                    <td>Có hoạt động trong ngày hôm nay</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="row mt-4">
+        <div class="col-12 text-center">
+            <a asp-action="Index" class="btn btn-primary">
+                <i class="fas fa-list me-2"></i>Quay lại danh sách người dùng
+            </a>
+            <button type="button" class="btn btn-secondary" onclick="window.print()">
+                <i class="fas fa-print me-2"></i>In báo cáo
+            </button>
+            <button type="button" class="btn btn-info" onclick="location.reload()">
+                <i class="fas fa-sync-alt me-2"></i>Làm mới dữ liệu
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .text-2xl {
+            font-size: 2rem;
+        }
+        
+        @@media print {
+            .btn, .breadcrumb, .card-footer {
+                display: none !important;
+            }
+        }
+    </style>
+}

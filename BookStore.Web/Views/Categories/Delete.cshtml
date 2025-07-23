@@ -1,0 +1,98 @@
+@model BookStore.Web.Models.CategoryViewModel
+
+@{
+    ViewData["Title"] = "Xóa thể loại";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index">Danh sách thể loại</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Details" asp-route-id="@Model.Id">@Model.Name</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Xóa</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Xác nhận xóa thể loại
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning" role="alert">
+                        <i class="fas fa-warning me-2"></i>
+                        <strong>Cảnh báo!</strong> Bạn có chắc chắn muốn xóa thể loại này? 
+                        @if (Model.BookCount > 0)
+                        {
+                            @:<br /><strong>Lưu ý:</strong> Thể loại này có @Model.BookCount sách. Việc xóa có thể ảnh hưởng đến dữ liệu sách.
+                        }
+                        Hành động này không thể hoàn tác.
+                    </div>
+
+                    <div class="text-center mb-4">
+                        <div class="rounded-circle bg-success d-flex align-items-center justify-content-center mx-auto mb-3" 
+                             style="width: 120px; height: 120px;">
+                            <i class="fas fa-tag fa-3x text-white"></i>
+                        </div>
+                        
+                        <h4>@Model.Name</h4>
+                        <span class="badge bg-info fs-6">
+                            <i class="fas fa-book me-1"></i>@Model.BookCount sách
+                        </span>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-sm-4"><strong>Tên thể loại:</strong></div>
+                        <div class="col-sm-8">@Model.Name</div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-sm-4"><strong>Số lượng sách:</strong></div>
+                        <div class="col-sm-8">@Model.BookCount</div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-sm-4"><strong>Ngày tạo:</strong></div>
+                        <div class="col-sm-8">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.Description))
+                    {
+                        <div class="row mb-2">
+                            <div class="col-sm-4"><strong>Mô tả:</strong></div>
+                            <div class="col-sm-8">
+                                @(Model.Description.Length > 100 ? Model.Description.Substring(0, 100) + "..." : Model.Description)
+                            </div>
+                        </div>
+                    }
+                </div>
+                <div class="card-footer">
+                    <form asp-action="Delete" method="post" class="d-inline">
+                        <input asp-for="Id" type="hidden" />
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>Quay lại
+                            </a>
+                            <div>
+                                <a asp-action="Index" class="btn btn-outline-secondary me-2">
+                                    <i class="fas fa-list me-1"></i>Danh sách thể loại
+                                </a>
+                                <button type="submit" class="btn btn-danger" 
+                                        onclick="return confirm('Bạn có chắc chắn muốn xóa thể loại này?')">
+                                    <i class="fas fa-trash me-1"></i>Xác nhận xóa
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

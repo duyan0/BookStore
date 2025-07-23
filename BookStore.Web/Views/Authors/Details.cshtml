@@ -1,0 +1,129 @@
+@model BookStore.Web.Models.AuthorViewModel
+
+@{
+    ViewData["Title"] = "Chi tiết tác giả";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index">Danh sách tác giả</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Chi tiết tác giả</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">
+                        <i class="fas fa-user me-2"></i>Thông tin tác giả
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                            {
+                                <img src="@Model.ImageUrl" class="img-fluid rounded-circle mb-3" alt="@Model.FullName" 
+                                     style="width: 200px; height: 200px; object-fit: cover;">
+                            }
+                            else
+                            {
+                                <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center mx-auto mb-3" 
+                                     style="width: 200px; height: 200px;">
+                                    <i class="fas fa-user fa-5x text-white"></i>
+                                </div>
+                            }
+                            
+                            <h4>@Model.FullName</h4>
+                            <span class="badge bg-info fs-6">
+                                <i class="fas fa-book me-1"></i>@Model.BookCount sách
+                            </span>
+                        </div>
+
+                        <div class="col-md-8">
+                            <div class="row mb-3">
+                                <div class="col-sm-3">
+                                    <strong>Tên:</strong>
+                                </div>
+                                <div class="col-sm-9">
+                                    @Model.FirstName
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-sm-3">
+                                    <strong>Họ:</strong>
+                                </div>
+                                <div class="col-sm-9">
+                                    @Model.LastName
+                                </div>
+                            </div>
+
+                            @if (Model.BirthDate.HasValue)
+                            {
+                                <div class="row mb-3">
+                                    <div class="col-sm-3">
+                                        <strong>Ngày sinh:</strong>
+                                    </div>
+                                    <div class="col-sm-9">
+                                        @Model.BirthDate.Value.ToString("dd/MM/yyyy")
+                                    </div>
+                                </div>
+                            }
+
+                            <div class="row mb-3">
+                                <div class="col-sm-3">
+                                    <strong>Ngày tạo:</strong>
+                                </div>
+                                <div class="col-sm-9">
+                                    @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                                </div>
+                            </div>
+
+                            @if (Model.UpdatedAt.HasValue)
+                            {
+                                <div class="row mb-3">
+                                    <div class="col-sm-3">
+                                        <strong>Cập nhật lần cuối:</strong>
+                                    </div>
+                                    <div class="col-sm-9">
+                                        @Model.UpdatedAt.Value.ToString("dd/MM/yyyy HH:mm")
+                                    </div>
+                                </div>
+                            }
+
+                            @if (!string.IsNullOrEmpty(Model.Biography))
+                            {
+                                <div class="row mb-3">
+                                    <div class="col-12">
+                                        <strong>Tiểu sử:</strong>
+                                        <p class="mt-2">@Model.Biography</p>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="btn-group" role="group">
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
+                            <i class="fas fa-edit me-1"></i>Chỉnh sửa
+                        </a>
+                        <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger">
+                            <i class="fas fa-trash me-1"></i>Xóa
+                        </a>
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Quay lại
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

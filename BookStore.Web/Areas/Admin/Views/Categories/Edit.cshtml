@@ -1,0 +1,153 @@
+@model CategoryViewModel
+@{
+    ViewData["Title"] = "Chỉnh sửa Danh mục";
+}
+
+<div class="container-fluid px-4">
+    <h1 class="mt-4">@ViewData["Title"]</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Home" asp-action="Index">Dashboard</a></li>
+        <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Categories" asp-action="Index">Danh mục</a></li>
+        <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Categories" asp-action="Details" asp-route-id="@Model.Id">@Model.Name</a></li>
+        <li class="breadcrumb-item active">Chỉnh sửa</li>
+    </ol>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card">
+        <div class="card-header">
+            <i class="fas fa-edit me-1"></i>
+            Chỉnh sửa: @Model.Name
+        </div>
+        <div class="card-body">
+            <form asp-action="Edit" method="post">
+                <input asp-for="Id" type="hidden">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="Name" class="form-label">Tên danh mục <span class="text-danger">*</span></label>
+                            <input asp-for="Name" class="form-control" placeholder="Nhập tên danh mục">
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                            <div class="form-text">Tên danh mục sách (ví dụ: Văn học, Khoa học, Lịch sử...)</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <!-- Preview area -->
+                        <div id="namePreview" class="mb-3">
+                            <label class="form-label">Xem trước:</label>
+                            <div class="alert alert-info">
+                                <i class="fas fa-list me-2"></i>
+                                <strong id="previewName">@Model.Name</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12">
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label">Mô tả</label>
+                            <textarea asp-for="Description" class="form-control" rows="6" placeholder="Nhập mô tả về danh mục này..."></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                            <div class="form-text">Mô tả chi tiết về loại sách thuộc danh mục này</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="bg-light p-3 rounded">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar-plus"></i> Tạo: @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                                    </small>
+                                </div>
+                                <div class="col-md-4 text-center">
+                                    <small class="text-muted">
+                                        <i class="fas fa-book"></i> Số sách: <strong>@Model.BookCount</strong>
+                                    </small>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar-edit"></i> Cập nhật: @(Model.UpdatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "Chưa cập nhật")
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Quay lại
+                            </a>
+                            <div>
+                                <a asp-action="Index" class="btn btn-outline-secondary me-2">
+                                    <i class="fas fa-list"></i> Danh sách
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Cập nhật
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        // Preview category name
+        document.getElementById('Name').addEventListener('input', function() {
+            const name = this.value.trim();
+            const previewName = document.getElementById('previewName');
+            
+            if (name) {
+                previewName.textContent = name;
+            } else {
+                previewName.textContent = '@Model.Name';
+            }
+        });
+
+        // Character counter for description
+        const descriptionTextarea = document.getElementById('Description');
+        const maxLength = 1000; // Set a reasonable limit
+        
+        // Create character counter
+        const counterDiv = document.createElement('div');
+        counterDiv.className = 'form-text text-end';
+        counterDiv.id = 'descriptionCounter';
+        descriptionTextarea.parentNode.appendChild(counterDiv);
+        
+        function updateCounter() {
+            const currentLength = descriptionTextarea.value.length;
+            counterDiv.textContent = `${currentLength}/${maxLength} ký tự`;
+            
+            if (currentLength > maxLength * 0.9) {
+                counterDiv.className = 'form-text text-end text-warning';
+            } else if (currentLength > maxLength) {
+                counterDiv.className = 'form-text text-end text-danger';
+            } else {
+                counterDiv.className = 'form-text text-end text-muted';
+            }
+        }
+        
+        descriptionTextarea.addEventListener('input', updateCounter);
+        updateCounter(); // Initialize counter
+    </script>
+}

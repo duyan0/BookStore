@@ -1,0 +1,45 @@
+@{
+    ViewData["Title"] = "Truy cập bị từ chối";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-ban me-2"></i>Truy cập bị từ chối
+                    </h4>
+                </div>
+                <div class="card-body text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-shield-alt text-danger" style="font-size: 4rem;"></i>
+                    </div>
+                    
+                    <h5 class="text-danger mb-3">Bạn không có quyền truy cập trang này</h5>
+                    
+                    <p class="text-muted mb-4">
+                        Trang này chỉ dành cho người dùng có quyền <strong>Administrator</strong>. 
+                        Vui lòng liên hệ quản trị viên để được cấp quyền truy cập.
+                    </p>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Thông tin tài khoản hiện tại:</strong><br>
+                        Username: <strong>@Context.Session.GetString("Username")</strong><br>
+                        Role: <strong>@(Context.Session.GetString("IsAdmin") == "True" ? "Administrator" : "User")</strong>
+                    </div>
+
+                    <div class="mt-4">
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-primary me-2">
+                            <i class="fas fa-home me-1"></i>Về trang chủ
+                        </a>
+                        <a asp-controller="Account" asp-action="Logout" class="btn btn-outline-secondary">
+                            <i class="fas fa-sign-out-alt me-1"></i>Đăng xuất
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
