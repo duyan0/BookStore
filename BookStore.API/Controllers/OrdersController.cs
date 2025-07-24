@@ -11,10 +11,12 @@ namespace BookStore.API.Controllers
     public class OrdersController : ControllerBase
     {
         private readonly IOrderService _orderService;
+        private readonly ILogger<OrdersController> _logger;
 
-        public OrdersController(IOrderService orderService)
+        public OrdersController(IOrderService orderService, ILogger<OrdersController> logger)
         {
             _orderService = orderService;
+            _logger = logger;
         }
 
         // GET: api/Orders
@@ -75,22 +77,7 @@ namespace BookStore.API.Controllers
             return Ok(order);
         }
 
-        // GET: api/Orders/user/5
-        [HttpGet("user/{userId}")]
-        public async Task<ActionResult<IEnumerable<OrderDto>>> GetOrdersByUser(int userId)
-        {
-            // Users can only view their own orders, admins can view all
-            var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            var isAdmin = User.IsInRole("Admin");
-            
-            if (!isAdmin && userId.ToString() != currentUserId)
-            {
-                return Forbid();
-            }
 
-            var orders = await _orderService.GetOrdersByUserIdAsync(userId);
-            return Ok(orders);
-        }
 
         // GET: api/Orders/status/pending
         [HttpGet("status/{status}")]

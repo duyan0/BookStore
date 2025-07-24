@@ -199,4 +199,11 @@ if (!Directory.Exists(uploadsDir))
     Directory.CreateDirectory(uploadsDir);
 }
 
+// Tạo thư mục uploads/books cho ảnh sách
+var booksUploadsDir = Path.Combine(uploadsDir, "books");
+if (!Directory.Exists(booksUploadsDir))
+{
+    Directory.CreateDirectory(booksUploadsDir);
+}
+
 app.Run();

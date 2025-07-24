@@ -1,0 +1,456 @@
+@model List<BookStore.Core.DTOs.ImageFileDto>
+@{
+    ViewData["Title"] = "Thư viện ảnh";
+}
+
+<div class="container px-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="fas fa-images me-2 text-primary"></i>Thư viện ảnh sách
+                </h2>
+                <button type="button" class="btn btn-success" onclick="showUploadModal()">
+                    <i class="fas fa-plus me-1"></i>Upload ảnh mới
+                </button>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-folder-open me-2"></i>Danh sách ảnh (@Model.Count ảnh)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.Any())
+                    {
+                        <div class="row g-3">
+                            @foreach (var image in Model)
+                            {
+                                <div class="col-lg-3 col-md-4 col-sm-6">
+                                    <div class="card h-100 image-card">
+                                        <div class="position-relative">
+                                            <img src="@image.FullUrl" alt="@image.FileName" 
+                                                 class="card-img-top" style="height: 200px; object-fit: cover;">
+                                            <div class="position-absolute top-0 end-0 p-2">
+                                                <button type="button" class="btn btn-sm btn-danger" 
+                                                        onclick="deleteImage('@image.FileName')" 
+                                                        title="Xóa ảnh">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="card-body">
+                                            <h6 class="card-title text-truncate" title="@image.FileName">
+                                                @image.FileName
+                                            </h6>
+                                            <div class="small text-muted">
+                                                <div><i class="fas fa-weight me-1"></i>@image.SizeFormatted</div>
+                                                <div><i class="fas fa-calendar me-1"></i>@image.LastModified.ToString("dd/MM/yyyy HH:mm")</div>
+                                            </div>
+                                        </div>
+                                        <div class="card-footer">
+                                            <div class="btn-group w-100" role="group">
+                                                <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                        onclick="copyImageUrl('@image.FullUrl')" 
+                                                        title="Copy URL">
+                                                    <i class="fas fa-copy"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-info" 
+                                                        onclick="previewImage('@image.FullUrl', '@image.FileName')" 
+                                                        title="Xem trước">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <a href="@image.FullUrl" target="_blank" 
+                                                   class="btn btn-sm btn-outline-success" 
+                                                   title="Mở trong tab mới">
+                                                    <i class="fas fa-external-link-alt"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-images fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Chưa có ảnh nào</h5>
+                            <p class="text-muted">Hãy upload ảnh đầu tiên cho thư viện</p>
+                            <button type="button" class="btn btn-primary" onclick="showUploadModal()">
+                                <i class="fas fa-plus me-1"></i>Upload ảnh ngay
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Image Preview Modal -->
+<div class="modal fade" id="imagePreviewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imagePreviewTitle">Xem trước ảnh</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="imagePreviewImg" src="" alt="" class="img-fluid">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Xác nhận xóa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa ảnh này không?</p>
+                <p class="text-danger"><strong>Lưu ý:</strong> Hành động này không thể hoàn tác!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Xóa</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upload Modal -->
+<div class="modal fade" id="uploadModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Upload ảnh mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="uploadImageFile" class="form-label">Chọn file ảnh</label>
+                    <input type="file" class="form-control" id="uploadImageFile" accept="image/*" multiple>
+                    <div class="form-text">Chọn một hoặc nhiều file ảnh (JPG, PNG, GIF, WebP). Kích thước tối đa: 5MB mỗi file</div>
+                </div>
+
+                <div id="uploadPreview" class="mb-3" style="display: none;">
+                    <label class="form-label">Xem trước:</label>
+                    <div id="previewContainer" class="d-flex flex-wrap gap-2"></div>
+                </div>
+
+                <div id="uploadProgress" class="mb-3" style="display: none;">
+                    <label class="form-label">Tiến trình upload:</label>
+                    <div class="progress">
+                        <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <div id="uploadStatus" class="mt-2"></div>
+                </div>
+
+                <div id="uploadMessage"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="uploadBtn" onclick="uploadImages()" disabled>
+                    <i class="fas fa-upload me-1"></i>Upload
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .image-card {
+            transition: transform 0.2s;
+        }
+        
+        .image-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .image-card .position-absolute {
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        
+        .image-card:hover .position-absolute {
+            opacity: 1;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        let imageToDelete = '';
+        let selectedFiles = [];
+
+        // Show upload modal
+        function showUploadModal() {
+            document.getElementById('uploadImageFile').value = '';
+            document.getElementById('uploadPreview').style.display = 'none';
+            document.getElementById('uploadProgress').style.display = 'none';
+            document.getElementById('uploadMessage').innerHTML = '';
+            document.getElementById('uploadBtn').disabled = true;
+            selectedFiles = [];
+            new bootstrap.Modal(document.getElementById('uploadModal')).show();
+        }
+
+        // Handle file selection for upload
+        document.getElementById('uploadImageFile').addEventListener('change', function(e) {
+            const files = Array.from(e.target.files);
+            selectedFiles = files;
+
+            if (files.length > 0) {
+                document.getElementById('uploadBtn').disabled = false;
+                showUploadPreview(files);
+            } else {
+                document.getElementById('uploadBtn').disabled = true;
+                document.getElementById('uploadPreview').style.display = 'none';
+            }
+        });
+
+        // Show upload preview
+        function showUploadPreview(files) {
+            const previewContainer = document.getElementById('previewContainer');
+            previewContainer.innerHTML = '';
+
+            files.forEach((file, index) => {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const previewDiv = document.createElement('div');
+                        previewDiv.className = 'position-relative';
+                        previewDiv.innerHTML = `
+                            <img src="${e.target.result}" alt="${file.name}"
+                                 class="img-thumbnail" style="width: 80px; height: 80px; object-fit: cover;">
+                            <div class="position-absolute top-0 end-0">
+                                <button type="button" class="btn btn-sm btn-danger"
+                                        onclick="removeFileFromPreview(${index})"
+                                        style="font-size: 10px; padding: 2px 4px;">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="small text-center mt-1 text-truncate" style="width: 80px;" title="${file.name}">
+                                ${file.name}
+                            </div>
+                        `;
+                        previewContainer.appendChild(previewDiv);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            document.getElementById('uploadPreview').style.display = 'block';
+        }
+
+        // Remove file from preview
+        function removeFileFromPreview(index) {
+            selectedFiles.splice(index, 1);
+
+            if (selectedFiles.length > 0) {
+                showUploadPreview(selectedFiles);
+            } else {
+                document.getElementById('uploadPreview').style.display = 'none';
+                document.getElementById('uploadBtn').disabled = true;
+            }
+        }
+
+        // Upload images
+        async function uploadImages() {
+            if (selectedFiles.length === 0) {
+                showToast('error', 'Vui lòng chọn ít nhất một file ảnh');
+                return;
+            }
+
+            const uploadBtn = document.getElementById('uploadBtn');
+            const progressDiv = document.getElementById('uploadProgress');
+            const progressBar = progressDiv.querySelector('.progress-bar');
+            const statusDiv = document.getElementById('uploadStatus');
+
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Đang upload...';
+            progressDiv.style.display = 'block';
+
+            let successCount = 0;
+            let errorCount = 0;
+
+            for (let i = 0; i < selectedFiles.length; i++) {
+                const file = selectedFiles[i];
+                const formData = new FormData();
+                formData.append('file', file);
+
+                try {
+                    statusDiv.textContent = `Đang upload ${i + 1}/${selectedFiles.length}: ${file.name}`;
+
+                    const response = await fetch('http://localhost:5274/api/BookImage/upload', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'Authorization': 'Bearer ' + getJwtToken()
+                        }
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        successCount++;
+                    } else {
+                        errorCount++;
+                        console.error(`Upload failed for ${file.name}:`, result.message);
+                    }
+                } catch (error) {
+                    errorCount++;
+                    console.error(`Upload error for ${file.name}:`, error);
+                }
+
+                // Update progress
+                const progress = ((i + 1) / selectedFiles.length) * 100;
+                progressBar.style.width = `${progress}%`;
+            }
+
+            // Show final status
+            statusDiv.innerHTML = `
+                <div class="text-success">✓ Thành công: ${successCount} file</div>
+                ${errorCount > 0 ? `<div class="text-danger">✗ Lỗi: ${errorCount} file</div>` : ''}
+            `;
+
+            uploadBtn.disabled = false;
+            uploadBtn.innerHTML = '<i class="fas fa-upload me-1"></i>Upload';
+
+            if (successCount > 0) {
+                showToast('success', `Upload thành công ${successCount} ảnh!`);
+
+                // Reload page after 2 seconds
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+            }
+
+            if (errorCount > 0) {
+                showToast('error', `Có ${errorCount} ảnh upload thất bại`);
+            }
+        }
+
+        // Get JWT token
+        function getJwtToken() {
+            return document.querySelector('meta[name="jwt-token"]')?.getAttribute('content') || '';
+        }
+
+        // Copy image URL to clipboard
+        function copyImageUrl(url) {
+            navigator.clipboard.writeText(url).then(function() {
+                showToast('success', 'Đã copy URL vào clipboard!');
+            }, function(err) {
+                showToast('error', 'Không thể copy URL');
+            });
+        }
+
+        // Preview image in modal
+        function previewImage(url, fileName) {
+            document.getElementById('imagePreviewImg').src = url;
+            document.getElementById('imagePreviewTitle').textContent = fileName;
+            new bootstrap.Modal(document.getElementById('imagePreviewModal')).show();
+        }
+
+        // Delete image
+        function deleteImage(fileName) {
+            imageToDelete = fileName;
+            new bootstrap.Modal(document.getElementById('deleteConfirmModal')).show();
+        }
+
+        // Confirm delete
+        document.getElementById('confirmDeleteBtn').addEventListener('click', async function() {
+            if (!imageToDelete) return;
+
+            try {
+                const response = await fetch(`/Admin/ImageGallery/Delete`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `fileName=${encodeURIComponent(imageToDelete)}`
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast('success', result.message);
+                    // Reload page after 1 second
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    showToast('error', result.message);
+                }
+            } catch (error) {
+                showToast('error', 'Lỗi khi xóa ảnh');
+            }
+
+            bootstrap.Modal.getInstance(document.getElementById('deleteConfirmModal')).hide();
+            imageToDelete = '';
+        });
+
+        // Show toast notification
+        function showToast(type, message) {
+            const toastHtml = `
+                <div class="toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            ${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `;
+            
+            let toastContainer = document.getElementById('toastContainer');
+            if (!toastContainer) {
+                toastContainer = document.createElement('div');
+                toastContainer.id = 'toastContainer';
+                toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+                document.body.appendChild(toastContainer);
+            }
+            
+            toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+            const toastElement = toastContainer.lastElementChild;
+            const toast = new bootstrap.Toast(toastElement);
+            toast.show();
+            
+            // Remove toast element after it's hidden
+            toastElement.addEventListener('hidden.bs.toast', () => {
+                toastElement.remove();
+            });
+        }
+    </script>
+}

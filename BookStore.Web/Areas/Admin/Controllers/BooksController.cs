@@ -97,6 +97,12 @@ namespace BookStore.Web.Areas.Admin.Controllers
 
             try
             {
+                // Ensure ImageUrl is never null before sending to API
+                if (model.ImageUrl == null)
+                {
+                    model.ImageUrl = string.Empty;
+                }
+
                 var createDto = MapToCreateDto(model);
                 var createdBook = await _apiService.PostAsync<BookDto>("books", createDto);
                 
@@ -171,10 +177,16 @@ namespace BookStore.Web.Areas.Admin.Controllers
 
             try
             {
+                // Ensure ImageUrl is never null before sending to API
+                if (model.ImageUrl == null)
+                {
+                    model.ImageUrl = string.Empty;
+                }
+
                 var updateDto = MapToUpdateDto(model);
-                var success = await _apiService.PutAsync<bool>($"books/{id}", updateDto);
-                
-                if (success)
+                var updatedBook = await _apiService.PutAsync<BookDto>($"books/{id}", updateDto);
+
+                if (updatedBook != null)
                 {
                     TempData["Success"] = "Cập nhật sách thành công!";
                     return RedirectToAction(nameof(Details), new { id });
@@ -279,10 +291,10 @@ namespace BookStore.Web.Areas.Admin.Controllers
                 Description = model.Description,
                 Price = model.Price,
                 Quantity = model.Quantity,
-                ISBN = model.ISBN,
-                Publisher = model.Publisher,
+                ISBN = model.ISBN ?? string.Empty,
+                Publisher = model.Publisher ?? string.Empty,
                 PublicationYear = model.PublicationYear,
-                ImageUrl = model.ImageUrl,
+                ImageUrl = model.ImageUrl ?? string.Empty,
                 AuthorId = model.AuthorId,
                 CategoryId = model.CategoryId
             };
@@ -296,10 +308,10 @@ namespace BookStore.Web.Areas.Admin.Controllers
                 Description = model.Description,
                 Price = model.Price,
                 Quantity = model.Quantity,
-                ISBN = model.ISBN,
-                Publisher = model.Publisher,
+                ISBN = model.ISBN ?? string.Empty,
+                Publisher = model.Publisher ?? string.Empty,
                 PublicationYear = model.PublicationYear,
-                ImageUrl = model.ImageUrl,
+                ImageUrl = model.ImageUrl ?? string.Empty,
                 AuthorId = model.AuthorId,
                 CategoryId = model.CategoryId
             };

@@ -97,3 +97,5 @@ C:\BookStore\BookStore.Web\obj\Debug\net9.0\refint\BookStore.Web.dll
 C:\BookStore\BookStore.Web\obj\Debug\net9.0\BookStore.Web.pdb
 C:\BookStore\BookStore.Web\obj\Debug\net9.0\BookStore.Web.genruntimeconfig.cache
 C:\BookStore\BookStore.Web\obj\Debug\net9.0\ref\BookStore.Web.dll
+C:\BookStore\BookStore.Web\obj\Debug\net9.0\BookStore.Web.sourcelink.json
+C:\BookStore\BookStore.Web\obj\Debug\net9.0\compressed\30x3s31e31-o5l50mm6o8.gz
