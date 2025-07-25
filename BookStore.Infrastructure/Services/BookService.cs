@@ -111,5 +111,73 @@ namespace BookStore.Infrastructure.Services
             await _bookRepository.UpdateAsync(book);
             return _mapper.Map<BookDto>(book);
         }
+
+        public async Task<BookStatisticsDto> GetBookStatisticsAsync()
+        {
+            try
+            {
+                var books = await _bookRepository.GetAllAsync();
+                var categories = await _categoryRepository.GetAllAsync();
+                var authors = await _authorRepository.GetAllAsync();
+
+                var booksList = books.ToList();
+                var categoriesList = categories.ToList();
+                var authorsList = authors.ToList();
+
+                var now = DateTime.UtcNow;
+                var startOfMonth = new DateTime(now.Year, now.Month, 1);
+                var startOfWeek = now.AddDays(-(int)now.DayOfWeek);
+
+                // Calculate statistics
+                var totalBooks = booksList.Count;
+                var booksInStock = booksList.Count(b => b.Quantity > 0);
+                var booksOutOfStock = booksList.Count(b => b.Quantity == 0);
+                var lowStockBooks = booksList.Count(b => b.Quantity > 0 && b.Quantity < 10);
+                var newBooksThisMonth = booksList.Count(b => b.CreatedAt >= startOfMonth);
+                var newBooksThisWeek = booksList.Count(b => b.CreatedAt >= startOfWeek);
+                var totalInventoryValue = booksList.Sum(b => b.Price * b.Quantity);
+                var averageBookPrice = booksList.Any() ? booksList.Average(b => b.Price) : 0;
+
+                // Top categories by book count
+                var topCategories = categoriesList.Select(c => new CategoryStatDto
+                {
+                    CategoryId = c.Id,
+                    CategoryName = c.Name,
+                    BookCount = booksList.Count(b => b.CategoryId == c.Id),
+                    TotalValue = booksList.Where(b => b.CategoryId == c.Id).Sum(b => b.Price * b.Quantity)
+                }).OrderByDescending(c => c.BookCount).Take(5).ToList();
+
+                // Recent books (last 10)
+                var recentBooks = booksList
+                    .OrderByDescending(b => b.CreatedAt)
+                    .Take(10)
+                    .Select(b => _mapper.Map<BookDto>(b))
+                    .ToList();
+
+                return new BookStatisticsDto
+                {
+                    TotalBooks = totalBooks,
+                    BooksInStock = booksInStock,
+                    BooksOutOfStock = booksOutOfStock,
+                    LowStockBooks = lowStockBooks,
+                    NewBooksThisMonth = newBooksThisMonth,
+                    NewBooksThisWeek = newBooksThisWeek,
+                    TotalInventoryValue = totalInventoryValue,
+                    AverageBookPrice = averageBookPrice,
+                    TotalCategories = categoriesList.Count,
+                    TotalAuthors = authorsList.Count,
+                    TopCategories = topCategories,
+                    RecentBooks = recentBooks,
+                    LastUpdated = DateTime.UtcNow
+                };
+            }
+            catch (Exception)
+            {
+                return new BookStatisticsDto
+                {
+                    LastUpdated = DateTime.UtcNow
+                };
+            }
+        }
     }
-} 
+}

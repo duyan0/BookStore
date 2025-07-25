@@ -1,3 +1,4 @@
+
 @{
     ViewData["Title"] = "Admin Dashboard";
     Layout = "_AdminLayout";
@@ -10,38 +11,78 @@
     </ol>
     <div class="row">
         <div class="col-xl-3 col-md-6">
-            <div class="card bg-primary text-white mb-4">
-                <div class="card-body">Sách</div>
-                <div class="card-footer d-flex align-items-center justify-content-between">
-                    <a class="small text-white stretched-link" asp-area="Admin" asp-controller="Books" asp-action="Index">Xem chi tiết</a>
-                    <div class="small text-white"><i class="fas fa-angle-right"></i></div>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-3 col-md-6">
-            <div class="card bg-warning text-white mb-4">
-                <div class="card-body">Danh mục</div>
-                <div class="card-footer d-flex align-items-center justify-content-between">
-                    <a class="small text-white stretched-link" asp-area="Admin" asp-controller="Categories" asp-action="Index">Xem chi tiết</a>
-                    <div class="small text-white"><i class="fas fa-angle-right"></i></div>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-3 col-md-6">
             <div class="card bg-success text-white mb-4">
-                <div class="card-body">Tác giả</div>
-                <div class="card-footer d-flex align-items-center justify-content-between">
-                    <a class="small text-white stretched-link" asp-area="Admin" asp-controller="Authors" asp-action="Index">Xem chi tiết</a>
+                <div class="card-body bg-success">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <i class="fas fa-book fa-2x text-white"></i>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0 text-white">@(ViewBag.BookStats?.TotalBooks ?? 0) Sách</h5>
+                            <p class="text-white mb-0">@(ViewBag.BookStats?.BooksInStock ?? 0) còn hàng</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-light-custom d-flex align-items-center justify-content-between">
+                    <a class="small text-white stretched-link text-decoration-none" asp-area="Admin" asp-controller="Books" asp-action="Index">Xem chi tiết</a>
                     <div class="small text-white"><i class="fas fa-angle-right"></i></div>
                 </div>
             </div>
         </div>
         <div class="col-xl-3 col-md-6">
-            <div class="card bg-danger text-white mb-4">
-                <div class="card-body">Đơn hàng</div>
-                <div class="card-footer d-flex align-items-center justify-content-between">
-                    <a class="small text-white stretched-link" asp-area="Admin" asp-controller="Orders" asp-action="Index">Xem chi tiết</a>
-                    <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+            <div class="card warning mb-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <i class="fas fa-list fa-2x text-warning"></i>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Danh mục</h5>
+                            <p class="text-black mb-0">Quản lý danh mục</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-light-custom d-flex align-items-center justify-content-between">
+                    <a class="small text-black stretched-link text-decoration-none" asp-area="Admin" asp-controller="Categories" asp-action="Index">Xem chi tiết</a>
+                    <div class="small text-black"><i class="fas fa-angle-right"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card success mb-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <i class="fas fa-user-edit fa-2x text-success"></i>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Tác giả</h5>
+                            <p class="text-muted mb-0">Quản lý tác giả</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-light-custom d-flex align-items-center justify-content-between">
+                    <a class="small text-black stretched-link text-decoration-none" asp-area="Admin" asp-controller="Authors" asp-action="Index">Xem chi tiết</a>
+                    <div class="small text-black"><i class="fas fa-angle-right"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card danger mb-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <i class="fas fa-shopping-cart fa-2x text-danger"></i>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">@(ViewBag.OrderStats?.TotalOrders ?? 0) Đơn hàng</h5>
+                            <p class="text-muted mb-0">@(ViewBag.OrderStats?.PendingOrders ?? 0) chờ xử lý</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-light-custom d-flex align-items-center justify-content-between">
+                    <a class="small text-black stretched-link text-decoration-none" asp-area="Admin" asp-controller="Orders" asp-action="Index">Xem chi tiết</a>
+                    <div class="small text-black"><i class="fas fa-angle-right"></i></div>
                 </div>
             </div>
         </div>
@@ -50,21 +91,17 @@
     <!-- User Management Statistics Row -->
     <div class="row mb-4">
         <div class="col-xl-3 col-md-6">
-            <div class="card bg-info text-white mb-4">
+            <div class="card h-auto bg-info text-white mb-4">
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
-                            <div class="text-white-75 small">Tổng người dùng</div>
+                            <div class="text-white small">Tổng người dùng</div>
                             <div class="text-lg fw-bold">@(ViewBag.UserStats?.TotalUsers ?? 0)</div>
                         </div>
                         <div class="fa-2x opacity-25">
                             <i class="fas fa-users"></i>
                         </div>
                     </div>
-                </div>
-                <div class="card-footer d-flex align-items-center justify-content-between">
-                    <a class="small text-white stretched-link" asp-area="Admin" asp-controller="Users" asp-action="Index">Quản lý người dùng</a>
-                    <div class="small text-white"><i class="fas fa-angle-right"></i></div>
                 </div>
             </div>
         </div>
@@ -122,6 +159,166 @@
                 <div class="card-footer d-flex align-items-center justify-content-between">
                     <span class="small text-white">Người dùng hoạt động</span>
                     <div class="small text-white"><i class="fas fa-pulse"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Book Management Statistics Row -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-primary text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-75 small">Tổng sách</div>
+                            <div class="text-lg fw-bold">@(ViewBag.BookStats?.TotalBooks ?? 0)</div>
+                        </div>
+                        <div class="fa-2x opacity-25">
+                            <i class="fas fa-book"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a class="small text-white stretched-link" asp-area="Admin" asp-controller="Books" asp-action="Index">Quản lý sách</a>
+                    <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-success text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-75 small">Còn hàng</div>
+                            <div class="text-lg fw-bold">@(ViewBag.BookStats?.BooksInStock ?? 0)</div>
+                        </div>
+                        <div class="fa-2x opacity-25">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <span class="small text-white">Sách có sẵn</span>
+                    <div class="small text-white"><i class="fas fa-inventory"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-danger text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-75 small">Hết hàng</div>
+                            <div class="text-lg fw-bold">@(ViewBag.BookStats?.BooksOutOfStock ?? 0)</div>
+                        </div>
+                        <div class="fa-2x opacity-25">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <span class="small text-white">Cần nhập thêm</span>
+                    <div class="small text-white"><i class="fas fa-warning"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-warning text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-75 small">Sắp hết</div>
+                            <div class="text-lg fw-bold">@(ViewBag.BookStats?.LowStockBooks ?? 0)</div>
+                        </div>
+                        <div class="fa-2x opacity-25">
+                            <i class="fas fa-battery-quarter"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <span class="small text-white">Dưới 10 cuốn</span>
+                    <div class="small text-white"><i class="fas fa-chart-line"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Management Statistics Row -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-success text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-75 small">Đơn hoàn thành</div>
+                            <div class="text-lg fw-bold">@(ViewBag.OrderStats?.CompletedOrders ?? 0)</div>
+                        </div>
+                        <div class="fa-2x opacity-25">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <span class="small text-white">Đã giao thành công</span>
+                    <div class="small text-white"><i class="fas fa-truck"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-warning text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-75 small">Đang xử lý</div>
+                            <div class="text-lg fw-bold">@(ViewBag.OrderStats?.ProcessingOrders ?? 0)</div>
+                        </div>
+                        <div class="fa-2x opacity-25">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <span class="small text-white">Đang chuẩn bị</span>
+                    <div class="small text-white"><i class="fas fa-cogs"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-info text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-75 small">Doanh thu tháng</div>
+                            <div class="text-lg fw-bold">@((ViewBag.OrderStats?.MonthlyRevenue ?? 0).ToString("N0"))đ</div>
+                        </div>
+                        <div class="fa-2x opacity-25">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <span class="small text-white">Tháng này</span>
+                    <div class="small text-white"><i class="fas fa-calendar"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-dark text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-75 small">Tổng doanh thu</div>
+                            <div class="text-lg fw-bold">@((ViewBag.OrderStats?.TotalRevenue ?? 0).ToString("N0"))đ</div>
+                        </div>
+                        <div class="fa-2x opacity-25">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <span class="small text-white">Tất cả thời gian</span>
+                    <div class="small text-white"><i class="fas fa-infinity"></i></div>
                 </div>
             </div>
         </div>
@@ -202,76 +399,40 @@
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
     <script>
-        // Biểu đồ doanh thu
+        // Biểu đồ doanh thu với dữ liệu thực
         var ctx = document.getElementById("myAreaChart");
+        var orderStats = @Html.Raw(Json.Serialize(ViewBag.OrderStats ?? new {}));
+
+        // Prepare chart data from real statistics
+        var monthlyData = orderStats.monthlyRevenueChart || [];
+        var labels = monthlyData.map(item => item.monthName || 'N/A');
+        var revenueData = monthlyData.map(item => item.revenue || 0);
+        var maxRevenue = Math.max(...revenueData, 10000);
+
         var myLineChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: ["Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6"],
+                labels: labels.length > 0 ? labels : ["Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6"],
                 datasets: [{
-                    label: "Doanh thu",
+                    label: "Doanh thu (VNĐ)",
                     lineTension: 0.3,
-                    backgroundColor: "rgba(2,117,216,0.2)",
-                    borderColor: "rgba(2,117,216,1)",
+                    backgroundColor: "rgba(0,0,0,0.1)",
+                    borderColor: "rgba(0,0,0,0.8)",
                     pointRadius: 5,
-                    pointBackgroundColor: "rgba(2,117,216,1)",
+                    pointBackgroundColor: "rgba(0,0,0,1)",
                     pointBorderColor: "rgba(255,255,255,0.8)",
-                    pointHoverRadius: 5,
-                    pointHoverBackgroundColor: "rgba(2,117,216,1)",
+                    pointHoverRadius: 7,
+                    pointHoverBackgroundColor: "rgba(0,0,0,1)",
                     pointHitRadius: 50,
                     pointBorderWidth: 2,
-                    data: [10000, 30000, 26000, 18000, 28000, 26000],
+                    data: revenueData.length > 0 ? revenueData : [10000, 30000, 26000, 18000, 28000, 26000],
                 }],
             },
             options: {
+                responsive: true,
+                maintainAspectRatio: false,
                 scales: {
                     xAxes: [{
-                        time: {
-                            unit: 'date'
-                        },
-                        gridLines: {
-                            display: false
-                        },
-                        ticks: {
-                            maxTicksLimit: 7
-                        }
-                    }],
-                    yAxes: [{
-                        ticks: {
-                            min: 0,
-                            max: 40000,
-                            maxTicksLimit: 5
-                        },
-                        gridLines: {
-                            color: "rgba(0, 0, 0, .125)",
-                        }
-                    }],
-                },
-                legend: {
-                    display: false
-                }
-            }
-        });
-
-        // Biểu đồ đơn hàng
-        var ctx = document.getElementById("myBarChart");
-        var myLineChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ["Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6"],
-                datasets: [{
-                    label: "Đơn hàng",
-                    backgroundColor: "rgba(2,117,216,1)",
-                    borderColor: "rgba(2,117,216,1)",
-                    data: [20, 30, 25, 18, 28, 26],
-                }],
-            },
-            options: {
-                scales: {
-                    xAxes: [{
-                        time: {
-                            unit: 'month'
-                        },
                         gridLines: {
                             display: false
                         },
@@ -282,16 +443,81 @@
                     yAxes: [{
                         ticks: {
                             min: 0,
-                            max: 40,
-                            maxTicksLimit: 5
+                            max: Math.ceil(maxRevenue * 1.2),
+                            maxTicksLimit: 5,
+                            callback: function(value) {
+                                return value.toLocaleString('vi-VN') + 'đ';
+                            }
                         },
                         gridLines: {
-                            display: true
+                            color: "rgba(0, 0, 0, .125)",
                         }
                     }],
                 },
                 legend: {
                     display: false
+                },
+                tooltips: {
+                    callbacks: {
+                        label: function(tooltipItem) {
+                            return 'Doanh thu: ' + tooltipItem.yLabel.toLocaleString('vi-VN') + 'đ';
+                        }
+                    }
+                }
+            }
+        });
+
+        // Biểu đồ đơn hàng với dữ liệu thực
+        var ctx2 = document.getElementById("myBarChart");
+        var orderData = monthlyData.map(item => item.orderCount || 0);
+        var maxOrders = Math.max(...orderData, 10);
+
+        var myBarChart = new Chart(ctx2, {
+            type: 'bar',
+            data: {
+                labels: labels.length > 0 ? labels : ["Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6"],
+                datasets: [{
+                    label: "Số đơn hàng",
+                    backgroundColor: "rgba(220, 53, 69, 0.8)",
+                    borderColor: "rgba(220, 53, 69, 1)",
+                    borderWidth: 1,
+                    data: orderData.length > 0 ? orderData : [20, 30, 25, 18, 28, 26],
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    xAxes: [{
+                        gridLines: {
+                            display: false
+                        },
+                        ticks: {
+                            maxTicksLimit: 6
+                        }
+                    }],
+                    yAxes: [{
+                        ticks: {
+                            min: 0,
+                            max: Math.ceil(maxOrders * 1.2),
+                            maxTicksLimit: 5,
+                            stepSize: 1
+                        },
+                        gridLines: {
+                            display: true,
+                            color: "rgba(0, 0, 0, .125)"
+                        }
+                    }],
+                },
+                legend: {
+                    display: false
+                },
+                tooltips: {
+                    callbacks: {
+                        label: function(tooltipItem) {
+                            return 'Đơn hàng: ' + tooltipItem.yLabel + ' đơn';
+                        }
+                    }
                 }
             }
         });

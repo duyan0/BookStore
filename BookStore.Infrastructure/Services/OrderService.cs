@@ -121,44 +121,51 @@ namespace BookStore.Infrastructure.Services
 
         public async Task<OrderStatisticsDto> GetOrderStatisticsAsync()
         {
-            var statusCounts = await _orderRepository.GetOrderCountByStatusAsync();
-            var totalRevenue = await _orderRepository.GetTotalRevenueAsync();
-            var currentDate = DateTime.Now;
-            var monthlyRevenue = await _orderRepository.GetMonthlyRevenueAsync(currentDate.Year, currentDate.Month);
-            var dailyRevenue = await _orderRepository.GetDailyRevenueAsync(currentDate);
-
-            // Get monthly revenue for the last 12 months
-            var monthlyRevenueChart = new List<MonthlyRevenueDto>();
-            for (int i = 11; i >= 0; i--)
+            try
             {
-                var date = currentDate.AddMonths(-i);
-                var revenue = await _orderRepository.GetMonthlyRevenueAsync(date.Year, date.Month);
-                var orders = await _orderRepository.GetOrdersByDateRangeAsync(
-                    new DateTime(date.Year, date.Month, 1),
-                    new DateTime(date.Year, date.Month, DateTime.DaysInMonth(date.Year, date.Month)));
+                var statusCounts = await _orderRepository.GetOrderCountByStatusAsync();
+                var totalRevenue = await _orderRepository.GetTotalRevenueAsync();
+                var currentDate = DateTime.Now;
+                var monthlyRevenue = await _orderRepository.GetMonthlyRevenueAsync(currentDate.Year, currentDate.Month);
+                var dailyRevenue = await _orderRepository.GetDailyRevenueAsync(currentDate);
 
-                monthlyRevenueChart.Add(new MonthlyRevenueDto
+                // Get monthly revenue for the last 12 months
+                var monthlyRevenueChart = new List<MonthlyRevenueDto>();
+                for (int i = 11; i >= 0; i--)
                 {
-                    Year = date.Year,
-                    Month = date.Month,
-                    MonthName = date.ToString("MM/yyyy"),
-                    Revenue = revenue,
-                    OrderCount = orders.Count()
-                });
-            }
+                    var date = currentDate.AddMonths(-i);
+                    var revenue = await _orderRepository.GetMonthlyRevenueAsync(date.Year, date.Month);
+                    var orders = await _orderRepository.GetOrdersByDateRangeAsync(
+                        new DateTime(date.Year, date.Month, 1),
+                        new DateTime(date.Year, date.Month, DateTime.DaysInMonth(date.Year, date.Month)));
 
-            return new OrderStatisticsDto
+                    monthlyRevenueChart.Add(new MonthlyRevenueDto
+                    {
+                        Year = date.Year,
+                        Month = date.Month,
+                        MonthName = date.ToString("MM/yyyy"),
+                        Revenue = revenue,
+                        OrderCount = orders.Count()
+                    });
+                }
+
+                return new OrderStatisticsDto
+                {
+                    TotalOrders = statusCounts.Values.Sum(),
+                    PendingOrders = statusCounts.GetValueOrDefault("Pending", 0),
+                    ProcessingOrders = statusCounts.GetValueOrDefault("Processing", 0),
+                    CompletedOrders = statusCounts.GetValueOrDefault("Completed", 0),
+                    CancelledOrders = statusCounts.GetValueOrDefault("Cancelled", 0),
+                    TotalRevenue = totalRevenue,
+                    MonthlyRevenue = monthlyRevenue,
+                    DailyRevenue = dailyRevenue,
+                    MonthlyRevenueChart = monthlyRevenueChart
+                };
+            }
+            catch (Exception)
             {
-                TotalOrders = statusCounts.Values.Sum(),
-                PendingOrders = statusCounts.GetValueOrDefault("Pending", 0),
-                ProcessingOrders = statusCounts.GetValueOrDefault("Processing", 0),
-                CompletedOrders = statusCounts.GetValueOrDefault("Completed", 0),
-                CancelledOrders = statusCounts.GetValueOrDefault("Cancelled", 0),
-                TotalRevenue = totalRevenue,
-                MonthlyRevenue = monthlyRevenue,
-                DailyRevenue = dailyRevenue,
-                MonthlyRevenueChart = monthlyRevenueChart
-            };
+                return new OrderStatisticsDto();
+            }
         }
 
         public async Task<IEnumerable<OrderDto>> GetOrdersByStatusAsync(string status)

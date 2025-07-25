@@ -119,5 +119,21 @@ namespace BookStore.API.Controllers
 
             return NoContent();
         }
+
+        // GET: api/Books/statistics
+        [HttpGet("statistics")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<BookStatisticsDto>> GetBookStatistics()
+        {
+            try
+            {
+                var statistics = await _bookService.GetBookStatisticsAsync();
+                return Ok(statistics);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error retrieving book statistics", error = ex.Message });
+            }
+        }
     }
-} 
+}

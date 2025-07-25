@@ -15,16 +15,20 @@
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body class="sb-nav-fixed">
-    <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
+    <nav class="sb-topnav navbar navbar-expand navbar-light bg-white border-bottom">
         <!-- Navbar Brand-->
-        <a class="navbar-brand ps-3" asp-area="Admin" asp-controller="Home" asp-action="Index">BookStore Admin</a>
+        <a class="navbar-brand ps-3 fw-bold text-black" asp-area="Admin" asp-controller="Home" asp-action="Index">
+            <i class="fas fa-book me-2"></i>BookStore Admin
+        </a>
         <!-- Sidebar Toggle-->
-        <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#!"><i class="fas fa-bars"></i></button>
+        <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0 text-black" id="sidebarToggle" href="#!">
+            <i class="fas fa-bars"></i>
+        </button>
         <!-- Navbar Search-->
         <form class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0">
             <div class="input-group">
-                <input class="form-control" type="text" placeholder="Tìm kiếm..." aria-label="Tìm kiếm..." aria-describedby="btnNavbarSearch" />
-                <button class="btn btn-primary" id="btnNavbarSearch" type="button"><i class="fas fa-search"></i></button>
+                <input class="form-control border-2" type="text" placeholder="Tìm kiếm..." aria-label="Tìm kiếm..." aria-describedby="btnNavbarSearch" />
+                <button class="btn btn-dark" id="btnNavbarSearch" type="button"><i class="fas fa-search"></i></button>
             </div>
         </form>
         <!-- Navbar-->
@@ -79,24 +83,17 @@
                             <div class="sb-nav-link-icon"><i class="fas fa-shopping-cart"></i></div>
                             Đơn hàng
                         </a>
-                        <a class="nav-link" asp-area="Admin" asp-controller="Orders" asp-action="Index">
-                            <div class="sb-nav-link-icon"><i class="fas fa-shopping-cart"></i></div>
-                            Đơn hàng
-                        </a>
                         <a class="nav-link" asp-area="Admin" asp-controller="Users" asp-action="Index">
                             <div class="sb-nav-link-icon"><i class="fas fa-users"></i></div>
                             Người dùng
                         </a>
-                        <a class="nav-link" asp-area="Admin" asp-controller="Files" asp-action="Index">
-                            <div class="sb-nav-link-icon"><i class="fas fa-file-upload"></i></div>
-                            Quản lý file
-                        </a>
+                        
                         <div class="sb-sidenav-menu-heading">Báo cáo</div>
-                        <a class="nav-link" asp-area="Admin" asp-controller="Reports" asp-action="Sales">
+                        <a class="nav-link disabled" asp-area="#" asp-controller="#" asp-action="Sales">
                             <div class="sb-nav-link-icon"><i class="fas fa-chart-line"></i></div>
                             Doanh thu
                         </a>
-                        <a class="nav-link" asp-area="Admin" asp-controller="Reports" asp-action="Inventory">
+                        <a class="nav-link disabled" asp-area="#" asp-controller="#" asp-action="Inventory">
                             <div class="sb-nav-link-icon"><i class="fas fa-boxes"></i></div>
                             Tồn kho
                         </a>

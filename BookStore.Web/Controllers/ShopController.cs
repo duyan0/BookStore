@@ -18,8 +18,14 @@ namespace BookStore.Web.Controllers
         }
 
         // GET: Shop
-        public async Task<IActionResult> Index(string? search, int? categoryId, int page = 1, int pageSize = 12)
+        public async Task<IActionResult> Index(string? search, int? categoryId, int page = 1, int pageSize = 15)
         {
+            // Redirect admin users to admin panel
+            if (HttpContext.Session.GetString("IsAdmin") == "True")
+            {
+                return RedirectToAction("Index", "Home", new { area = "Admin" });
+            }
+
             try
             {
                 var books = await _apiService.GetAsync<List<BookDto>>("books");
@@ -76,6 +82,12 @@ namespace BookStore.Web.Controllers
         // GET: Shop/Details/5
         public async Task<IActionResult> Details(int id)
         {
+            // Redirect admin users to admin panel
+            if (HttpContext.Session.GetString("IsAdmin") == "True")
+            {
+                return RedirectToAction("Index", "Home", new { area = "Admin" });
+            }
+
             try
             {
                 var book = await _apiService.GetAsync<BookDto>($"books/{id}");
@@ -154,6 +166,12 @@ namespace BookStore.Web.Controllers
         // GET: Shop/Cart
         public async Task<IActionResult> Cart()
         {
+            // Redirect admin users to admin panel
+            if (HttpContext.Session.GetString("IsAdmin") == "True")
+            {
+                return RedirectToAction("Index", "Home", new { area = "Admin" });
+            }
+
             try
             {
                 if (!IsUserLoggedIn())
@@ -263,6 +281,12 @@ namespace BookStore.Web.Controllers
         // GET: Shop/Checkout
         public async Task<IActionResult> Checkout()
         {
+            // Redirect admin users to admin panel
+            if (HttpContext.Session.GetString("IsAdmin") == "True")
+            {
+                return RedirectToAction("Index", "Home", new { area = "Admin" });
+            }
+
             try
             {
                 if (!IsUserLoggedIn())
@@ -326,6 +350,12 @@ namespace BookStore.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Checkout(CheckoutViewModel model)
         {
+            // Redirect admin users to admin panel
+            if (HttpContext.Session.GetString("IsAdmin") == "True")
+            {
+                return RedirectToAction("Index", "Home", new { area = "Admin" });
+            }
+
             try
             {
                 if (!IsUserLoggedIn())
@@ -388,6 +418,12 @@ namespace BookStore.Web.Controllers
         // GET: Shop/OrderConfirmation
         public async Task<IActionResult> OrderConfirmation(int orderId)
         {
+            // Redirect admin users to admin panel
+            if (HttpContext.Session.GetString("IsAdmin") == "True")
+            {
+                return RedirectToAction("Index", "Home", new { area = "Admin" });
+            }
+
             try
             {
                 if (!IsUserLoggedIn())

@@ -28,11 +28,21 @@ namespace BookStore.Web.Areas.Admin.Controllers
                 // Get user statistics for dashboard
                 var userStats = await _apiService.GetAsync<Core.DTOs.UserStatisticsDto>("auth/users/statistics");
                 ViewBag.UserStats = userStats ?? new Core.DTOs.UserStatisticsDto();
+
+                // Get book statistics for dashboard
+                var bookStats = await _apiService.GetAsync<Core.DTOs.BookStatisticsDto>("books/statistics");
+                ViewBag.BookStats = bookStats ?? new Core.DTOs.BookStatisticsDto();
+
+                // Get order statistics for dashboard
+                var orderStats = await _apiService.GetAsync<Core.DTOs.OrderStatisticsDto>("orders/statistics");
+                ViewBag.OrderStats = orderStats ?? new Core.DTOs.OrderStatisticsDto();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error loading user statistics for dashboard");
+                _logger.LogError(ex, "Error loading statistics for dashboard");
                 ViewBag.UserStats = new Core.DTOs.UserStatisticsDto();
+                ViewBag.BookStats = new Core.DTOs.BookStatisticsDto();
+                ViewBag.OrderStats = new Core.DTOs.OrderStatisticsDto();
             }
 
             return View();

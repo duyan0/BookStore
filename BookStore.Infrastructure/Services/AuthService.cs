@@ -236,6 +236,17 @@ namespace BookStore.Infrastructure.Services
             }
         }
 
+        // Test method để debug password hashing
+        public bool TestPasswordHashing(string password, string storedHash)
+        {
+            return VerifyPasswordHash(password, storedHash);
+        }
+
+        public string TestHashPassword(string password)
+        {
+            return HashPassword(password);
+        }
+
         private string HashPassword(string password)
         {
             using var hmac = new HMACSHA512();
@@ -254,14 +265,14 @@ namespace BookStore.Infrastructure.Services
         {
             try
             {
-                // Kiểm tra nếu mật khẩu trùng với hash (cho tài khoản simple)
-                if (storedHash == password)
-                {
-                    return true;
-                }
-
-                // Nếu không trùng, thử xác thực bằng cách hash
+                // Decode the stored hash
                 var hashBytes = Convert.FromBase64String(storedHash);
+
+                // Check if the hash has the expected length (64 bytes salt + 64 bytes hash)
+                if (hashBytes.Length != 128)
+                {
+                    return false;
+                }
 
                 // Extract salt (first 64 bytes)
                 var salt = new byte[64];
@@ -271,7 +282,7 @@ namespace BookStore.Infrastructure.Services
                 using var hmac = new HMACSHA512(salt);
                 var computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
 
-                // Compare computed hash with stored hash
+                // Compare computed hash with stored hash (last 64 bytes)
                 for (int i = 0; i < computedHash.Length; i++)
                 {
                     if (computedHash[i] != hashBytes[64 + i])
@@ -282,11 +293,11 @@ namespace BookStore.Infrastructure.Services
 
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
-                // Nếu có lỗi khi giải mã hash (ví dụ: không phải Base64 hợp lệ),
-                // thử so sánh trực tiếp như một giải pháp cuối cùng
-                return storedHash == password;
+                // Log the error for debugging
+                Console.WriteLine($"Password verification error: {ex.Message}");
+                return false;
             }
         }
 

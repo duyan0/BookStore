@@ -248,8 +248,8 @@ namespace BookStore.API.Controllers
             {
                 var key = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(
                     System.Text.Encoding.UTF8.GetBytes("ThisIsASecretKeyForJwtAuthenticationInBookStoreAPI_VeryVeryLongKeyToSolveIssueWithHmacSha512"));
-                
-                var creds = new Microsoft.IdentityModel.Tokens.SigningCredentials(key, 
+
+                var creds = new Microsoft.IdentityModel.Tokens.SigningCredentials(key,
                     Microsoft.IdentityModel.Tokens.SecurityAlgorithms.HmacSha256);
 
                 var claims = new List<System.Security.Claims.Claim>
@@ -278,6 +278,42 @@ namespace BookStore.API.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        // POST: api/Test/TestPasswordHashing
+        [HttpPost("TestPasswordHashing")]
+        public ActionResult<object> TestPasswordHashing([FromBody] TestPasswordRequest request)
+        {
+            try
+            {
+                var hashedPassword = HashPassword(request.Password);
+                var isValid = VerifyPasswordHash(request.Password, hashedPassword);
+
+                // Test với stored hash nếu có
+                bool isStoredHashValid = false;
+                if (!string.IsNullOrEmpty(request.StoredHash))
+                {
+                    isStoredHashValid = VerifyPasswordHash(request.Password, request.StoredHash);
+                }
+
+                return Ok(new
+                {
+                    OriginalPassword = request.Password,
+                    NewHashedPassword = hashedPassword,
+                    IsNewHashValid = isValid,
+                    StoredHash = request.StoredHash,
+                    IsStoredHashValid = isStoredHashValid,
+                    Message = $"New hash valid: {isValid}, Stored hash valid: {isStoredHashValid}"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    Error = ex.Message,
+                    Message = "Password testing failed"
+                });
             }
         }
 
@@ -323,6 +359,12 @@ namespace BookStore.API.Controllers
         {
             public string Username { get; set; } = string.Empty;
             public string Password { get; set; } = string.Empty;
+        }
+
+        public class TestPasswordRequest
+        {
+            public string Password { get; set; } = string.Empty;
+            public string? StoredHash { get; set; }
         }
     }
 } 

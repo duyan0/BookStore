@@ -14,7 +14,7 @@
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow">
+        <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm border-bottom">
             <div class="container">
                 <a class="navbar-brand fw-bold" asp-area="" asp-controller="Home" asp-action="Index">
                     <i class="fas fa-book me-2"></i>BookStore
@@ -35,50 +35,7 @@
                                 <i class="fas fa-store me-1"></i>Cửa hàng
                             </a>
                         </li>
-                        @* Only show admin menu items if user is admin *@
-                        @if (Context.Session.GetString("IsAdmin") == "True")
-                        {
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" id="booksDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="fas fa-book me-1"></i>Quản lý sách
-                                </a>
-                                <ul class="dropdown-menu" aria-labelledby="booksDropdown">
-                                    <li><a class="dropdown-item" asp-controller="Books" asp-action="Index">
-                                        <i class="fas fa-list me-1"></i>Danh sách sách
-                                    </a></li>
-                                    <li><a class="dropdown-item" asp-controller="Books" asp-action="Create">
-                                        <i class="fas fa-plus me-1"></i>Thêm sách mới
-                                    </a></li>
-                                </ul>
-                            </li>
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" id="authorsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="fas fa-user-edit me-1"></i>Tác giả
-                                </a>
-                                <ul class="dropdown-menu" aria-labelledby="authorsDropdown">
-                                    <li><a class="dropdown-item" asp-controller="Authors" asp-action="Index">
-                                        <i class="fas fa-list me-1"></i>Danh sách tác giả
-                                    </a></li>
-                                    <li><a class="dropdown-item" asp-controller="Authors" asp-action="Create">
-                                        <i class="fas fa-plus me-1"></i>Thêm tác giả mới
-                                    </a></li>
-                                </ul>
-                            </li>
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" id="categoriesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="fas fa-tags me-1"></i>Thể loại
-                                </a>
-                                <ul class="dropdown-menu" aria-labelledby="categoriesDropdown">
-                                    <li><a class="dropdown-item" asp-controller="Categories" asp-action="Index">
-                                        <i class="fas fa-list me-1"></i>Danh sách thể loại
-                                    </a></li>
-                                    <li><a class="dropdown-item" asp-controller="Categories" asp-action="Create">
-                                        <i class="fas fa-plus me-1"></i>Thêm thể loại mới
-                                    </a></li>
-                                </ul>
-                            </li>
-                        }
-                        @* User menu items for non-admin users *@
+                        @* User menu items for non-admin users only *@
                         @if (Context.Session.GetString("Token") != null && Context.Session.GetString("IsAdmin") != "True")
                         {
                             <li class="nav-item">
@@ -92,13 +49,17 @@
                                 </a>
                             </li>
                         }
+                        @* Admin users get a link to admin panel *@
+                        @if (Context.Session.GetString("IsAdmin") == "True")
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="Admin" asp-controller="Home" asp-action="Index">
+                                    <i class="fas fa-cog me-1"></i>Quản trị hệ thống
+                                </a>
+                            </li>
+                        }
                     </ul>
                     <ul class="navbar-nav">
-                        <li class="nav-item">
-                            <a class="nav-link" href="http://localhost:5274/swagger" target="_blank">
-                                <i class="fas fa-code me-1"></i>API Docs
-                            </a>
-                        </li>
                         @if (Context.Session.GetString("Token") != null)
                         {
                             <li class="nav-item dropdown">
@@ -183,21 +144,134 @@
     }
 
     <div class="container">
-        <main role="main" class="pb-3">
+        <main role="main" class="main-content">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted bg-light mt-5">
-        <div class="container py-3">
-            <div class="row">
-                <div class="col-md-6">
-                    <p class="mb-0">&copy; 2025 - BookStore Management System</p>
+    <footer class=" bg-white border-top">
+        <div class="container">
+            <div class="row py-4">
+                <!-- Thông tin công ty -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <h5 class="fw-bold text-black mb-3">
+                        <i class="fas fa-book me-2"></i>BookStore
+                    </h5>
+                    <p class="text-muted mb-3">
+                        Cửa hàng sách trực tuyến hàng đầu Việt Nam với hàng ngàn đầu sách chất lượng cao từ các nhà xuất bản uy tín.
+                    </p>
+                    <div class="d-flex gap-3">
+                        <a href="#" class="text-muted hover-primary">
+                            <i class="fab fa-facebook-f fa-lg"></i>
+                        </a>
+                        <a href="#" class="text-muted hover-primary">
+                            <i class="fab fa-twitter fa-lg"></i>
+                        </a>
+                        <a href="#" class="text-muted hover-primary">
+                            <i class="fab fa-instagram fa-lg"></i>
+                        </a>
+                        <a href="#" class="text-muted hover-primary">
+                            <i class="fab fa-youtube fa-lg"></i>
+                        </a>
+                    </div>
                 </div>
-                <div class="col-md-6 text-end">
-                    <small>
-                        <i class="fas fa-code me-1"></i>
-                        Powered by .NET Core & Bootstrap
+
+                <!-- Liên kết nhanh -->
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h6 class="fw-bold text-black mb-3">Liên kết nhanh</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <a href="@Url.Action("Index", "Home")" class="text-muted text-decoration-none hover-primary">
+                                <i class="fas fa-home me-1"></i>Trang chủ
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="@Url.Action("Index", "Shop")" class="text-muted text-decoration-none hover-primary">
+                                <i class="fas fa-store me-1"></i>Cửa hàng
+                            </a>
+                        </li>
+                        @if (Context.Session.GetString("Token") != null && Context.Session.GetString("IsAdmin") != "True")
+                        {
+                            <li class="mb-2">
+                                <a href="@Url.Action("Dashboard", "User")" class="text-muted text-decoration-none hover-primary">
+                                    <i class="fas fa-user me-1"></i>Tài khoản
+                                </a>
+                            </li>
+                            <li class="mb-2">
+                                <a href="@Url.Action("Cart", "Shop")" class="text-muted text-decoration-none hover-primary">
+                                    <i class="fas fa-shopping-cart me-1"></i>Giỏ hàng
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+
+                <!-- Danh mục sách -->
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <h6 class="fw-bold text-black mb-3">Danh mục sách</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <a href="#" class="text-muted text-decoration-none hover-primary">
+                                <i class="fas fa-book me-1"></i>Văn học
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="#" class="text-muted text-decoration-none hover-primary">
+                                <i class="fas fa-laptop-code me-1"></i>Công nghệ
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="#" class="text-muted text-decoration-none hover-primary">
+                                <i class="fas fa-graduation-cap me-1"></i>Giáo dục
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="#" class="text-muted text-decoration-none hover-primary">
+                                <i class="fas fa-heart me-1"></i>Sức khỏe
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Thông tin liên hệ -->
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <h6 class="fw-bold text-black mb-3">Liên hệ</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2 text-muted">
+                            <i class="fas fa-map-marker-alt me-2"></i>
+                            123 Đường ABC, Quận 1, TP.HCM
+                        </li>
+                        <li class="mb-2 text-muted">
+                            <i class="fas fa-phone me-2"></i>
+                            <a href="tel:+84123456789" class="text-muted text-decoration-none">
+                                +84 123 456 789
+                            </a>
+                        </li>
+                        <li class="mb-2 text-muted">
+                            <i class="fas fa-envelope me-2"></i>
+                            <a href="mailto:info@bookstore.vn" class="text-muted text-decoration-none">
+                                info@bookstore.vn
+                            </a>
+                        </li>
+                        <li class="mb-2 text-muted">
+                            <i class="fas fa-clock me-2"></i>
+                            T2-CN: 8:00 - 22:00
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Copyright -->
+            <div class="row border-top pt-3">
+                <div class="col-md-6">
+                    <p class="mb-0 text-muted">
+                        &copy; 2025 BookStore. Tất cả quyền được bảo lưu.
+                    </p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <small class="text-muted">
+                        <i class="fas fa-shield-alt me-1"></i>
+                        Thanh toán an toàn & Bảo mật thông tin
                     </small>
                 </div>
             </div>

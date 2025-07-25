@@ -12,5 +12,6 @@ namespace BookStore.Core.Interfaces
         Task<IEnumerable<BookDto>> GetBooksByCategoryIdAsync(int categoryId);
         Task<IEnumerable<BookDto>> GetBooksByAuthorIdAsync(int authorId);
         Task<IEnumerable<BookDto>> SearchBooksAsync(string searchTerm);
+        Task<BookStatisticsDto> GetBookStatisticsAsync();
     }
-} 
+}
