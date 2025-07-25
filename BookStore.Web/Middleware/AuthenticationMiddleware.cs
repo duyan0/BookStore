@@ -14,6 +14,7 @@ namespace BookStore.Web.Middleware
             "/account/login",
             "/account/register",
             "/account/logout",
+            "/account/forgotpassword",
             "/debug"
         };
 

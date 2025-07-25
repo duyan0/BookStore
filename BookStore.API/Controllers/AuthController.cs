@@ -238,6 +238,106 @@ namespace BookStore.API.Controllers
             }
         }
 
+        // POST: api/Auth/reset-password
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequestDto request)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(request.Email) && string.IsNullOrEmpty(request.Username))
+                {
+                    return BadRequest(new { message = "Email hoặc username là bắt buộc" });
+                }
+
+                bool result;
+                if (!string.IsNullOrEmpty(request.Email))
+                {
+                    result = await _authService.ResetPasswordAsync(request.Email);
+                }
+                else
+                {
+                    result = await _authService.ResetPasswordByUsernameAsync(request.Username!);
+                }
+
+                if (result)
+                {
+                    return Ok(new { message = "Mật khẩu mới đã được gửi đến email của bạn" });
+                }
+                else
+                {
+                    return NotFound(new { message = "Không tìm thấy tài khoản với thông tin đã cung cấp" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi khi reset mật khẩu", error = ex.Message });
+            }
+        }
+
+        // PUT: api/Auth/users/{id}/avatar
+        [HttpPut("users/{id}/avatar")]
+        [Authorize]
+        public async Task<IActionResult> UpdateUserAvatar(int id, [FromBody] UpdateAvatarDto updateAvatarDto)
+        {
+            try
+            {
+                // Check if user is updating their own avatar or is admin
+                var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                var isAdmin = User.IsInRole("Admin");
+
+                if (!isAdmin && id.ToString() != currentUserId)
+                {
+                    return StatusCode(403, new { message = "Bạn chỉ có thể cập nhật avatar của chính mình" });
+                }
+
+                var result = await _authService.UpdateUserAvatarAsync(id, updateAvatarDto.AvatarUrl);
+
+                if (result)
+                {
+                    return Ok(new { message = "Cập nhật avatar thành công" });
+                }
+                else
+                {
+                    return NotFound(new { message = "Không tìm thấy người dùng" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi khi cập nhật avatar", error = ex.Message });
+            }
+        }
+
+        // POST: api/Auth/change-password
+        [HttpPost("change-password")]
+        [Authorize]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto changePasswordDto)
+        {
+            try
+            {
+                // Get current user ID from token
+                var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+                if (string.IsNullOrEmpty(currentUserId) || !int.TryParse(currentUserId, out int userId))
+                {
+                    return Unauthorized(new { message = "Không thể xác định người dùng" });
+                }
+
+                var result = await _authService.ChangePasswordAsync(userId, changePasswordDto);
+
+                if (result)
+                {
+                    return Ok(new { message = "Đổi mật khẩu thành công. Email thông báo đã được gửi." });
+                }
+                else
+                {
+                    return BadRequest(new { message = "Mật khẩu hiện tại không đúng hoặc có lỗi xảy ra" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi khi đổi mật khẩu", error = ex.Message });
+            }
+        }
 
     }
-} 
+}

@@ -2,8 +2,6 @@ using BookStore.Core.Entities;
 using BookStore.Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace BookStore.API.Controllers
 {
@@ -319,40 +317,14 @@ namespace BookStore.API.Controllers
 
         private string HashPassword(string password)
         {
-            using var hmac = new HMACSHA512();
-            var salt = hmac.Key;
-            var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
-
-            // Combine salt and hash
-            var hashBytes = new byte[salt.Length + hash.Length];
-            Array.Copy(salt, 0, hashBytes, 0, salt.Length);
-            Array.Copy(hash, 0, hashBytes, salt.Length, hash.Length);
-
-            return Convert.ToBase64String(hashBytes);
+            // Store password as plain text (as requested)
+            return password;
         }
 
-        private bool VerifyPasswordHash(string password, string storedHash)
+        private bool VerifyPasswordHash(string password, string storedPassword)
         {
-            var hashBytes = Convert.FromBase64String(storedHash);
-
-            // Extract salt (first 64 bytes)
-            var salt = new byte[64];
-            Array.Copy(hashBytes, 0, salt, 0, 64);
-
-            // Create hmac with the same salt
-            using var hmac = new HMACSHA512(salt);
-            var computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
-
-            // Compare computed hash with stored hash
-            for (int i = 0; i < computedHash.Length; i++)
-            {
-                if (computedHash[i] != hashBytes[64 + i])
-                {
-                    return false;
-                }
-            }
-
-            return true;
+            // Simple plain text comparison (as requested)
+            return password == storedPassword;
         }
 
         public class LoginDto

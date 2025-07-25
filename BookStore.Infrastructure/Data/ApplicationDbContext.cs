@@ -1,4 +1,5 @@
 using BookStore.Core.Entities;
+using BookStore.Core.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace BookStore.Infrastructure.Data
@@ -16,6 +17,8 @@ namespace BookStore.Infrastructure.Data
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderDetail> OrderDetails { get; set; }
         public DbSet<Review> Reviews { get; set; }
+        public DbSet<Slider> Sliders { get; set; }
+        public DbSet<Banner> Banners { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -80,11 +83,11 @@ namespace BookStore.Infrastructure.Data
 
                 if (entityEntry.State == EntityState.Added)
                 {
-                    entity.CreatedAt = DateTime.UtcNow;
+                    entity.CreatedAt = BookStore.Core.Extensions.DateTimeExtensions.GetVietnamNow();
                 }
-                else
+                else if (entityEntry.State == EntityState.Modified)
                 {
-                    entity.UpdatedAt = DateTime.UtcNow;
+                    entity.UpdatedAt = BookStore.Core.Extensions.DateTimeExtensions.GetVietnamNow();
                 }
             }
 

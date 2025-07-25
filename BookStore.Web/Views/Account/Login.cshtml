@@ -22,7 +22,7 @@
                                 <span class="input-group-text">
                                     <i class="fas fa-user"></i>
                                 </span>
-                                <input asp-for="Username" class="form-control" placeholder="Nhập tên đăng nhập" />
+                                <input asp-for="Username" class="form-control" placeholder="Nhập email hoặc tên đăng nhập" />
                             </div>
                             <span asp-validation-for="Username" class="text-danger"></span>
                         </div>
@@ -54,6 +54,11 @@
                     </form>
                 </div>
                 <div class="card-footer text-center">
+                    <div class="mb-2">
+                        <a asp-action="ForgotPassword" class="text-decoration-none text-muted">
+                            <i class="fas fa-key me-1"></i>Quên mật khẩu?
+                        </a>
+                    </div>
                     <p class="mb-0">
                         Chưa có tài khoản?
                         <a asp-action="Register" class="text-decoration-none">

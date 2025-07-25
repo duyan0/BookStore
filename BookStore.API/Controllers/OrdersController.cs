@@ -169,6 +169,60 @@ namespace BookStore.API.Controllers
             }
         }
 
+        // PUT: api/Orders/5/cancel
+        [HttpPut("{id}/cancel")]
+        [Authorize]
+        public async Task<IActionResult> CancelOrder(int id, [FromBody] CancelOrderDto cancelDto)
+        {
+            try
+            {
+                // Get current user ID from token
+                var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                var isAdmin = User.IsInRole("Admin");
+
+                // Check if user can cancel this order
+                var order = await _orderService.GetOrderByIdAsync(id);
+                if (order == null)
+                {
+                    return NotFound();
+                }
+
+                if (!isAdmin && order.UserId.ToString() != currentUserId)
+                {
+                    return Forbid();
+                }
+
+                var result = await _orderService.CancelOrderAsync(id, cancelDto.CancellationReason);
+
+                if (!result)
+                {
+                    return BadRequest(new { message = "Không thể hủy đơn hàng này. Đơn hàng có thể đã được xử lý hoặc hoàn thành." });
+                }
+
+                return Ok(new { message = "Đơn hàng đã được hủy thành công" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        // POST: api/Orders/test-email-notifications
+        [HttpPost("test-email-notifications")]
+        [AllowAnonymous]
+        public async Task<IActionResult> TestEmailNotifications()
+        {
+            try
+            {
+                await BookStore.API.TestEmailNotifications.RunEmailTests(HttpContext.RequestServices);
+                return Ok(new { message = "Email notification tests completed. Check console logs for results." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
         // DELETE: api/Orders/5
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
@@ -188,6 +242,37 @@ namespace BookStore.API.Controllers
             catch (Exception ex)
             {
                 return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        // POST: api/Orders/{id}/reorder
+        [HttpPost("{id}/reorder")]
+        [Authorize]
+        public async Task<ActionResult<ReorderResultDto>> ReorderAsync(int id)
+        {
+            try
+            {
+                // Get current user ID from token
+                var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                if (!int.TryParse(userIdClaim, out int userId))
+                {
+                    return Unauthorized(new { message = "Invalid user token" });
+                }
+
+                var result = await _orderService.ReorderAsync(id, userId);
+
+                if (result.Success)
+                {
+                    return Ok(result);
+                }
+                else
+                {
+                    return BadRequest(result);
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error processing reorder", error = ex.Message });
             }
         }
     }

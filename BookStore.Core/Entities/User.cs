@@ -27,6 +27,9 @@ namespace BookStore.Core.Entities
         [StringLength(200)]
         public string Address { get; set; } = string.Empty;
 
+        [StringLength(255)]
+        public string? AvatarUrl { get; set; }
+
         public bool IsAdmin { get; set; } = false;
 
         public ICollection<Order> Orders { get; set; } = new List<Order>();

@@ -1,0 +1,190 @@
+@using BookStore.Core.DTOs
+@model CreateSliderDto
+@{
+    ViewData["Title"] = "Tạo Slider";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="fas fa-plus me-2 text-success"></i>Tạo Slider mới
+                </h2>
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Quay lại
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Thông tin Slider
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Title" class="form-label">Tiêu đề <span class="text-danger">*</span></label>
+                                    <input asp-for="Title" class="form-control" placeholder="Nhập tiêu đề slider">
+                                    <span asp-validation-for="Title" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="DisplayOrder" class="form-label">Thứ tự hiển thị</label>
+                                    <input asp-for="DisplayOrder" class="form-control" type="number" min="0" max="999">
+                                    <span asp-validation-for="DisplayOrder" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label">Mô tả</label>
+                            <textarea asp-for="Description" class="form-control" rows="3" placeholder="Nhập mô tả slider"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="ImageUrl" class="form-label">URL hình ảnh <span class="text-danger">*</span></label>
+                            <input asp-for="ImageUrl" class="form-control" placeholder="https://example.com/image.jpg">
+                            <span asp-validation-for="ImageUrl" class="text-danger"></span>
+                            <div class="form-text">Khuyến nghị kích thước: 1200x400px</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="LinkUrl" class="form-label">URL liên kết</label>
+                            <input asp-for="LinkUrl" class="form-control" placeholder="https://example.com">
+                            <span asp-validation-for="LinkUrl" class="text-danger"></span>
+                            <div class="form-text">URL sẽ được mở khi người dùng click vào slider</div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="ButtonText" class="form-label">Text nút</label>
+                                    <input asp-for="ButtonText" class="form-control" placeholder="Xem thêm">
+                                    <span asp-validation-for="ButtonText" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="ButtonStyle" class="form-label">Kiểu nút</label>
+                                    <select asp-for="ButtonStyle" class="form-select">
+                                        <option value="primary">Primary (Xanh dương)</option>
+                                        <option value="secondary">Secondary (Xám)</option>
+                                        <option value="success">Success (Xanh lá)</option>
+                                        <option value="danger">Danger (Đỏ)</option>
+                                        <option value="warning">Warning (Vàng)</option>
+                                        <option value="info">Info (Xanh nhạt)</option>
+                                        <option value="light">Light (Trắng)</option>
+                                        <option value="dark">Dark (Đen)</option>
+                                    </select>
+                                    <span asp-validation-for="ButtonStyle" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input asp-for="IsActive" class="form-check-input" type="checkbox" checked>
+                                <label asp-for="IsActive" class="form-check-label">
+                                    Kích hoạt slider
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a asp-action="Index" class="btn btn-secondary me-md-2">
+                                <i class="fas fa-times me-1"></i>Hủy
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save me-1"></i>Tạo Slider
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-eye me-2"></i>Xem trước
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="preview-container">
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-image fa-3x mb-3"></i>
+                            <p>Nhập URL hình ảnh để xem trước</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow mt-3">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Hướng dẫn
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Kích thước khuyến nghị: 1200x400px
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Định dạng: JPG, PNG, WebP
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Thứ tự hiển thị: 0 = đầu tiên
+                        </li>
+                        <li>
+                            <i class="fas fa-check text-success me-2"></i>
+                            Slider sẽ hiển thị trên trang chủ
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('ImageUrl').addEventListener('input', function() {
+            const imageUrl = this.value;
+            const previewContainer = document.getElementById('preview-container');
+            
+            if (imageUrl) {
+                previewContainer.innerHTML = `
+                    <img src="${imageUrl}" class="img-fluid rounded" alt="Preview" 
+                         style="max-height: 200px; width: 100%; object-fit: cover;"
+                         onerror="this.parentElement.innerHTML='<div class=\\'text-center text-danger py-4\\'><i class=\\'fas fa-exclamation-triangle fa-3x mb-3\\'></i><p>Không thể tải hình ảnh</p></div>'">
+                `;
+            } else {
+                previewContainer.innerHTML = `
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-image fa-3x mb-3"></i>
+                        <p>Nhập URL hình ảnh để xem trước</p>
+                    </div>
+                `;
+            }
+        });
+    </script>
+}
+
+@section ValidationScripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

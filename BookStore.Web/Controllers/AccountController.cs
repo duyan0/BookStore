@@ -63,6 +63,12 @@ namespace BookStore.Web.Controllers
                         HttpContext.Session.SetString("FullName", response.User.FullName);
                         HttpContext.Session.SetString("IsAdmin", response.User.IsAdmin.ToString());
                         HttpContext.Session.SetInt32("UserId", response.User.Id);
+
+                        // Set AvatarUrl in session if available
+                        if (!string.IsNullOrEmpty(response.User.AvatarUrl))
+                        {
+                            HttpContext.Session.SetString("AvatarUrl", response.User.AvatarUrl);
+                        }
                     }
                     else
                     {
@@ -217,10 +223,147 @@ namespace BookStore.Web.Controllers
                 Username = HttpContext.Session.GetString("Username"),
                 FullName = HttpContext.Session.GetString("FullName"),
                 IsAdmin = HttpContext.Session.GetString("IsAdmin") == "true",
-                UserId = HttpContext.Session.GetInt32("UserId")
+                UserId = HttpContext.Session.GetInt32("UserId"),
+                AvatarUrl = HttpContext.Session.GetString("AvatarUrl")
             };
 
             return View(userInfo);
+        }
+
+        // POST: Account/UploadAvatar
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UploadAvatar(IFormFile avatarFile)
+        {
+            if (!IsUserLoggedIn())
+            {
+                return RedirectToAction("Login");
+            }
+
+            if (avatarFile == null || avatarFile.Length == 0)
+            {
+                TempData["Error"] = "Vui lòng chọn một file ảnh.";
+                return RedirectToAction("Profile");
+            }
+
+            // Validate file type
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+            var fileExtension = Path.GetExtension(avatarFile.FileName).ToLowerInvariant();
+
+            if (!allowedExtensions.Contains(fileExtension))
+            {
+                TempData["Error"] = "Chỉ chấp nhận file ảnh có định dạng: JPG, JPEG, PNG, GIF, WEBP.";
+                return RedirectToAction("Profile");
+            }
+
+            // Validate file size (max 5MB)
+            if (avatarFile.Length > 5 * 1024 * 1024)
+            {
+                TempData["Error"] = "Kích thước file không được vượt quá 5MB.";
+                return RedirectToAction("Profile");
+            }
+
+            try
+            {
+                // Create avatars directory if it doesn't exist
+                var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "avatars");
+                if (!Directory.Exists(uploadsPath))
+                {
+                    Directory.CreateDirectory(uploadsPath);
+                }
+
+                // Generate unique filename
+                var userId = HttpContext.Session.GetInt32("UserId");
+                var fileName = $"avatar_{userId}_{Guid.NewGuid()}{fileExtension}";
+                var filePath = Path.Combine(uploadsPath, fileName);
+
+                // Delete old avatar if exists
+                var oldAvatarUrl = HttpContext.Session.GetString("AvatarUrl");
+                if (!string.IsNullOrEmpty(oldAvatarUrl))
+                {
+                    var oldFileName = Path.GetFileName(oldAvatarUrl);
+                    var oldFilePath = Path.Combine(uploadsPath, oldFileName);
+                    if (System.IO.File.Exists(oldFilePath))
+                    {
+                        System.IO.File.Delete(oldFilePath);
+                    }
+                }
+
+                // Save new avatar
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await avatarFile.CopyToAsync(stream);
+                }
+
+                // Update avatar URL in session
+                var avatarUrl = $"/uploads/avatars/{fileName}";
+                HttpContext.Session.SetString("AvatarUrl", avatarUrl);
+
+                // Update avatar URL in database via API
+                try
+                {
+                    var updateData = new { AvatarUrl = avatarUrl };
+                    await _apiService.PutAsync<object>($"auth/users/{userId}/avatar", updateData);
+                }
+                catch (Exception)
+                {
+                    // If API call fails, we still have the file uploaded locally
+                    // The avatar will work for this session
+                }
+
+                TempData["Success"] = "Cập nhật ảnh đại diện thành công!";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Có lỗi xảy ra khi tải lên ảnh: {ex.Message}";
+            }
+
+            return RedirectToAction("Profile");
+        }
+
+        // GET: Account/ForgotPassword
+        public IActionResult ForgotPassword()
+        {
+            return View();
+        }
+
+        // POST: Account/ForgotPassword
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ForgotPassword(string emailOrUsername)
+        {
+            if (string.IsNullOrEmpty(emailOrUsername))
+            {
+                TempData["Error"] = "Vui lòng nhập email hoặc tên đăng nhập.";
+                return View();
+            }
+
+            try
+            {
+                var requestData = new
+                {
+                    Email = emailOrUsername.Contains("@") ? emailOrUsername : null,
+                    Username = !emailOrUsername.Contains("@") ? emailOrUsername : null
+                };
+
+                var response = await _apiService.PostAsync<object>("auth/reset-password", requestData);
+
+                if (response != null)
+                {
+                    TempData["Success"] = "Mật khẩu mới đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư.";
+                    return RedirectToAction("Login");
+                }
+                else
+                {
+                    TempData["Error"] = "Không tìm thấy tài khoản với thông tin đã cung cấp.";
+                }
+            }
+            catch (Exception)
+            {
+                TempData["Error"] = "Có lỗi xảy ra khi gửi yêu cầu. Vui lòng thử lại sau.";
+            }
+
+            return View();
         }
 
         // Helper method to check if user is logged in
@@ -301,6 +444,66 @@ namespace BookStore.Web.Controllers
             {
                 _logger.LogError(ex, "Error extracting info from JWT token");
                 return ("", "", false, 0);
+            }
+        }
+
+        // GET: Account/ChangePassword
+        [HttpGet]
+        public IActionResult ChangePassword()
+        {
+            // Check if user is logged in
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null)
+            {
+                return RedirectToAction("Login");
+            }
+
+            return View(new ChangePasswordViewModel());
+        }
+
+        // POST: Account/ChangePassword
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
+        {
+            // Check if user is logged in
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null)
+            {
+                return RedirectToAction("Login");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            try
+            {
+                var changePasswordDto = new ChangePasswordDto
+                {
+                    CurrentPassword = model.CurrentPassword,
+                    NewPassword = model.NewPassword,
+                    ConfirmNewPassword = model.ConfirmNewPassword
+                };
+
+                var response = await _apiService.PostAsync<object>("auth/change-password", changePasswordDto);
+
+                if (response != null)
+                {
+                    TempData["Success"] = "Đổi mật khẩu thành công! Email thông báo đã được gửi đến địa chỉ email của bạn.";
+                    return RedirectToAction("Profile");
+                }
+                else
+                {
+                    ModelState.AddModelError("", "Mật khẩu hiện tại không đúng hoặc có lỗi xảy ra.");
+                    return View(model);
+                }
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", $"Có lỗi xảy ra: {ex.Message}");
+                return View(model);
             }
         }
 

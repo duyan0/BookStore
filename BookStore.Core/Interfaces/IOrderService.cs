@@ -13,5 +13,7 @@ namespace BookStore.Core.Interfaces
         Task<OrderStatisticsDto> GetOrderStatisticsAsync();
         Task<IEnumerable<OrderDto>> GetOrdersByStatusAsync(string status);
         Task<bool> UpdateOrderStatusAsync(int id, string status);
+        Task<bool> CancelOrderAsync(int id, string cancellationReason);
+        Task<ReorderResultDto> ReorderAsync(int orderId, int userId);
     }
 }

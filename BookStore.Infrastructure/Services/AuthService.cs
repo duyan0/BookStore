@@ -2,11 +2,11 @@ using AutoMapper;
 using BookStore.Core.DTOs;
 using BookStore.Core.Entities;
 using BookStore.Core.Interfaces;
+using BookStore.Core.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Security.Cryptography;
 using System.Text;
 
 namespace BookStore.Infrastructure.Services
@@ -16,28 +16,56 @@ namespace BookStore.Infrastructure.Services
         private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
         private readonly IConfiguration _configuration;
+        private readonly IEmailService _emailService;
 
         public AuthService(
             IUserRepository userRepository,
             IMapper mapper,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IEmailService emailService)
         {
             _userRepository = userRepository;
             _mapper = mapper;
             _configuration = configuration;
+            _emailService = emailService;
         }
 
         public async Task<AuthResponseDto> LoginAsync(LoginUserDto loginDto)
         {
             try
             {
-                var user = await _userRepository.GetByUsernameAsync(loginDto.Username);
+                // Try to find user by username first, then by email
+                User? user = null;
+
+                // Check if the input looks like an email
+                if (loginDto.Username.Contains("@"))
+                {
+                    user = await _userRepository.GetByEmailAsync(loginDto.Username);
+                }
+                else
+                {
+                    user = await _userRepository.GetByUsernameAsync(loginDto.Username);
+                }
+
+                // If not found by the primary method, try the other method
+                if (user == null)
+                {
+                    if (loginDto.Username.Contains("@"))
+                    {
+                        user = await _userRepository.GetByUsernameAsync(loginDto.Username);
+                    }
+                    else
+                    {
+                        user = await _userRepository.GetByEmailAsync(loginDto.Username);
+                    }
+                }
+
                 if (user == null)
                 {
                     return new AuthResponseDto
                     {
                         Success = false,
-                        Message = "Invalid username or password"
+                        Message = "Email/Tên đăng nhập hoặc mật khẩu không đúng"
                     };
                 }
 
@@ -46,7 +74,7 @@ namespace BookStore.Infrastructure.Services
                     return new AuthResponseDto
                     {
                         Success = false,
-                        Message = "Invalid username or password"
+                        Message = "Email/Tên đăng nhập hoặc mật khẩu không đúng"
                     };
                 }
 
@@ -56,7 +84,7 @@ namespace BookStore.Infrastructure.Services
                 return new AuthResponseDto
                 {
                     Success = true,
-                    Message = "Login successful",
+                    Message = "Đăng nhập thành công",
                     Token = token,
                     User = userDto
                 };
@@ -66,7 +94,7 @@ namespace BookStore.Infrastructure.Services
                 return new AuthResponseDto
                 {
                     Success = false,
-                    Message = $"Login failed: {ex.Message}"
+                    Message = $"Đăng nhập thất bại: {ex.Message}"
                 };
             }
         }
@@ -249,56 +277,14 @@ namespace BookStore.Infrastructure.Services
 
         private string HashPassword(string password)
         {
-            using var hmac = new HMACSHA512();
-            var salt = hmac.Key;
-            var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
-
-            // Combine salt and hash
-            var hashBytes = new byte[salt.Length + hash.Length];
-            Array.Copy(salt, 0, hashBytes, 0, salt.Length);
-            Array.Copy(hash, 0, hashBytes, salt.Length, hash.Length);
-
-            return Convert.ToBase64String(hashBytes);
+            // Store password as plain text (as requested)
+            return password;
         }
 
-        private bool VerifyPasswordHash(string password, string storedHash)
+        private bool VerifyPasswordHash(string password, string storedPassword)
         {
-            try
-            {
-                // Decode the stored hash
-                var hashBytes = Convert.FromBase64String(storedHash);
-
-                // Check if the hash has the expected length (64 bytes salt + 64 bytes hash)
-                if (hashBytes.Length != 128)
-                {
-                    return false;
-                }
-
-                // Extract salt (first 64 bytes)
-                var salt = new byte[64];
-                Array.Copy(hashBytes, 0, salt, 0, 64);
-
-                // Create hmac with the same salt
-                using var hmac = new HMACSHA512(salt);
-                var computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
-
-                // Compare computed hash with stored hash (last 64 bytes)
-                for (int i = 0; i < computedHash.Length; i++)
-                {
-                    if (computedHash[i] != hashBytes[64 + i])
-                    {
-                        return false;
-                    }
-                }
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                // Log the error for debugging
-                Console.WriteLine($"Password verification error: {ex.Message}");
-                return false;
-            }
+            // Simple plain text comparison (as requested)
+            return password == storedPassword;
         }
 
         private string GenerateJwtToken(User user)
@@ -334,5 +320,136 @@ namespace BookStore.Infrastructure.Services
 
             return tokenHandler.WriteToken(token);
         }
+
+        public async Task<bool> ResetPasswordAsync(string email)
+        {
+            try
+            {
+                var user = await _userRepository.GetUserByEmailAsync(email);
+                if (user == null)
+                {
+                    return false; // User not found
+                }
+
+                // Generate new random password
+                var newPassword = GenerateRandomPassword();
+
+                // Update user password
+                user.PasswordHash = HashPassword(newPassword);
+                await _userRepository.UpdateAsync(user);
+
+                // Send email with new password
+                var emailSent = await _emailService.SendPasswordResetEmailAsync(user.Email, newPassword, user.Username);
+
+                return emailSent;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> ResetPasswordByUsernameAsync(string username)
+        {
+            try
+            {
+                var user = await _userRepository.GetUserByUsernameAsync(username);
+                if (user == null)
+                {
+                    return false; // User not found
+                }
+
+                // Generate new random password
+                var newPassword = GenerateRandomPassword();
+
+                // Update user password
+                user.PasswordHash = HashPassword(newPassword);
+                await _userRepository.UpdateAsync(user);
+
+                // Send email with new password
+                var emailSent = await _emailService.SendPasswordResetEmailAsync(user.Email, newPassword, user.Username);
+
+                return emailSent;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        private string GenerateRandomPassword(int length = 8)
+        {
+            const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+            var random = new Random();
+            var password = new char[length];
+
+            for (int i = 0; i < length; i++)
+            {
+                password[i] = chars[random.Next(chars.Length)];
+            }
+
+            return new string(password);
+        }
+
+        public async Task<bool> UpdateUserAvatarAsync(int userId, string avatarUrl)
+        {
+            try
+            {
+                var user = await _userRepository.GetByIdAsync(userId);
+                if (user == null)
+                {
+                    return false;
+                }
+
+                user.AvatarUrl = avatarUrl;
+                await _userRepository.UpdateAsync(user);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> ChangePasswordAsync(int userId, ChangePasswordDto changePasswordDto)
+        {
+            try
+            {
+                var user = await _userRepository.GetByIdAsync(userId);
+                if (user == null)
+                {
+                    return false;
+                }
+
+                // Verify current password
+                if (!VerifyPasswordHash(changePasswordDto.CurrentPassword, user.PasswordHash))
+                {
+                    return false;
+                }
+
+                // Hash new password
+                user.PasswordHash = HashPassword(changePasswordDto.NewPassword);
+                user.UpdatedAt = DateTime.UtcNow;
+
+                await _userRepository.UpdateAsync(user);
+
+                // Send email notification about password change
+                try
+                {
+                    await _emailService.SendPasswordChangeNotificationAsync(user.Email, user.FirstName);
+                }
+                catch (Exception)
+                {
+                    // Log email error but don't fail the password change
+                    // Password change succeeded, email notification failed
+                }
+
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
     }
-} 
+}

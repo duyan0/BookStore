@@ -36,6 +36,10 @@ namespace BookStore.Web.Areas.Admin.Controllers
                 // Get order statistics for dashboard
                 var orderStats = await _apiService.GetAsync<Core.DTOs.OrderStatisticsDto>("orders/statistics");
                 ViewBag.OrderStats = orderStats ?? new Core.DTOs.OrderStatisticsDto();
+
+                // Get recent orders for dashboard
+                var recentOrders = await _apiService.GetAsync<List<Core.DTOs.OrderDto>>("orders");
+                ViewBag.RecentOrders = recentOrders?.Take(10).OrderByDescending(o => o.OrderDate).ToList() ?? new List<Core.DTOs.OrderDto>();
             }
             catch (Exception ex)
             {

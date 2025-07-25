@@ -87,7 +87,17 @@
                             <div class="sb-nav-link-icon"><i class="fas fa-users"></i></div>
                             Người dùng
                         </a>
-                        
+
+                        <div class="sb-sidenav-menu-heading">Nội dung</div>
+                        <a class="nav-link" asp-area="Admin" asp-controller="Sliders" asp-action="Index">
+                            <div class="sb-nav-link-icon"><i class="fas fa-images"></i></div>
+                            Slider
+                        </a>
+                        <a class="nav-link" asp-area="Admin" asp-controller="Banners" asp-action="Index">
+                            <div class="sb-nav-link-icon"><i class="fas fa-ad"></i></div>
+                            Banner
+                        </a>
+
                         <div class="sb-sidenav-menu-heading">Báo cáo</div>
                         <a class="nav-link disabled" asp-area="#" asp-controller="#" asp-action="Sales">
                             <div class="sb-nav-link-icon"><i class="fas fa-chart-line"></i></div>
@@ -129,5 +139,6 @@
     <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
     <script src="~/js/admin-scripts.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
+    @await RenderSectionAsync("ValidationScripts", required: false)
 </body>
-</html> 
+</html>

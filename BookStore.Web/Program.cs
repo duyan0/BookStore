@@ -20,6 +20,7 @@ builder.Services.AddSession(options =>
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 builder.Services.AddScoped<ApiService>();
+builder.Services.AddScoped<BookStore.Core.Services.ITimezoneService, BookStore.Infrastructure.Services.TimezoneService>();
 
 var app = builder.Build();
 

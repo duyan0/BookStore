@@ -1,0 +1,330 @@
+@using BookStore.Core.DTOs
+@using BookStore.Web.Models
+@model IEnumerable<BookViewModel>
+@{
+    var books = Model?.ToList() ?? new List<BookViewModel>();
+    var gridClass = ViewBag.GridClass ?? "books-grid-5"; // Default 5-column grid
+    var showPagination = ViewBag.ShowPagination ?? false;
+    var paginationModel = ViewBag.PaginationModel;
+}
+
+<div class="books-container">
+    @if (books.Any())
+    {
+        <!-- Books Grid -->
+        <div class="row @gridClass" id="booksGrid">
+            @foreach (var book in books)
+            {
+                <div class="book-grid-item">
+                    @await Html.PartialAsync("_BookCard", book)
+                </div>
+            }
+        </div>
+        
+        <!-- Pagination -->
+        @if (showPagination && paginationModel != null)
+        {
+            <div class="row mt-4">
+                <div class="col-12">
+                    <!-- Simple pagination placeholder - implement later -->
+                    <nav aria-label="Phân trang">
+                        <p class="text-center text-muted">Pagination will be implemented</p>
+                    </nav>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <!-- Empty State -->
+        <div class="row">
+            <div class="col-12">
+                <div class="empty-state text-center py-5">
+                    <div class="empty-state-icon mb-4">
+                        <i class="fas fa-search fa-5x text-muted"></i>
+                    </div>
+                    <h4 class="empty-state-title text-muted mb-3">Không tìm thấy sách nào</h4>
+                    <p class="empty-state-description text-muted mb-4">
+                        @(ViewBag.EmptyMessage ?? "Hãy thử tìm kiếm với từ khóa khác hoặc xóa bộ lọc")
+                    </p>
+                    <div class="empty-state-actions">
+                        <a href="@Url.Action("Index", "Shop")" class="btn btn-primary me-2">
+                            <i class="fas fa-refresh me-1"></i>Xem tất cả sách
+                        </a>
+                        @if (!string.IsNullOrEmpty(ViewBag.SearchTerm?.ToString()) || ViewBag.SelectedCategoryId != null)
+                        {
+                            <a href="@Url.Action("Index", "Shop")" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i>Xóa bộ lọc
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+
+.books-container {
+    margin: 0 -0.5rem;
+}
+
+/* 5-column grid (default) */
+.books-grid-5 .book-grid-item {
+    width: 20%;
+    padding: 0.5rem;
+}
+
+/* 4-column grid */
+.books-grid-4 .book-grid-item {
+    width: 25%;
+    padding: 0.5rem;
+}
+
+/* 3-column grid */
+.books-grid-3 .book-grid-item {
+    width: 33.333333%;
+    padding: 0.5rem;
+}
+
+/* 2-column grid */
+.books-grid-2 .book-grid-item {
+    width: 50%;
+    padding: 0.5rem;
+}
+
+/* Responsive Grid Breakpoints */
+@@media (max-width: 575.98px) {
+    /* Mobile: 1-2 columns */
+    .books-grid-5 .book-grid-item,
+    .books-grid-4 .book-grid-item,
+    .books-grid-3 .book-grid-item {
+        width: 50%; /* 2 columns on mobile */
+    }
+    
+    .books-grid-2 .book-grid-item {
+        width: 100%; /* 1 column for 2-grid on mobile */
+    }
+}
+
+@@media (min-width: 576px) and (max-width: 767.98px) {
+    /* Small tablets: 2-3 columns */
+    .books-grid-5 .book-grid-item,
+    .books-grid-4 .book-grid-item {
+        width: 33.333333%; /* 3 columns */
+    }
+    
+    .books-grid-3 .book-grid-item {
+        width: 50%; /* 2 columns */
+    }
+    
+    .books-grid-2 .book-grid-item {
+        width: 50%; /* 2 columns */
+    }
+}
+
+@@media (min-width: 768px) and (max-width: 991.98px) {
+    /* Tablets: 3-4 columns */
+    .books-grid-5 .book-grid-item {
+        width: 25%; /* 4 columns */
+    }
+    
+    .books-grid-4 .book-grid-item {
+        width: 33.333333%; /* 3 columns */
+    }
+    
+    .books-grid-3 .book-grid-item {
+        width: 33.333333%; /* 3 columns */
+    }
+    
+    .books-grid-2 .book-grid-item {
+        width: 50%; /* 2 columns */
+    }
+}
+
+@@media (min-width: 992px) and (max-width: 1199.98px) {
+    /* Desktop: 4-5 columns */
+    .books-grid-5 .book-grid-item {
+        width: 20%; /* 5 columns */
+    }
+    
+    .books-grid-4 .book-grid-item {
+        width: 25%; /* 4 columns */
+    }
+    
+    .books-grid-3 .book-grid-item {
+        width: 33.333333%; /* 3 columns */
+    }
+    
+    .books-grid-2 .book-grid-item {
+        width: 50%; /* 2 columns */
+    }
+}
+
+@@media (min-width: 1200px) {
+    /* Large Desktop: Full grid */
+    .books-grid-5 .book-grid-item {
+        width: 20%; /* 5 columns */
+    }
+    
+    .books-grid-4 .book-grid-item {
+        width: 25%; /* 4 columns */
+    }
+    
+    .books-grid-3 .book-grid-item {
+        width: 33.333333%; /* 3 columns */
+    }
+    
+    .books-grid-2 .book-grid-item {
+        width: 50%; /* 2 columns */
+    }
+}
+
+/* Empty State Styling */
+.empty-state {
+    padding: 4rem 2rem;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    border: 1px solid #dee2e6;
+}
+
+.empty-state-icon {
+    opacity: 0.6;
+}
+
+.empty-state-title {
+    font-weight: 600;
+    color: #495057;
+}
+
+.empty-state-description {
+    font-size: 1.1rem;
+    color: #6c757d;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.empty-state-actions .btn {
+    min-width: 140px;
+}
+
+/* Grid Animation */
+.book-grid-item {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+.book-grid-item:nth-child(1) { animation-delay: 0.1s; }
+.book-grid-item:nth-child(2) { animation-delay: 0.2s; }
+.book-grid-item:nth-child(3) { animation-delay: 0.3s; }
+.book-grid-item:nth-child(4) { animation-delay: 0.4s; }
+.book-grid-item:nth-child(5) { animation-delay: 0.5s; }
+.book-grid-item:nth-child(n+6) { animation-delay: 0.6s; }
+
+@@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Loading State */
+.books-loading {
+    text-align: center;
+    padding: 3rem;
+}
+
+.books-loading .spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+
+/* Grid View Toggle Buttons */
+.grid-view-controls {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.grid-view-btn {
+    padding: 0.5rem;
+    border: 1px solid #dee2e6;
+    background: #ffffff;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #6c757d;
+}
+
+.grid-view-btn:hover {
+    background: #f8f9fa;
+    color: #495057;
+}
+
+.grid-view-btn.active {
+    background: #007bff;
+    color: #ffffff;
+    border-color: #007bff;
+}
+
+.grid-view-btn i {
+    font-size: 0.9rem;
+}
+
+/* Responsive Grid Controls */
+@@media (max-width: 767.98px) {
+    .grid-view-controls {
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+    
+    .empty-state {
+        padding: 2rem 1rem;
+    }
+    
+    .empty-state-icon i {
+        font-size: 3rem !important;
+    }
+    
+    .empty-state-title {
+        font-size: 1.25rem;
+    }
+    
+    .empty-state-description {
+        font-size: 1rem;
+    }
+}
+</style>
+
+<script>
+// Grid View Controls
+function changeGridView(columns) {
+    const grid = document.getElementById('booksGrid');
+    if (grid) {
+        // Remove existing grid classes
+        grid.classList.remove('books-grid-2', 'books-grid-3', 'books-grid-4', 'books-grid-5');
+        
+        // Add new grid class
+        grid.classList.add(`books-grid-${columns}`);
+        
+        // Update active button
+        document.querySelectorAll('.grid-view-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelector(`[data-columns="${columns}"]`)?.classList.add('active');
+        
+        // Save preference to localStorage
+        localStorage.setItem('bookGridColumns', columns);
+    }
+}
+
+// Load saved grid preference
+document.addEventListener('DOMContentLoaded', function() {
+    const savedColumns = localStorage.getItem('bookGridColumns');
+    if (savedColumns) {
+        changeGridView(parseInt(savedColumns));
+    }
+});
+</script>

@@ -49,6 +49,8 @@ builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IAuthorRepository, AuthorRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<ISliderRepository, SliderRepository>();
+builder.Services.AddScoped<IBannerRepository, BannerRepository>();
 
 // Configure services
 builder.Services.AddScoped<IBookService, BookService>();
@@ -57,6 +59,10 @@ builder.Services.AddScoped<IAuthorService, AuthorService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<ISliderService, SliderService>();
+builder.Services.AddScoped<IBannerService, BannerService>();
+builder.Services.AddScoped<BookStore.Core.Services.ITimezoneService, TimezoneService>();
+builder.Services.AddScoped<BookStore.Core.Services.IEmailService, BookStore.Infrastructure.Services.EmailService>();
 
 // Configure JWT Authentication
 builder.Services.AddAuthentication(options =>

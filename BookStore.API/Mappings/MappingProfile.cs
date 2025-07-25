@@ -42,6 +42,16 @@ namespace BookStore.API.Mappings
                 .ForMember(dest => dest.BookTitle, opt => opt.MapFrom(src => src.Book != null ? src.Book.Title : string.Empty))
                 .ForMember(dest => dest.BookImageUrl, opt => opt.MapFrom(src => src.Book != null ? src.Book.ImageUrl : string.Empty));
             CreateMap<CreateOrderDetailDto, OrderDetail>();
+
+            // Slider mappings
+            CreateMap<Slider, SliderDto>();
+            CreateMap<CreateSliderDto, Slider>();
+            CreateMap<UpdateSliderDto, Slider>();
+
+            // Banner mappings
+            CreateMap<Banner, BannerDto>();
+            CreateMap<CreateBannerDto, Banner>();
+            CreateMap<UpdateBannerDto, Banner>();
         }
     }
-} 
+}

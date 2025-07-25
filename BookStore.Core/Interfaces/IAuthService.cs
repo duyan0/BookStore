@@ -13,5 +13,9 @@ namespace BookStore.Core.Interfaces
         Task<UserDto?> ToggleAdminStatusAsync(int id);
         Task<bool> ResetUserPasswordAsync(int id, string newPassword);
         Task<UserStatisticsDto> GetUserStatisticsAsync();
+        Task<bool> ResetPasswordAsync(string email);
+        Task<bool> ResetPasswordByUsernameAsync(string username);
+        Task<bool> UpdateUserAvatarAsync(int userId, string avatarUrl);
+        Task<bool> ChangePasswordAsync(int userId, ChangePasswordDto changePasswordDto);
     }
 } 

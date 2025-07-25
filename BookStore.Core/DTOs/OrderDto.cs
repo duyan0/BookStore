@@ -71,4 +71,26 @@ namespace BookStore.Core.DTOs
         public decimal Revenue { get; set; }
         public int OrderCount { get; set; }
     }
+
+    public class ReorderResultDto
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public int OriginalOrderId { get; set; }
+        public List<ReorderItemDto> ReorderItems { get; set; } = new List<ReorderItemDto>();
+        public List<string> UnavailableItems { get; set; } = new List<string>();
+        public List<string> PriceChangedItems { get; set; } = new List<string>();
+        public decimal TotalAmount { get; set; }
+        public decimal OriginalTotalAmount { get; set; }
+    }
+
+    public class ReorderItemDto
+    {
+        public int BookId { get; set; }
+        public string BookTitle { get; set; } = string.Empty;
+        public int OriginalQuantity { get; set; }
+        public int AvailableQuantity { get; set; }
+        public decimal OriginalPrice { get; set; }
+        public decimal CurrentPrice { get; set; }
+    }
 }

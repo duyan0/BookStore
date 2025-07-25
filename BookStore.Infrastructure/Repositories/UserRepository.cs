@@ -29,5 +29,15 @@ namespace BookStore.Infrastructure.Repositories
                 .Where(u => u.IsAdmin)
                 .ToListAsync();
         }
+
+        public async Task<User?> GetUserByEmailAsync(string email)
+        {
+            return await GetByEmailAsync(email);
+        }
+
+        public async Task<User?> GetUserByUsernameAsync(string username)
+        {
+            return await GetByUsernameAsync(username);
+        }
     }
-} 
+}

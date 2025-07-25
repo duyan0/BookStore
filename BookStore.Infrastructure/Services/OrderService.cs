@@ -2,6 +2,7 @@ using AutoMapper;
 using BookStore.Core.DTOs;
 using BookStore.Core.Entities;
 using BookStore.Core.Interfaces;
+using BookStore.Core.Services;
 
 namespace BookStore.Infrastructure.Services
 {
@@ -10,12 +11,16 @@ namespace BookStore.Infrastructure.Services
         private readonly IOrderRepository _orderRepository;
         private readonly IBookRepository _bookRepository;
         private readonly IMapper _mapper;
+        private readonly IEmailService _emailService;
+        private readonly IUserRepository _userRepository;
 
-        public OrderService(IOrderRepository orderRepository, IBookRepository bookRepository, IMapper mapper)
+        public OrderService(IOrderRepository orderRepository, IBookRepository bookRepository, IMapper mapper, IEmailService emailService, IUserRepository userRepository)
         {
             _orderRepository = orderRepository;
             _bookRepository = bookRepository;
             _mapper = mapper;
+            _emailService = emailService;
+            _userRepository = userRepository;
         }
 
         public async Task<IEnumerable<OrderDto>> GetAllOrdersAsync()
@@ -75,10 +80,31 @@ namespace BookStore.Infrastructure.Services
 
             order.TotalAmount = totalAmount;
             var createdOrder = await _orderRepository.AddAsync(order);
-            
+
             // Get the order with details for return
             var orderWithDetails = await _orderRepository.GetOrderWithDetailsAsync(createdOrder.Id);
-            return _mapper.Map<OrderDto>(orderWithDetails);
+            var orderDto = _mapper.Map<OrderDto>(orderWithDetails);
+
+            // Send order confirmation email
+            try
+            {
+                var user = await _userRepository.GetByIdAsync(createOrderDto.UserId);
+                if (user != null && !string.IsNullOrEmpty(user.Email))
+                {
+                    var customerName = $"{user.FirstName} {user.LastName}".Trim();
+                    if (string.IsNullOrEmpty(customerName))
+                        customerName = user.Username;
+
+                    await _emailService.SendOrderConfirmationEmailAsync(user.Email, orderDto, customerName);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log email error but don't fail the order creation
+                Console.WriteLine($"Failed to send order confirmation email: {ex.Message}");
+            }
+
+            return orderDto;
         }
 
         public async Task<OrderDto?> UpdateOrderAsync(int id, UpdateOrderDto updateOrderDto)
@@ -176,14 +202,188 @@ namespace BookStore.Infrastructure.Services
 
         public async Task<bool> UpdateOrderStatusAsync(int id, string status)
         {
-            var order = await _orderRepository.GetByIdAsync(id);
+            var order = await _orderRepository.GetOrderWithDetailsAsync(id);
             if (order == null)
                 return false;
 
+            var oldStatus = order.Status;
             order.Status = status;
             order.UpdatedAt = DateTime.UtcNow;
             await _orderRepository.UpdateAsync(order);
+
+            // Send status update email
+            try
+            {
+                var user = await _userRepository.GetByIdAsync(order.UserId);
+                if (user != null && !string.IsNullOrEmpty(user.Email))
+                {
+                    var customerName = $"{user.FirstName} {user.LastName}".Trim();
+                    if (string.IsNullOrEmpty(customerName))
+                        customerName = user.Username;
+
+                    var orderDto = _mapper.Map<OrderDto>(order);
+                    await _emailService.SendOrderStatusUpdateEmailAsync(user.Email, orderDto, customerName, oldStatus, status);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log email error but don't fail the status update
+                Console.WriteLine($"Failed to send order status update email: {ex.Message}");
+            }
+
             return true;
+        }
+
+        public async Task<bool> CancelOrderAsync(int id, string cancellationReason)
+        {
+            var order = await _orderRepository.GetOrderWithDetailsAsync(id);
+            if (order == null)
+                return false;
+
+            // Only allow cancellation of Pending or Confirmed orders
+            if (order.Status != "Pending" && order.Status != "Confirmed")
+                return false;
+
+            order.Status = "Cancelled";
+            order.UpdatedAt = DateTime.UtcNow;
+            await _orderRepository.UpdateAsync(order);
+
+            // Restore book quantities
+            foreach (var detail in order.OrderDetails)
+            {
+                var book = await _bookRepository.GetByIdAsync(detail.BookId);
+                if (book != null)
+                {
+                    book.Quantity += detail.Quantity;
+                    await _bookRepository.UpdateAsync(book);
+                }
+            }
+
+            // Send cancellation email
+            try
+            {
+                var user = await _userRepository.GetByIdAsync(order.UserId);
+                if (user != null && !string.IsNullOrEmpty(user.Email))
+                {
+                    var customerName = $"{user.FirstName} {user.LastName}".Trim();
+                    if (string.IsNullOrEmpty(customerName))
+                        customerName = user.Username;
+
+                    var orderDto = _mapper.Map<OrderDto>(order);
+                    await _emailService.SendOrderCancellationEmailAsync(user.Email, orderDto, customerName, cancellationReason);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log email error but don't fail the cancellation
+                Console.WriteLine($"Failed to send order cancellation email: {ex.Message}");
+            }
+
+            return true;
+        }
+
+        public async Task<ReorderResultDto> ReorderAsync(int orderId, int userId)
+        {
+            try
+            {
+                // Get the original order
+                var originalOrder = await _orderRepository.GetOrderWithDetailsAsync(orderId);
+                if (originalOrder == null || originalOrder.UserId != userId)
+                {
+                    return new ReorderResultDto
+                    {
+                        Success = false,
+                        Message = "Không tìm thấy đơn hàng hoặc bạn không có quyền truy cập"
+                    };
+                }
+
+                var reorderItems = new List<ReorderItemDto>();
+                var unavailableItems = new List<string>();
+                var priceChangedItems = new List<string>();
+                decimal totalAmount = 0;
+
+                // Check each item in the original order
+                foreach (var orderDetail in originalOrder.OrderDetails)
+                {
+                    var currentBook = await _bookRepository.GetByIdAsync(orderDetail.BookId);
+
+                    if (currentBook == null)
+                    {
+                        unavailableItems.Add($"{orderDetail.Book.Title} - Sách không còn tồn tại");
+                        continue;
+                    }
+
+                    if (currentBook.Quantity < orderDetail.Quantity)
+                    {
+                        if (currentBook.Quantity > 0)
+                        {
+                            // Add available quantity
+                            reorderItems.Add(new ReorderItemDto
+                            {
+                                BookId = orderDetail.BookId,
+                                BookTitle = currentBook.Title,
+                                OriginalQuantity = orderDetail.Quantity,
+                                AvailableQuantity = currentBook.Quantity,
+                                OriginalPrice = orderDetail.UnitPrice,
+                                CurrentPrice = currentBook.Price
+                            });
+
+                            totalAmount += currentBook.Price * currentBook.Quantity;
+
+                            if (orderDetail.UnitPrice != currentBook.Price)
+                            {
+                                priceChangedItems.Add($"{currentBook.Title} - Giá từ {orderDetail.UnitPrice:N0}đ thành {currentBook.Price:N0}đ");
+                            }
+
+                            unavailableItems.Add($"{currentBook.Title} - Chỉ còn {currentBook.Quantity} cuốn (bạn đã đặt {orderDetail.Quantity} cuốn)");
+                        }
+                        else
+                        {
+                            unavailableItems.Add($"{currentBook.Title} - Hết hàng");
+                        }
+                    }
+                    else
+                    {
+                        // Item is available with requested quantity
+                        reorderItems.Add(new ReorderItemDto
+                        {
+                            BookId = orderDetail.BookId,
+                            BookTitle = currentBook.Title,
+                            OriginalQuantity = orderDetail.Quantity,
+                            AvailableQuantity = orderDetail.Quantity,
+                            OriginalPrice = orderDetail.UnitPrice,
+                            CurrentPrice = currentBook.Price
+                        });
+
+                        totalAmount += currentBook.Price * orderDetail.Quantity;
+
+                        if (orderDetail.UnitPrice != currentBook.Price)
+                        {
+                            priceChangedItems.Add($"{currentBook.Title} - Giá từ {orderDetail.UnitPrice:N0}đ thành {currentBook.Price:N0}đ");
+                        }
+                    }
+                }
+
+                return new ReorderResultDto
+                {
+                    Success = true,
+                    Message = reorderItems.Any() ? "Đã chuẩn bị danh sách sản phẩm để đặt lại" : "Không có sản phẩm nào có thể đặt lại",
+                    OriginalOrderId = orderId,
+                    ReorderItems = reorderItems,
+                    UnavailableItems = unavailableItems,
+                    PriceChangedItems = priceChangedItems,
+                    TotalAmount = totalAmount,
+                    OriginalTotalAmount = originalOrder.TotalAmount
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ReorderResultDto
+                {
+                    Success = false,
+                    Message = $"Có lỗi xảy ra khi chuẩn bị đặt lại đơn hàng: {ex.Message}"
+                };
+            }
         }
     }
 }

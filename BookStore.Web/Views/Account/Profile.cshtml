@@ -4,125 +4,221 @@
     ViewData["Title"] = "Thông tin tài khoản";
 }
 
-<div class="container">
+<div class="container mt-4">
     <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow">
-                <div class="card-header bg-info text-white">
-                    <h3 class="mb-0">
+        <div class="col-md-10">
+            <!-- Profile Header -->
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-header bg-white border-bottom-0 py-4">
+                    <h2 class="mb-0 fw-bold text-black text-center">
                         <i class="fas fa-user-circle me-2"></i>Thông tin tài khoản
-                    </h3>
+                    </h2>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-4">
                     <div class="row">
+                        <!-- Avatar Section -->
                         <div class="col-md-4 text-center">
-                            <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center mx-auto mb-3" 
-                                 style="width: 120px; height: 120px;">
-                                <i class="fas fa-user fa-3x text-white"></i>
-                            </div>
-                            <h5>@Model.FullName</h5>
-                            @if (Model.IsAdmin)
-                            {
-                                <span class="badge bg-danger">Quản trị viên</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-secondary">Người dùng</span>
-                            }
-                        </div>
-                        <div class="col-md-8">
-                            <div class="row mb-3">
-                                <div class="col-sm-4">
-                                    <strong>Tên đăng nhập:</strong>
-                                </div>
-                                <div class="col-sm-8">
-                                    @Model.Username
-                                </div>
-                            </div>
-
-                            <div class="row mb-3">
-                                <div class="col-sm-4">
-                                    <strong>Họ tên:</strong>
-                                </div>
-                                <div class="col-sm-8">
-                                    @Model.FullName
-                                </div>
-                            </div>
-
-                            <div class="row mb-3">
-                                <div class="col-sm-4">
-                                    <strong>ID người dùng:</strong>
-                                </div>
-                                <div class="col-sm-8">
-                                    @Model.UserId
-                                </div>
-                            </div>
-
-                            <div class="row mb-3">
-                                <div class="col-sm-4">
-                                    <strong>Quyền hạn:</strong>
-                                </div>
-                                <div class="col-sm-8">
-                                    @if (Model.IsAdmin)
+                            <div class="position-relative d-inline-block mb-3">
+                                <div class="avatar-container" style="width: 150px; height: 150px;">
+                                    @if (!string.IsNullOrEmpty(Model.AvatarUrl))
                                     {
-                                        <span class="text-danger">
-                                            <i class="fas fa-crown me-1"></i>Quản trị viên
-                                        </span>
+                                        <img src="@Model.AvatarUrl" alt="Avatar" class="rounded-circle img-fluid border border-3 border-light shadow"
+                                             style="width: 150px; height: 150px; object-fit: cover;" id="avatarPreview">
                                     }
                                     else
                                     {
-                                        <span class="text-secondary">
-                                            <i class="fas fa-user me-1"></i>Người dùng thông thường
-                                        </span>
+                                        <div class="rounded-circle bg-gradient d-flex align-items-center justify-content-center border border-3 border-light shadow"
+                                             style="width: 150px; height: 150px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);" id="avatarPreview">
+                                            <i class="fas fa-user fa-4x text-white"></i>
+                                        </div>
                                     }
+                                </div>
+
+                                <!-- Avatar Upload Button -->
+                                <button type="button" class="btn btn-dark btn-sm rounded-circle position-absolute"
+                                        style="bottom: 10px; right: 10px; width: 40px; height: 40px;"
+                                        onclick="document.getElementById('avatarInput').click()">
+                                    <i class="fas fa-camera"></i>
+                                </button>
+
+                                <!-- Hidden File Input -->
+                                <input type="file" id="avatarInput" accept="image/*" style="display: none;" onchange="previewAvatar(this)">
+                            </div>
+
+                            <h4 class="fw-bold text-black">@Model.FullName</h4>
+                            @if (Model.IsAdmin)
+                            {
+                                <span class="badge bg-danger fs-6 px-3 py-2">
+                                    <i class="fas fa-crown me-1"></i>Quản trị viên
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary fs-6 px-3 py-2">
+                                    <i class="fas fa-user me-1"></i>Người dùng
+                                </span>
+                            }
+
+                            <!-- Upload Avatar Form -->
+                            <form id="avatarForm" method="post" enctype="multipart/form-data" asp-action="UploadAvatar" style="display: none;">
+                                @Html.AntiForgeryToken()
+                                <input type="file" name="avatarFile" id="avatarFileInput" accept="image/*">
+                            </form>
+                        </div>
+                        <!-- Profile Information -->
+                        <div class="col-md-8">
+                            <div class="card border-0 bg-light h-100">
+                                <div class="card-body p-4">
+                                    <h5 class="card-title text-black mb-4">
+                                        <i class="fas fa-info-circle me-2"></i>Thông tin cá nhân
+                                    </h5>
+
+                                    <div class="row mb-3">
+                                        <div class="col-sm-4">
+                                            <strong class="text-muted">
+                                                <i class="fas fa-user me-2"></i>Tên đăng nhập:
+                                            </strong>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <span class="fw-semibold">@Model.Username</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="row mb-3">
+                                        <div class="col-sm-4">
+                                            <strong class="text-muted">
+                                                <i class="fas fa-id-card me-2"></i>Họ tên:
+                                            </strong>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <span class="fw-semibold">@Model.FullName</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="row mb-3">
+                                        <div class="col-sm-4">
+                                            <strong class="text-muted">
+                                                <i class="fas fa-hashtag me-2"></i>ID người dùng:
+                                            </strong>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <span class="fw-semibold text-primary">#@Model.UserId</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="row mb-0">
+                                        <div class="col-sm-4">
+                                            <strong class="text-muted">
+                                                <i class="fas fa-shield-alt me-2"></i>Quyền hạn:
+                                            </strong>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            @if (Model.IsAdmin)
+                                            {
+                                                <span class="badge bg-danger fs-6 px-3 py-2">
+                                                    <i class="fas fa-crown me-1"></i>Quản trị viên
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary fs-6 px-3 py-2">
+                                                    <i class="fas fa-user me-1"></i>Người dùng
+                                                </span>
+                                            }
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="card-footer">
-                    <div class="d-flex justify-content-between">
-                        <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">
-                            <i class="fas fa-arrow-left me-1"></i>Quay lại trang chủ
+
+                <!-- Action Buttons -->
+                <div class="card-footer bg-white border-top-0 py-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary btn-lg">
+                            <i class="fas fa-arrow-left me-2"></i>Quay lại trang chủ
                         </a>
-                        <form asp-action="LogoutPost" method="post" class="d-inline">
-                            @Html.AntiForgeryToken()
-                            <button type="submit" class="btn btn-danger"
-                                    onclick="return confirm('Bạn có chắc chắn muốn đăng xuất?')">
-                                <i class="fas fa-sign-out-alt me-1"></i>Đăng xuất
-                            </button>
-                        </form>
+
+                        <div class="d-flex gap-2">
+                            <a asp-action="ChangePassword" class="btn btn-warning btn-lg">
+                                <i class="fas fa-key me-2"></i>Đổi mật khẩu
+                            </a>
+
+                            @if (Model.IsAdmin)
+                            {
+                                <a asp-area="Admin" asp-controller="Home" asp-action="Index" class="btn btn-dark btn-lg">
+                                    <i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard
+                                </a>
+                            }
+
+                            <form asp-action="LogoutPost" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-danger btn-lg"
+                                        onclick="return confirm('Bạn có chắc chắn muốn đăng xuất?')">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Quick Actions -->
-            <div class="card mt-4">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-bolt me-2"></i>Thao tác nhanh
-                    </h5>
+            <!-- Success/Error Messages -->
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show mt-4" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-4 mb-2">
-                            <a asp-controller="Books" asp-action="Index" class="btn btn-outline-primary w-100">
-                                <i class="fas fa-book me-1"></i>Quản lý sách
-                            </a>
-                        </div>
-                        <div class="col-md-4 mb-2">
-                            <a asp-controller="Authors" asp-action="Index" class="btn btn-outline-success w-100">
-                                <i class="fas fa-user-edit me-1"></i>Quản lý tác giả
-                            </a>
-                        </div>
-                        <div class="col-md-4 mb-2">
-                            <a asp-controller="Categories" asp-action="Index" class="btn btn-outline-warning w-100">
-                                <i class="fas fa-tags me-1"></i>Quản lý thể loại
-                            </a>
-                        </div>
-                    </div>
+            }
+
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show mt-4" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>@TempData["Error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
-            </div>
+            }
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        function previewAvatar(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    const preview = document.getElementById('avatarPreview');
+                    preview.innerHTML = `<img src="${e.target.result}" alt="Avatar Preview" class="rounded-circle img-fluid border border-3 border-light shadow" style="width: 150px; height: 150px; object-fit: cover;">`;
+
+                    // Copy file to hidden form input and submit
+                    const formInput = document.getElementById('avatarFileInput');
+                    formInput.files = input.files;
+
+                    // Show loading state
+                    const btn = preview.parentElement.querySelector('button');
+                    const originalContent = btn.innerHTML;
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                    btn.disabled = true;
+
+                    // Submit form
+                    document.getElementById('avatarForm').submit();
+                };
+
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Auto-dismiss alerts after 5 seconds
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+    </script>
+}

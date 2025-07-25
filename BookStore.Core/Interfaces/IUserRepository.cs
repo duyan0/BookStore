@@ -7,5 +7,7 @@ namespace BookStore.Core.Interfaces
         Task<User?> GetByUsernameAsync(string username);
         Task<User?> GetByEmailAsync(string email);
         Task<IEnumerable<User>> GetAdminsAsync();
+        Task<User?> GetUserByEmailAsync(string email);
+        Task<User?> GetUserByUsernameAsync(string username);
     }
 } 

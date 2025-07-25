@@ -1,0 +1,149 @@
+@using BookStore.Core.DTOs
+@using BookStore.Web.Models
+@model BookViewModel
+
+<div class="book-card-wrapper">
+    <div class="card h-100 border-0 shadow-sm book-card @(Model.Quantity <= 0 ? "out-of-stock" : "")" 
+         data-book-id="@Model.Id" 
+         data-url="@Url.Action("Details", "Shop", new { id = Model.Id })" 
+         style="cursor: pointer;">
+        
+        <!-- Book Image Container -->
+        <div class="book-image-container position-relative">
+            <img src="@Model.ImageUrl" 
+                 class="card-img-top book-image" 
+                 alt="@Model.Title" 
+                 loading="lazy"
+                 onerror="this.src='/images/no-image.jpg'">
+            
+            <!-- Stock Status Badge -->
+            <div class="position-absolute top-0 end-0 m-2">
+                @if (Model.Quantity <= 0)
+                {
+                    <span class="badge bg-danger stock-badge">
+                        <i class="fas fa-times me-1"></i>Hết hàng
+                    </span>
+                }
+                else if (Model.Quantity <= 5)
+                {
+                    <span class="badge bg-warning text-dark stock-badge">
+                        <i class="fas fa-exclamation-triangle me-1"></i>Sắp hết
+                    </span>
+                }
+                else
+                {
+                    <span class="badge bg-success stock-badge">
+                        <i class="fas fa-check me-1"></i>Còn hàng
+                    </span>
+                }
+            </div>
+            
+            <!-- Quick View Button (Optional) -->
+            <div class="position-absolute bottom-0 end-0 m-2 quick-view-btn" style="opacity: 0; transition: opacity 0.3s ease;">
+                <button class="btn btn-sm btn-light rounded-circle" 
+                        title="Xem nhanh" 
+                        onclick="event.stopPropagation(); quickView(@Model.Id);">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Book Information -->
+        <div class="card-body d-flex flex-column book-info">
+            <!-- Title -->
+            <h6 class="card-title book-title text-truncate mb-2" title="@Model.Title">
+                @Model.Title
+            </h6>
+            
+            <!-- Author -->
+            <p class="card-text book-author text-muted small mb-1">
+                <i class="fas fa-user me-1"></i>@Model.AuthorName
+            </p>
+            
+            <!-- Category (if available) -->
+            @if (!string.IsNullOrEmpty(Model.CategoryName))
+            {
+                <p class="card-text book-category text-muted small mb-2">
+                    <i class="fas fa-tag me-1"></i>@Model.CategoryName
+                </p>
+            }
+            
+            <!-- Price -->
+            <div class="book-price-container mt-auto">
+                <p class="card-text book-price text-danger fw-bold fs-6 mb-2">
+                    @Model.Price.ToString("N0") VNĐ
+                </p>
+                
+                <!-- Action Button -->
+                <div class="book-actions">
+                    @if (Model.Quantity > 0)
+                    {
+                        <form asp-controller="Shop" asp-action="AddToCart" method="post" class="d-inline w-100" onclick="event.stopPropagation();">
+                            <input type="hidden" name="bookId" value="@Model.Id" />
+                            <input type="hidden" name="quantity" value="1" />
+                            <button type="submit" class="btn btn-primary btn-sm w-100 add-to-cart-btn" onclick="event.stopPropagation();">
+                                <i class="fas fa-cart-plus me-1"></i>
+                                <span class="btn-text">Thêm vào giỏ</span>
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <button class="btn btn-secondary btn-sm w-100" disabled onclick="event.stopPropagation();">
+                            <i class="fas fa-times me-1"></i>Hết hàng
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+        
+        <!-- Loading Overlay (for AJAX operations) -->
+        <div class="loading-overlay position-absolute top-0 start-0 w-100 h-100 d-none" 
+             style="background: rgba(255,255,255,0.8); z-index: 10;">
+            <div class="d-flex align-items-center justify-content-center h-100">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Book Card CSS is included in site.css -->
+
+<script>
+// Book Card JavaScript Functions
+function quickView(bookId) {
+    // Quick view functionality - can be implemented later
+    console.log('Quick view for book:', bookId);
+}
+
+// Click handler for book cards
+$(document).ready(function() {
+    $('.book-card').on('click', function(e) {
+        // Don't navigate if clicking on buttons or forms
+        if ($(e.target).is('button') || $(e.target).is('input') || $(e.target).closest('form').length > 0) {
+            return;
+        }
+        
+        var url = $(this).data('url');
+        if (url) {
+            window.location.href = url;
+        }
+    });
+    
+    // Add to cart with loading state
+    $('.add-to-cart-btn').on('click', function(e) {
+        e.stopPropagation();
+        var $btn = $(this);
+        var $card = $btn.closest('.book-card');
+        var $overlay = $card.find('.loading-overlay');
+        
+        // Show loading state
+        $btn.prop('disabled', true);
+        $overlay.removeClass('d-none');
+        
+        // Submit form normally - loading will be hidden on page reload/redirect
+    });
+});
+</script>

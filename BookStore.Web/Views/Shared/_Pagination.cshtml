@@ -1,0 +1,332 @@
+@model dynamic
+@{
+    var currentPage = Model?.CurrentPage ?? 1;
+    var totalPages = Model?.TotalPages ?? 1;
+    var hasNextPage = Model?.HasNextPage ?? false;
+    var hasPreviousPage = Model?.HasPreviousPage ?? false;
+    var searchTerm = ViewBag.SearchTerm?.ToString() ?? "";
+    var selectedCategoryId = ViewBag.SelectedCategoryId;
+    var pageSize = Model?.PageSize ?? 12;
+    
+    // Calculate page range to display
+    var startPage = Math.Max(1, currentPage - 2);
+    var endPage = Math.Min(totalPages, currentPage + 2);
+    
+    // Adjust range if we're near the beginning or end
+    if (endPage - startPage < 4 && totalPages > 5)
+    {
+        if (startPage == 1)
+        {
+            endPage = Math.Min(totalPages, startPage + 4);
+        }
+        else if (endPage == totalPages)
+        {
+            startPage = Math.Max(1, endPage - 4);
+        }
+    }
+}
+
+@if (totalPages > 1)
+{
+    <nav aria-label="Phân trang sách" class="pagination-container">
+        <ul class="pagination justify-content-center mb-0">
+            <!-- First Page -->
+            @if (currentPage > 3)
+            {
+                <li class="page-item">
+                    <a class="page-link" href="@GetPageUrl(1)" title="Trang đầu">
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                </li>
+            }
+            
+            <!-- Previous Page -->
+            @if (hasPreviousPage)
+            {
+                <li class="page-item">
+                    <a class="page-link" href="@GetPageUrl(currentPage - 1)" title="Trang trước">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+            }
+            else
+            {
+                <li class="page-item disabled">
+                    <span class="page-link">
+                        <i class="fas fa-chevron-left"></i>
+                    </span>
+                </li>
+            }
+            
+            <!-- Page Numbers -->
+            @for (int i = startPage; i <= endPage; i++)
+            {
+                <li class="page-item @(i == currentPage ? "active" : "")">
+                    @if (i == currentPage)
+                    {
+                        <span class="page-link current-page">
+                            @i
+                            <span class="visually-hidden">(trang hiện tại)</span>
+                        </span>
+                    }
+                    else
+                    {
+                        <a class="page-link" href="@GetPageUrl(i)" title="Trang @i">
+                            @i
+                        </a>
+                    }
+                </li>
+            }
+            
+            <!-- Next Page -->
+            @if (hasNextPage)
+            {
+                <li class="page-item">
+                    <a class="page-link" href="@GetPageUrl(currentPage + 1)" title="Trang sau">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            }
+            else
+            {
+                <li class="page-item disabled">
+                    <span class="page-link">
+                        <i class="fas fa-chevron-right"></i>
+                    </span>
+                </li>
+            }
+            
+            <!-- Last Page -->
+            @if (currentPage < totalPages - 2)
+            {
+                <li class="page-item">
+                    <a class="page-link" href="@GetPageUrl(totalPages)" title="Trang cuối">
+                        <i class="fas fa-angle-double-right"></i>
+                    </a>
+                </li>
+            }
+        </ul>
+        
+        <!-- Page Info -->
+        <div class="pagination-info text-center mt-3">
+            <small class="text-muted">
+                Trang @currentPage / @totalPages
+                @if (Model?.TotalItems != null)
+                {
+                    <span class="mx-2">•</span>
+                    <span>Tổng @Model.TotalItems sách</span>
+                }
+            </small>
+        </div>
+        
+        <!-- Quick Jump (for large page counts) -->
+        @if (totalPages > 10)
+        {
+            <div class="pagination-jump text-center mt-2">
+                <div class="input-group input-group-sm d-inline-flex" style="width: auto;">
+                    <span class="input-group-text">Đến trang</span>
+                    <input type="number" class="form-control" id="pageJump" min="1" max="@totalPages" 
+                           placeholder="@currentPage" style="width: 80px;">
+                    <button class="btn btn-outline-secondary" type="button" onclick="jumpToPage()">
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        }
+    </nav>
+}
+
+@functions {
+    string GetPageUrl(int page)
+    {
+        var routeValues = new Dictionary<string, object>
+        {
+            { "page", page },
+            { "pageSize", Model?.PageSize ?? 12 }
+        };
+
+        var searchTerm = ViewBag.SearchTerm?.ToString() ?? "";
+        if (!string.IsNullOrEmpty(searchTerm))
+        {
+            routeValues.Add("search", searchTerm);
+        }
+
+        var selectedCategoryId = ViewBag.SelectedCategoryId;
+        if (selectedCategoryId != null)
+        {
+            routeValues.Add("categoryId", selectedCategoryId);
+        }
+
+        return Url.Action("Index", "Shop", routeValues);
+    }
+}
+
+<style>
+/* Pagination Styling */
+.pagination-container {
+    margin: 2rem 0;
+}
+
+.pagination {
+    --bs-pagination-padding-x: 0.75rem;
+    --bs-pagination-padding-y: 0.5rem;
+    --bs-pagination-font-size: 0.9rem;
+    --bs-pagination-color: #495057;
+    --bs-pagination-bg: #ffffff;
+    --bs-pagination-border-width: 1px;
+    --bs-pagination-border-color: #dee2e6;
+    --bs-pagination-border-radius: 8px;
+    --bs-pagination-hover-color: #0056b3;
+    --bs-pagination-hover-bg: #f8f9fa;
+    --bs-pagination-hover-border-color: #dee2e6;
+    --bs-pagination-focus-color: #0056b3;
+    --bs-pagination-focus-bg: #e7f1ff;
+    --bs-pagination-focus-box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    --bs-pagination-active-color: #ffffff;
+    --bs-pagination-active-bg: #007bff;
+    --bs-pagination-active-border-color: #007bff;
+    --bs-pagination-disabled-color: #6c757d;
+    --bs-pagination-disabled-bg: #ffffff;
+    --bs-pagination-disabled-border-color: #dee2e6;
+}
+
+.page-link {
+    transition: all 0.2s ease-in-out;
+    font-weight: 500;
+}
+
+.page-link:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.page-item.active .page-link {
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(0,123,255,0.3);
+}
+
+.current-page {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    border-color: #0056b3;
+}
+
+.pagination-info {
+    color: #6c757d;
+    font-size: 0.85rem;
+}
+
+.pagination-jump {
+    margin-top: 1rem;
+}
+
+.pagination-jump .input-group {
+    max-width: 200px;
+    margin: 0 auto;
+}
+
+.pagination-jump .form-control {
+    text-align: center;
+    font-weight: 500;
+}
+
+/* Responsive Design */
+@@media (max-width: 575.98px) {
+    .pagination {
+        --bs-pagination-padding-x: 0.5rem;
+        --bs-pagination-padding-y: 0.375rem;
+        --bs-pagination-font-size: 0.8rem;
+    }
+    
+    .pagination-container {
+        margin: 1.5rem 0;
+    }
+    
+    /* Hide page numbers on very small screens, keep only prev/next */
+    .page-item:not(.active):not(:first-child):not(:last-child):not(:nth-child(2)):not(:nth-last-child(2)) {
+        display: none;
+    }
+    
+    .pagination-jump {
+        display: none; /* Hide quick jump on mobile */
+    }
+}
+
+@@media (max-width: 767.98px) {
+    /* Show fewer page numbers on tablets */
+    .page-item:not(.active):not(:first-child):not(:last-child):not(:nth-child(2)):not(:nth-last-child(2)):not(:nth-child(3)):not(:nth-last-child(3)) {
+        display: none;
+    }
+}
+
+/* Loading State */
+.pagination-loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.pagination-loading .page-link {
+    cursor: not-allowed;
+}
+
+/* Accessibility Improvements */
+.page-link:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+.page-item.disabled .page-link {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* Animation for page changes */
+@@keyframes pageChange {
+    0% { opacity: 0.7; transform: scale(0.95); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+.pagination.changing {
+    animation: pageChange 0.3s ease-out;
+}
+</style>
+
+<script>
+// Quick Jump Functionality
+function jumpToPage() {
+    const pageInput = document.getElementById('pageJump');
+    const page = parseInt(pageInput.value);
+    const maxPage = @totalPages;
+    
+    if (page && page >= 1 && page <= maxPage) {
+        const url = '@Html.Raw(GetPageUrl(0))'.replace('page=0', `page=${page}`);
+        window.location.href = url;
+    } else {
+        pageInput.classList.add('is-invalid');
+        setTimeout(() => {
+            pageInput.classList.remove('is-invalid');
+        }, 2000);
+    }
+}
+
+// Enter key support for quick jump
+document.addEventListener('DOMContentLoaded', function() {
+    const pageJump = document.getElementById('pageJump');
+    if (pageJump) {
+        pageJump.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                jumpToPage();
+            }
+        });
+    }
+    
+    // Add loading state to pagination links
+    document.querySelectorAll('.page-link').forEach(link => {
+        link.addEventListener('click', function() {
+            if (!this.closest('.page-item').classList.contains('disabled') && 
+                !this.closest('.page-item').classList.contains('active')) {
+                document.querySelector('.pagination').classList.add('pagination-loading');
+            }
+        });
+    });
+});
+</script>

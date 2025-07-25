@@ -18,4 +18,11 @@ namespace BookStore.Core.DTOs
         [StringLength(200)]
         public string? Address { get; set; }
     }
+
+    public class UpdateAvatarDto
+    {
+        [Required]
+        [StringLength(255)]
+        public string AvatarUrl { get; set; } = string.Empty;
+    }
 }
