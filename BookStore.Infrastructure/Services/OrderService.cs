@@ -3,6 +3,8 @@ using BookStore.Core.DTOs;
 using BookStore.Core.Entities;
 using BookStore.Core.Interfaces;
 using BookStore.Core.Services;
+using BookStore.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace BookStore.Infrastructure.Services
 {
@@ -13,14 +15,16 @@ namespace BookStore.Infrastructure.Services
         private readonly IMapper _mapper;
         private readonly IEmailService _emailService;
         private readonly IUserRepository _userRepository;
+        private readonly ApplicationDbContext _context;
 
-        public OrderService(IOrderRepository orderRepository, IBookRepository bookRepository, IMapper mapper, IEmailService emailService, IUserRepository userRepository)
+        public OrderService(IOrderRepository orderRepository, IBookRepository bookRepository, IMapper mapper, IEmailService emailService, IUserRepository userRepository, ApplicationDbContext context)
         {
             _orderRepository = orderRepository;
             _bookRepository = bookRepository;
             _mapper = mapper;
             _emailService = emailService;
             _userRepository = userRepository;
+            _context = context;
         }
 
         public async Task<IEnumerable<OrderDto>> GetAllOrdersAsync()
@@ -50,7 +54,14 @@ namespace BookStore.Infrastructure.Services
                 Status = "Pending",
                 ShippingAddress = createOrderDto.ShippingAddress,
                 PaymentMethod = createOrderDto.PaymentMethod,
-                OrderDetails = new List<OrderDetail>()
+                OrderDetails = new List<OrderDetail>(),
+
+                // Voucher fields
+                VoucherCode = createOrderDto.VoucherCode,
+                VoucherDiscount = createOrderDto.VoucherDiscount,
+                FreeShipping = createOrderDto.FreeShipping,
+                ShippingFee = createOrderDto.ShippingFee,
+                SubTotal = createOrderDto.SubTotal
             };
 
             decimal totalAmount = 0;
@@ -78,7 +89,34 @@ namespace BookStore.Infrastructure.Services
                 await _bookRepository.UpdateAsync(book);
             }
 
-            order.TotalAmount = totalAmount;
+            // Set subtotal and calculate final amount
+            order.SubTotal = totalAmount;
+            order.TotalAmount = Math.Max(0, totalAmount - createOrderDto.VoucherDiscount + createOrderDto.ShippingFee);
+
+            // If voucher is used, find and link the voucher
+            if (!string.IsNullOrEmpty(createOrderDto.VoucherCode))
+            {
+                var voucher = await _context.Vouchers
+                    .FirstOrDefaultAsync(v => v.Code == createOrderDto.VoucherCode.ToUpper());
+                if (voucher != null)
+                {
+                    order.VoucherId = voucher.Id;
+
+                    // Create voucher usage record
+                    var voucherUsage = new VoucherUsage
+                    {
+                        VoucherId = voucher.Id,
+                        UserId = createOrderDto.UserId,
+                        OrderId = 0, // Will be set after order is created
+                        UsedAt = DateTime.UtcNow,
+                        DiscountAmount = createOrderDto.VoucherDiscount
+                    };
+
+                    // Increment voucher used count
+                    voucher.UsedCount++;
+                    await _context.SaveChangesAsync();
+                }
+            }
             var createdOrder = await _orderRepository.AddAsync(order);
 
             // Get the order with details for return
@@ -309,7 +347,7 @@ namespace BookStore.Infrastructure.Services
 
                     if (currentBook == null)
                     {
-                        unavailableItems.Add($"{orderDetail.Book.Title} - Sách không còn tồn tại");
+                        unavailableItems.Add($"{orderDetail.Book?.Title ?? "Sách không xác định"} - Sách không còn tồn tại");
                         continue;
                     }
 

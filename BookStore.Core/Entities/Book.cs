@@ -14,14 +14,22 @@ namespace BookStore.Core.Entities
 
         [Required]
         [Column(TypeName = "decimal(18,2)")]
-        public decimal Price { get; set; }
+        public decimal OriginalPrice { get; set; }
+
+        // Legacy field for backward compatibility
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal Price
+        {
+            get => FinalPrice;
+            set => OriginalPrice = value;
+        }
 
         // Discount fields
         [Column(TypeName = "decimal(5,2)")]
-        public decimal DiscountPercentage { get; set; } = 0; // 0-100%
+        public decimal? DiscountPercentage { get; set; } // 0-100%, null means no discount
 
         [Column(TypeName = "decimal(18,2)")]
-        public decimal DiscountAmount { get; set; } = 0; // Fixed discount amount
+        public decimal DiscountAmount { get; set; } = 0; // Fixed discount amount (optional)
 
         public bool IsOnSale { get; set; } = false;
 
@@ -29,39 +37,66 @@ namespace BookStore.Core.Entities
         public DateTime? SaleEndDate { get; set; }
 
         // Computed properties
-        public decimal DiscountedPrice
+        [NotMapped]
+        public decimal FinalPrice
         {
             get
             {
-                if (!IsOnSale || !IsDiscountActive) return Price;
+                if (!HasActiveDiscount) return OriginalPrice;
 
-                var discountFromPercentage = Price * (DiscountPercentage / 100);
+                // Calculate discount based on percentage
+                var discountFromPercentage = DiscountPercentage.HasValue
+                    ? OriginalPrice * (DiscountPercentage.Value / 100)
+                    : 0;
+
+                // Add fixed discount amount if any
                 var totalDiscount = discountFromPercentage + DiscountAmount;
-                var finalPrice = Price - totalDiscount;
+                var finalPrice = OriginalPrice - totalDiscount;
 
-                return finalPrice < 0 ? 0 : finalPrice;
+                // Ensure price doesn't go below 0
+                return Math.Max(0, finalPrice);
             }
         }
 
-        public bool IsDiscountActive
+        [NotMapped]
+        public bool HasActiveDiscount
         {
             get
             {
                 var now = DateTime.UtcNow;
-                return IsOnSale &&
-                       (SaleStartDate == null || SaleStartDate <= now) &&
-                       (SaleEndDate == null || SaleEndDate >= now);
+                var hasValidDiscountPercentage = DiscountPercentage.HasValue && DiscountPercentage.Value > 0;
+                var hasValidDiscountAmount = DiscountAmount > 0;
+                var isInSalePeriod = !IsOnSale ||
+                    ((SaleStartDate == null || SaleStartDate <= now) &&
+                     (SaleEndDate == null || SaleEndDate >= now));
+
+                return (hasValidDiscountPercentage || hasValidDiscountAmount) && isInSalePeriod;
             }
         }
 
-        public decimal TotalDiscountAmount
+        [NotMapped]
+        public decimal TotalSavings
         {
             get
             {
-                if (!IsDiscountActive) return 0;
-                return Price - DiscountedPrice;
+                if (!HasActiveDiscount) return 0;
+                return OriginalPrice - FinalPrice;
             }
         }
+
+        [NotMapped]
+        public decimal EffectiveDiscountPercentage
+        {
+            get
+            {
+                if (!HasActiveDiscount || OriginalPrice == 0) return 0;
+                return Math.Round((TotalSavings / OriginalPrice) * 100, 2);
+            }
+        }
+
+        // Legacy property for backward compatibility
+        [NotMapped]
+        public decimal DiscountedPrice => FinalPrice;
 
         public int Quantity { get; set; }
 

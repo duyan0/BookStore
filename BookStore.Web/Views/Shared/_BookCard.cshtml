@@ -2,6 +2,12 @@
 @using BookStore.Web.Models
 @model BookViewModel
 
+@{
+    var hasDiscount = Model.IsDiscountActive;
+    var finalPrice = Model.DiscountedPrice;
+    var discountPercent = Model.DiscountPercentageDisplay;
+}
+
 <div class="book-card-wrapper">
     <div class="card h-100 border-0 shadow-sm book-card @(Model.Quantity <= 0 ? "out-of-stock" : "")" 
          data-book-id="@Model.Id" 
@@ -16,6 +22,16 @@
                  loading="lazy"
                  onerror="this.src='/images/no-image.jpg'">
             
+            <!-- Discount Badge -->
+            @if (hasDiscount)
+            {
+                <div class="position-absolute top-0 start-0 m-2">
+                    <span class="badge bg-danger discount-badge">
+                        <i class="fas fa-percent me-1"></i>-@discountPercent%
+                    </span>
+                </div>
+            }
+
             <!-- Stock Status Badge -->
             <div class="position-absolute top-0 end-0 m-2">
                 @if (Model.Quantity <= 0)
@@ -70,9 +86,26 @@
             
             <!-- Price -->
             <div class="book-price-container mt-auto">
-                <p class="card-text book-price text-danger fw-bold fs-6 mb-2">
-                    @Model.Price.ToString("N0") VNĐ
-                </p>
+                @if (hasDiscount)
+                {
+                    <div class="price-discount mb-2">
+                        <p class="card-text book-price-original text-muted text-decoration-line-through small mb-1">
+                            @Model.PriceFormatted
+                        </p>
+                        <p class="card-text book-price text-danger fw-bold fs-6 mb-1">
+                            @Model.DiscountedPriceFormatted
+                        </p>
+                        <small class="text-success">
+                            <i class="fas fa-piggy-bank me-1"></i>Tiết kiệm: @Model.TotalDiscountAmountFormatted
+                        </small>
+                    </div>
+                }
+                else
+                {
+                    <p class="card-text book-price text-danger fw-bold fs-6 mb-2">
+                        @Model.PriceFormatted
+                    </p>
+                }
                 
                 <!-- Action Button -->
                 <div class="book-actions">
@@ -110,6 +143,37 @@
 </div>
 
 <!-- Book Card CSS is included in site.css -->
+<style>
+.discount-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    animation: pulse 2s infinite;
+}
+
+@@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.book-price-original {
+    font-size: 0.8rem;
+}
+
+.book-price {
+    font-size: 0.9rem;
+}
+
+/* Responsive adjustments */
+@@media (max-width: 576px) {
+    .discount-badge {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
+    }
+}
+</style>
 
 <script>
 // Book Card JavaScript Functions

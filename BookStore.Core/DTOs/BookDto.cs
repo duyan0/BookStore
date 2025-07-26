@@ -5,19 +5,19 @@ namespace BookStore.Core.DTOs
         public int Id { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public decimal Price { get; set; }
+        public decimal Price { get; set; } // Original price
 
         // Discount fields
-        public decimal DiscountPercentage { get; set; } = 0;
-        public decimal DiscountAmount { get; set; } = 0;
+        public decimal? DiscountPercentage { get; set; } // 0-100%, null means no discount
+        public decimal DiscountAmount { get; set; } = 0; // Fixed discount amount
         public bool IsOnSale { get; set; } = false;
         public DateTime? SaleStartDate { get; set; }
         public DateTime? SaleEndDate { get; set; }
 
         // Computed properties
-        public decimal DiscountedPrice { get; set; }
-        public bool IsDiscountActive { get; set; }
-        public decimal TotalDiscountAmount { get; set; }
+        public decimal DiscountedPrice { get; set; } // Final price after discount
+        public bool IsDiscountActive { get; set; } // Whether discount is currently active
+        public decimal TotalDiscountAmount { get; set; } // Total savings amount
 
         public int Quantity { get; set; }
         public string ISBN { get; set; } = string.Empty;

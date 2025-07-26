@@ -40,14 +40,23 @@ namespace BookStore.Web.Models
     public class CartViewModel
     {
         public List<CartItemDetailViewModel> Items { get; set; } = new();
-        
+
         public decimal TotalAmount => Items.Sum(i => i.TotalPrice);
+        public decimal TotalOriginalAmount => Items.Sum(i => i.BookPrice * i.Quantity);
+        public decimal TotalSavings => Items.Sum(i => i.TotalSavings);
         public int TotalItems => Items.Sum(i => i.Quantity);
         public bool IsEmpty => !Items.Any();
-        
+        public bool HasDiscounts => Items.Any(i => i.IsDiscountActive);
+
         [Display(Name = "Tổng tiền")]
         public string TotalAmountFormatted => CurrencyHelper.FormatVND(TotalAmount);
-        
+
+        [Display(Name = "Tổng tiền gốc")]
+        public string TotalOriginalAmountFormatted => CurrencyHelper.FormatVND(TotalOriginalAmount);
+
+        [Display(Name = "Tổng tiết kiệm")]
+        public string TotalSavingsFormatted => CurrencyHelper.FormatVND(TotalSavings);
+
         [Display(Name = "Tổng số lượng")]
         public string TotalItemsText => TotalItems == 1 ? "1 sản phẩm" : $"{TotalItems} sản phẩm";
     }
@@ -66,15 +75,45 @@ namespace BookStore.Web.Models
         public string BookImageUrl { get; set; } = "";
         public int Quantity { get; set; }
         public int MaxQuantity { get; set; }
-        
-        public decimal TotalPrice => BookPrice * Quantity;
-        
-        [Display(Name = "Đơn giá")]
+
+        // Discount fields
+        public decimal DiscountPercentage { get; set; } = 0;
+        public decimal DiscountAmount { get; set; } = 0;
+        public bool IsOnSale { get; set; } = false;
+        public DateTime? SaleStartDate { get; set; }
+        public DateTime? SaleEndDate { get; set; }
+        public decimal DiscountedPrice { get; set; }
+        public bool IsDiscountActive { get; set; }
+
+        // Use discounted price for calculations
+        public decimal EffectivePrice => IsDiscountActive ? DiscountedPrice : BookPrice;
+        public decimal TotalPrice => EffectivePrice * Quantity;
+        public decimal TotalSavings => IsDiscountActive ? (BookPrice - DiscountedPrice) * Quantity : 0;
+
+        [Display(Name = "Giá gốc")]
         public string BookPriceFormatted => CurrencyHelper.FormatVND(BookPrice);
+
+        [Display(Name = "Đơn giá")]
+        public string EffectivePriceFormatted => CurrencyHelper.FormatVND(EffectivePrice);
+
+        [Display(Name = "Giá khuyến mãi")]
+        public string DiscountedPriceFormatted => CurrencyHelper.FormatVND(DiscountedPrice);
 
         [Display(Name = "Thành tiền")]
         public string TotalPriceFormatted => CurrencyHelper.FormatVND(TotalPrice);
-        
+
+        [Display(Name = "Tiết kiệm")]
+        public string TotalSavingsFormatted => CurrencyHelper.FormatVND(TotalSavings);
+
+        public decimal DiscountPercentageDisplay
+        {
+            get
+            {
+                if (!IsDiscountActive || BookPrice == 0) return 0;
+                return Math.Round(((BookPrice - DiscountedPrice) / BookPrice) * 100, 0);
+            }
+        }
+
         public bool IsOutOfStock => MaxQuantity <= 0;
         public bool ExceedsStock => Quantity > MaxQuantity;
     }
@@ -94,18 +133,32 @@ namespace BookStore.Web.Models
         [Display(Name = "Ghi chú")]
         public string? Notes { get; set; }
 
+        // Voucher fields
+        [Display(Name = "Mã voucher")]
+        public string? VoucherCode { get; set; }
+
+        public bool HasVoucher => !string.IsNullOrEmpty(VoucherCode) && VoucherDiscount > 0;
+        public decimal VoucherDiscount { get; set; } = 0;
+        public bool VoucherFreeShipping { get; set; } = false;
+        public string VoucherMessage { get; set; } = string.Empty;
+
         public List<CartItemDetailViewModel> Items { get; set; } = new List<CartItemDetailViewModel>();
 
         // Computed properties
         public decimal TotalAmount => Items.Sum(i => i.TotalPrice);
-        public decimal ShippingFee => TotalAmount >= 500000 ? 0 : 30000; // Free shipping for orders over 500k VND
-        public decimal FinalAmount => TotalAmount + ShippingFee;
+        public decimal ShippingFee => (TotalAmount >= 500000 || VoucherFreeShipping) ? 0 : 30000; // Free shipping for orders over 500k VND or with voucher
+        public decimal DiscountAmount => VoucherDiscount;
+        public decimal FinalAmount => Math.Max(0, TotalAmount - DiscountAmount + ShippingFee);
 
+        // Formatted properties
         [Display(Name = "Tổng tiền hàng")]
         public string TotalAmountFormatted => CurrencyHelper.FormatVND(TotalAmount);
 
         [Display(Name = "Phí vận chuyển")]
         public string ShippingFeeFormatted => CurrencyHelper.FormatVND(ShippingFee);
+
+        [Display(Name = "Giảm giá voucher")]
+        public string VoucherDiscountFormatted => CurrencyHelper.FormatVND(VoucherDiscount);
 
         [Display(Name = "Tổng thanh toán")]
         public string FinalAmountFormatted => CurrencyHelper.FormatVND(FinalAmount);

@@ -11,12 +11,14 @@ namespace BookStore.Infrastructure.Services
     public class VoucherService : IVoucherService
     {
         private readonly ApplicationDbContext _context;
+        private readonly IVoucherRepository _voucherRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<VoucherService> _logger;
 
-        public VoucherService(ApplicationDbContext context, IMapper mapper, ILogger<VoucherService> logger)
+        public VoucherService(ApplicationDbContext context, IVoucherRepository voucherRepository, IMapper mapper, ILogger<VoucherService> logger)
         {
             _context = context;
+            _voucherRepository = voucherRepository;
             _mapper = mapper;
             _logger = logger;
         }
@@ -233,6 +235,23 @@ namespace BookStore.Infrastructure.Services
                 .ToListAsync();
 
             return _mapper.Map<IEnumerable<VoucherUsageDto>>(usages);
+        }
+
+        public async Task<IEnumerable<VoucherDto>> GetUserVouchersAsync(int userId)
+        {
+            // Get vouchers that the user has used
+            var usedVoucherIds = await _context.VoucherUsages
+                .Where(vu => vu.UserId == userId)
+                .Select(vu => vu.VoucherId)
+                .Distinct()
+                .ToListAsync();
+
+            var usedVouchers = await _context.Vouchers
+                .Where(v => usedVoucherIds.Contains(v.Id))
+                .OrderByDescending(v => v.CreatedAt)
+                .ToListAsync();
+
+            return _mapper.Map<IEnumerable<VoucherDto>>(usedVouchers);
         }
 
         public async Task<int> GetUserVoucherUsageCountAsync(int userId, int voucherId)

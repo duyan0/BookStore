@@ -1,0 +1,247 @@
+@model List<BookStore.Web.Models.VoucherViewModel>
+@{
+    ViewData["Title"] = "Quản lý Voucher";
+}
+
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0">
+                <i class="fas fa-ticket-alt me-2"></i>Quản lý Voucher
+            </h2>
+            <p class="text-muted mb-0">Quản lý mã giảm giá và khuyến mãi</p>
+        </div>
+        <div>
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Tạo Voucher Mới
+            </a>
+        </div>
+    </div>
+
+    <!-- Alerts -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Tổng Voucher</h6>
+                            <h3 class="mb-0">@Model.Count</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-ticket-alt fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Đang Hoạt Động</h6>
+                            <h3 class="mb-0">@Model.Count(v => v.IsValid)</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Đã Hết Hạn</h6>
+                            <h3 class="mb-0">@Model.Count(v => v.IsExpired)</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-clock fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Đã Sử Dụng</h6>
+                            <h3 class="mb-0">@Model.Sum(v => v.UsedCount)</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-chart-line fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vouchers Table -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-list me-2"></i>Danh sách Voucher
+            </h5>
+        </div>
+        <div class="card-body">
+            @if (Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Mã</th>
+                                <th>Tên</th>
+                                <th>Loại</th>
+                                <th>Giá trị</th>
+                                <th>Đã sử dụng</th>
+                                <th>Trạng thái</th>
+                                <th>Hết hạn</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var voucher in Model.OrderByDescending(v => v.CreatedAt))
+                            {
+                                <tr>
+                                    <td>
+                                        <code class="bg-light px-2 py-1 rounded">@voucher.Code</code>
+                                    </td>
+                                    <td>
+                                        <strong>@voucher.Name</strong>
+                                        @if (!string.IsNullOrEmpty(voucher.Description))
+                                        {
+                                            <br><small class="text-muted">@voucher.Description</small>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">@voucher.TypeName</span>
+                                    </td>
+                                    <td>
+                                        <strong>@voucher.ValueFormatted</strong>
+                                        @if (voucher.MinimumOrderAmount > 0)
+                                        {
+                                            <br><small class="text-muted">Tối thiểu: @voucher.MinimumOrderAmountFormatted</small>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <span class="me-2">@voucher.UsedCount</span>
+                                            @if (voucher.UsageLimit.HasValue)
+                                            {
+                                                <span class="text-muted">/ @voucher.UsageLimit</span>
+                                                <div class="progress ms-2" style="width: 60px; height: 8px;">
+                                                    <div class="progress-bar" style="width: @voucher.UsagePercentage%"></div>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">/ ∞</span>
+                                            }
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-@voucher.ValidityStatusClass">
+                                            @voucher.ValidityStatus
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            @voucher.EndDate.ToString("dd/MM/yyyy")
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a asp-action="Details" asp-route-id="@voucher.Id" 
+                                               class="btn btn-sm btn-outline-primary" title="Xem chi tiết">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a asp-action="Edit" asp-route-id="@voucher.Id" 
+                                               class="btn btn-sm btn-outline-warning" title="Chỉnh sửa">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                    onclick="confirmDelete(@voucher.Id, '@voucher.Code')" title="Xóa">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-ticket-alt fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Chưa có voucher nào</h5>
+                    <p class="text-muted">Tạo voucher đầu tiên để bắt đầu chương trình khuyến mãi</p>
+                    <a asp-action="Create" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Tạo Voucher Mới
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Xác nhận xóa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa voucher <strong id="voucherCodeToDelete"></strong>?</p>
+                <p class="text-danger"><small>Hành động này không thể hoàn tác.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <form id="deleteForm" method="post" style="display: inline;">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger">Xóa</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmDelete(voucherId, voucherCode) {
+            document.getElementById('voucherCodeToDelete').textContent = voucherCode;
+            document.getElementById('deleteForm').action = `/Admin/Vouchers/Delete/${voucherId}`;
+            
+            const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            modal.show();
+        }
+    </script>
+}

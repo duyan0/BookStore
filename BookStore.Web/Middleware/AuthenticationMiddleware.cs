@@ -22,7 +22,8 @@ namespace BookStore.Web.Middleware
         private readonly string[] _adminOnlyRoutes = {
             "/books",
             "/authors",
-            "/categories"
+            "/categories",
+            "/admin"
         };
 
         public AuthenticationMiddleware(RequestDelegate next, ILogger<AuthenticationMiddleware> logger)

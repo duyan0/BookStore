@@ -1,0 +1,259 @@
+@model BookStore.Web.Models.VoucherViewModel
+@{
+    ViewData["Title"] = "Chi tiết Voucher";
+}
+
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0">
+                <i class="fas fa-ticket-alt me-2"></i>Chi tiết Voucher
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Index">Quản lý Voucher</a></li>
+                    <li class="breadcrumb-item active">Chi tiết</li>
+                </ol>
+            </nav>
+        </div>
+        <div>
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary me-2">
+                <i class="fas fa-edit me-2"></i>Chỉnh sửa
+            </a>
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Quay lại
+            </a>
+        </div>
+    </div>
+
+    <!-- Alerts -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Voucher Details -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>Thông tin Voucher
+                        </h5>
+                        <span class="badge @(Model.IsValid ? "bg-success" : "bg-secondary") fs-6">
+                            @Model.StatusText
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Mã voucher:</label>
+                            <div class="p-2 bg-light rounded">
+                                <code class="fs-5 text-primary">@Model.Code</code>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Tên voucher:</label>
+                            <p class="mb-0">@Model.Name</p>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.Description))
+                    {
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Mô tả:</label>
+                            <p class="mb-0">@Model.Description</p>
+                        </div>
+                    }
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">Loại voucher:</label>
+                            <p class="mb-0">
+                                <span class="badge bg-info">@Model.TypeName</span>
+                            </p>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">Giá trị:</label>
+                            <p class="mb-0 fs-5 text-success fw-bold">@Model.ValueFormatted</p>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">Đơn hàng tối thiểu:</label>
+                            <p class="mb-0">@Model.MinimumOrderAmountFormatted</p>
+                        </div>
+                    </div>
+
+                    @if (Model.MaximumDiscountAmount.HasValue)
+                    {
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Giảm giá tối đa:</label>
+                                <p class="mb-0">@Model.MaximumDiscountAmountFormatted</p>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Ngày bắt đầu:</label>
+                            <p class="mb-0">@Model.StartDate.ToString("dd/MM/yyyy HH:mm")</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Ngày kết thúc:</label>
+                            <p class="mb-0">@Model.EndDate.ToString("dd/MM/yyyy HH:mm")</p>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Ngày tạo:</label>
+                            <p class="mb-0">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</p>
+                        </div>
+                        @if (Model.UpdatedAt.HasValue)
+                        {
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Cập nhật lần cuối:</label>
+                                <p class="mb-0">@Model.UpdatedAt.Value.ToString("dd/MM/yyyy HH:mm")</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Usage Statistics -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>Thống kê sử dụng
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Đã sử dụng:</label>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fs-4 fw-bold text-primary">@Model.UsedCount</span>
+                            @if (Model.UsageLimit.HasValue)
+                            {
+                                <span class="text-muted">/ @Model.UsageLimit lần</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">/ Không giới hạn</span>
+                            }
+                        </div>
+                        @if (Model.UsageLimit.HasValue)
+                        {
+                            var usagePercentage = (double)Model.UsedCount / Model.UsageLimit.Value * 100;
+                            <div class="progress mt-2">
+                                <div class="progress-bar @(usagePercentage >= 90 ? "bg-danger" : usagePercentage >= 70 ? "bg-warning" : "bg-success")" 
+                                     style="width: @usagePercentage%"></div>
+                            </div>
+                            <small class="text-muted">@usagePercentage.ToString("F1")% đã sử dụng</small>
+                        }
+                    </div>
+
+                    @if (Model.UsageLimitPerUser.HasValue)
+                    {
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Giới hạn mỗi người:</label>
+                            <p class="mb-0">@Model.UsageLimitPerUser lần</p>
+                        </div>
+                    }
+
+                    <!-- Status Indicators -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Trạng thái:</label>
+                        <div>
+                            @if (Model.IsActive)
+                            {
+                                <span class="badge bg-success me-2">Đang hoạt động</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary me-2">Không hoạt động</span>
+                            }
+
+                            @if (Model.IsExpired)
+                            {
+                                <span class="badge bg-danger">Đã hết hạn</span>
+                            }
+                            else if (DateTime.UtcNow < Model.StartDate)
+                            {
+                                <span class="badge bg-warning">Chưa bắt đầu</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-info">Trong thời hạn</span>
+                            }
+
+                            @if (Model.IsUsageLimitReached)
+                            {
+                                <span class="badge bg-danger mt-1">Đã đạt giới hạn</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="card shadow">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cogs me-2"></i>Thao tác
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+                            <i class="fas fa-edit me-2"></i>Chỉnh sửa
+                        </a>
+
+                        @if (Model.IsActive)
+                        {
+                            <form asp-action="Deactivate" asp-route-id="@Model.Id" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-warning w-100" 
+                                        onclick="return confirm('Bạn có chắc muốn vô hiệu hóa voucher này?')">
+                                    <i class="fas fa-pause me-2"></i>Vô hiệu hóa
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <form asp-action="Activate" asp-route-id="@Model.Id" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="fas fa-play me-2"></i>Kích hoạt
+                                </button>
+                            </form>
+                        }
+
+                        <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-danger w-100" 
+                                    onclick="return confirm('Bạn có chắc muốn xóa voucher này? Hành động này không thể hoàn tác!')">
+                                <i class="fas fa-trash me-2"></i>Xóa
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

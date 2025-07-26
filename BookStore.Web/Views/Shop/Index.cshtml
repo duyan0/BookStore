@@ -120,6 +120,22 @@
                                          class="card-img-top object-fit-contain book-image">
                                 </a>
 
+                                @{
+                                    var hasDiscount = book.IsDiscountActive;
+                                    var finalPrice = book.DiscountedPrice;
+                                    var discountPercent = book.DiscountPercentageDisplay;
+                                }
+
+                                <!-- Discount Badge -->
+                                @if (hasDiscount)
+                                {
+                                    <div class="position-absolute top-0 start-0 m-2">
+                                        <span class="badge bg-danger discount-badge">
+                                            <i class="fas fa-percent me-1"></i>-@discountPercent%
+                                        </span>
+                                    </div>
+                                }
+
                                 <!-- Stock Badge -->
                                 @if (book.IsInStock)
                                 {
@@ -148,8 +164,26 @@
                                
 
                                 <div class="mt-auto">
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <span class="book-price text-danger fw-bold">@book.PriceFormatted</span>
+                                    <!-- Price Section -->
+                                    <div class="price-section mb-2">
+                                        @if (hasDiscount)
+                                        {
+                                            <div class="d-flex flex-column">
+                                                <div class="original-price text-muted text-decoration-line-through small mb-1">
+                                                    @book.PriceFormatted
+                                                </div>
+                                                <div class="discounted-price text-danger fw-bold">
+                                                    @book.DiscountedPriceFormatted
+                                                </div>
+                                                <small class="text-success">
+                                                    <i class="fas fa-piggy-bank me-1"></i>Tiết kiệm: @book.TotalDiscountAmountFormatted
+                                                </small>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="book-price text-danger fw-bold">@book.PriceFormatted</span>
+                                        }
                                     </div>
 
                                     @if (book.IsInStock)

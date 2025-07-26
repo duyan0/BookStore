@@ -91,10 +91,22 @@ namespace BookStore.Web.Models
             {
                 if (!IsOnSale || !IsDiscountActive) return Price;
 
-                var discountFromPercentage = Price * (DiscountPercentage / 100);
-                var totalDiscount = discountFromPercentage + DiscountAmount;
-                var finalPrice = Price - totalDiscount;
+                // Tính discount từ phần trăm trước
+                var priceAfterPercentageDiscount = Price;
+                if (DiscountPercentage > 0)
+                {
+                    var percentageDiscount = Price * (DiscountPercentage / 100);
+                    priceAfterPercentageDiscount = Price - percentageDiscount;
+                }
 
+                // Sau đó áp dụng discount cố định
+                var finalPrice = priceAfterPercentageDiscount;
+                if (DiscountAmount > 0)
+                {
+                    finalPrice = priceAfterPercentageDiscount - DiscountAmount;
+                }
+
+                // Đảm bảo giá không âm
                 return finalPrice < 0 ? 0 : finalPrice;
             }
         }
@@ -131,6 +143,47 @@ namespace BookStore.Web.Models
             {
                 if (!IsDiscountActive || Price == 0) return 0;
                 return Math.Round((TotalDiscountAmount / Price) * 100, 0);
+            }
+        }
+
+        // Discount breakdown for display
+        public decimal PercentageDiscountAmount
+        {
+            get
+            {
+                if (!IsDiscountActive || DiscountPercentage <= 0) return 0;
+                return Price * (DiscountPercentage / 100);
+            }
+        }
+
+        public decimal FixedDiscountAmount
+        {
+            get
+            {
+                if (!IsDiscountActive || DiscountAmount <= 0) return 0;
+                return Math.Min(DiscountAmount, Price - PercentageDiscountAmount);
+            }
+        }
+
+        public string DiscountDescription
+        {
+            get
+            {
+                if (!IsDiscountActive) return string.Empty;
+
+                var parts = new List<string>();
+
+                if (DiscountPercentage > 0)
+                {
+                    parts.Add($"Giảm {DiscountPercentage}%");
+                }
+
+                if (DiscountAmount > 0)
+                {
+                    parts.Add($"Giảm thêm {CurrencyHelper.FormatVND(DiscountAmount)}");
+                }
+
+                return string.Join(" + ", parts);
             }
         }
 

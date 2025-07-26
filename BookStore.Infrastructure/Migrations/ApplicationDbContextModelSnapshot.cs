@@ -152,7 +152,7 @@ namespace BookStore.Infrastructure.Migrations
                     b.Property<decimal>("DiscountAmount")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal>("DiscountPercentage")
+                    b.Property<decimal?>("DiscountPercentage")
                         .HasColumnType("decimal(5,2)");
 
                     b.Property<string>("ISBN")
@@ -167,6 +167,9 @@ namespace BookStore.Infrastructure.Migrations
 
                     b.Property<bool>("IsOnSale")
                         .HasColumnType("bit");
+
+                    b.Property<decimal>("OriginalPrice")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");

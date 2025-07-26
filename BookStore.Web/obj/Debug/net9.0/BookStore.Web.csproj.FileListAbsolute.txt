@@ -3,8 +3,8 @@ C:\BookStore\bookstore.web\bin\Debug\net9.0\appsettings.json
 C:\BookStore\bookstore.web\bin\Debug\net9.0\BookStore.Web.staticwebassets.runtime.json
 C:\BookStore\bookstore.web\bin\Debug\net9.0\BookStore.Web.staticwebassets.endpoints.json
 C:\BookStore\bookstore.web\bin\Debug\net9.0\BookStore.Web.exe
-C:\BookStore\bookstore.web\bin\Debug\net9.0\BookStore.Web.deps.json
-C:\BookStore\bookstore.web\bin\Debug\net9.0\BookStore.Web.runtimeconfig.json
+C:\BookStore\BookStore.Web\bin\Debug\net9.0\BookStore.Web.deps.json
+C:\BookStore\BookStore.Web\bin\Debug\net9.0\BookStore.Web.runtimeconfig.json
 C:\BookStore\bookstore.web\bin\Debug\net9.0\BookStore.Web.dll
 C:\BookStore\bookstore.web\bin\Debug\net9.0\BookStore.Web.pdb
 C:\BookStore\bookstore.web\bin\Debug\net9.0\AutoMapper.dll
@@ -73,10 +73,10 @@ C:\BookStore\bookstore.web\obj\Debug\net9.0\BookStore.Web.sourcelink.json
 C:\BookStore\bookstore.web\obj\Debug\net9.0\scopedcss\Views\Shared\_Layout.cshtml.rz.scp.css
 C:\BookStore\bookstore.web\obj\Debug\net9.0\scopedcss\bundle\BookStore.Web.styles.css
 C:\BookStore\bookstore.web\obj\Debug\net9.0\scopedcss\projectbundle\BookStore.Web.bundle.scp.css
-C:\BookStore\bookstore.web\obj\Debug\net9.0\compressed\o6wij7foii-0xynz4c2kj.gz
+C:\BookStore\bookstore.web\obj\Debug\net9.0\compressed\o6wij7foii-mr34vw9rvq.gz
 C:\BookStore\bookstore.web\obj\Debug\net9.0\compressed\nxknmza96g-zcvqhrdwcr.gz
 C:\BookStore\bookstore.web\obj\Debug\net9.0\compressed\wafub7jsrq-61n19gt1b8.gz
-C:\BookStore\bookstore.web\obj\Debug\net9.0\compressed\pg99qyl8w0-b3dn2be92y.gz
+C:\BookStore\bookstore.web\obj\Debug\net9.0\compressed\pg99qyl8w0-88b8udref6.gz
 C:\BookStore\bookstore.web\obj\Debug\net9.0\compressed\tbeai9vv9e-rzcir9qr1o.gz
 C:\BookStore\bookstore.web\obj\Debug\net9.0\compressed\6dguzj50t4-bqjiyaj88i.gz
 C:\BookStore\bookstore.web\obj\Debug\net9.0\compressed\be8sorya5c-c2jlpeoesf.gz
@@ -144,9 +144,9 @@ C:\BookStore\bookstore.web\obj\Debug\net9.0\staticwebassets.build.json
 C:\BookStore\bookstore.web\obj\Debug\net9.0\staticwebassets.build.json.cache
 C:\BookStore\bookstore.web\obj\Debug\net9.0\staticwebassets.development.json
 C:\BookStore\bookstore.web\obj\Debug\net9.0\staticwebassets.build.endpoints.json
-C:\BookStore\bookstore.web\obj\Debug\net9.0\BookStor.5D7E8913.Up2Date
+C:\BookStore\BookStore.Web\obj\Debug\net9.0\BookStor.5D7E8913.Up2Date
 C:\BookStore\bookstore.web\obj\Debug\net9.0\BookStore.Web.dll
 C:\BookStore\bookstore.web\obj\Debug\net9.0\refint\BookStore.Web.dll
 C:\BookStore\bookstore.web\obj\Debug\net9.0\BookStore.Web.pdb
-C:\BookStore\bookstore.web\obj\Debug\net9.0\BookStore.Web.genruntimeconfig.cache
-C:\BookStore\bookstore.web\obj\Debug\net9.0\ref\BookStore.Web.dll
+C:\BookStore\BookStore.Web\obj\Debug\net9.0\BookStore.Web.genruntimeconfig.cache
+C:\BookStore\BookStore.Web\obj\Debug\net9.0\ref\BookStore.Web.dll

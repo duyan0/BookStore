@@ -1,0 +1,265 @@
+@model BookStore.Web.Models.HelpCenterHomeViewModel
+@{
+    ViewData["Title"] = "Trung tâm trợ giúp";
+}
+
+<!-- Hero Section -->
+<div class="bg-primary text-white py-5 mb-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-4 fw-bold mb-3">
+                    <i class="fas fa-question-circle me-3"></i>Trung tâm trợ giúp
+                </h1>
+                <p class="lead mb-4">
+                    Tìm câu trả lời cho các câu hỏi thường gặp, hướng dẫn sử dụng và chính sách của BookStore
+                </p>
+                
+                <!-- Search Box -->
+                <form asp-controller="Help" asp-action="Search" method="get" class="d-flex">
+                    <div class="input-group input-group-lg">
+                        <span class="input-group-text bg-white">
+                            <i class="fas fa-search text-muted"></i>
+                        </span>
+                        <input type="text" name="q" class="form-control" 
+                               placeholder="Tìm kiếm câu hỏi, hướng dẫn..." 
+                               value="@ViewBag.Query">
+                        <button class="btn btn-light" type="submit">
+                            <strong>Tìm kiếm</strong>
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="col-lg-4 text-center">
+                <i class="fas fa-headset fa-5x opacity-75"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Quick Access Categories -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h2 class="mb-4">
+                <i class="fas fa-th-large me-2"></i>Danh mục hỗ trợ
+            </h2>
+        </div>
+        
+        @if (Model.Categories.Any())
+        {
+            @foreach (var category in Model.Categories.Take(6))
+            {
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <a asp-action="Category" asp-route-category="@category.CategoryUrl" 
+                       class="card h-100 text-decoration-none category-card">
+                        <div class="card-body text-center">
+                            <div class="category-icon mb-3">
+                                <i class="@GetCategoryIcon(category.Category) fa-3x text-primary"></i>
+                            </div>
+                            <h5 class="card-title text-dark">@category.CategoryName</h5>
+                            <p class="card-text text-muted">@category.CategoryDescription</p>
+                            <div class="badge bg-primary">@category.ArticleCount bài viết</div>
+                        </div>
+                    </a>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12">
+                <div class="row">
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <a asp-action="FAQ" class="card h-100 text-decoration-none category-card">
+                            <div class="card-body text-center">
+                                <div class="category-icon mb-3">
+                                    <i class="fas fa-question-circle fa-3x text-primary"></i>
+                                </div>
+                                <h5 class="card-title text-dark">Câu hỏi thường gặp</h5>
+                                <p class="card-text text-muted">Các câu hỏi phổ biến từ khách hàng</p>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <a asp-action="Category" asp-route-category="orders" class="card h-100 text-decoration-none category-card">
+                            <div class="card-body text-center">
+                                <div class="category-icon mb-3">
+                                    <i class="fas fa-shopping-cart fa-3x text-primary"></i>
+                                </div>
+                                <h5 class="card-title text-dark">Đơn hàng</h5>
+                                <p class="card-text text-muted">Hướng dẫn đặt hàng và theo dõi</p>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <a asp-action="Contact" class="card h-100 text-decoration-none category-card">
+                            <div class="card-body text-center">
+                                <div class="category-icon mb-3">
+                                    <i class="fas fa-envelope fa-3x text-primary"></i>
+                                </div>
+                                <h5 class="card-title text-dark">Liên hệ</h5>
+                                <p class="card-text text-muted">Gửi câu hỏi trực tiếp cho chúng tôi</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Featured Articles -->
+    @if (Model.FeaturedArticles.Any())
+    {
+        <div class="row mb-5">
+            <div class="col-12">
+                <h3 class="mb-4">
+                    <i class="fas fa-star me-2"></i>Bài viết nổi bật
+                </h3>
+            </div>
+            @foreach (var article in Model.FeaturedArticles.Take(3))
+            {
+                <div class="col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <span class="badge bg-warning">@article.TypeName</span>
+                                <small class="text-muted">@article.CreatedAtFormatted</small>
+                            </div>
+                            <h5 class="card-title">
+                                <a asp-action="Article" asp-route-slug="@article.Slug" 
+                                   class="text-decoration-none">@article.Title</a>
+                            </h5>
+                            <p class="card-text text-muted">@article.Summary</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    <i class="fas fa-eye me-1"></i>@article.ViewCount lượt xem
+                                </small>
+                                <a asp-action="Article" asp-route-slug="@article.Slug" 
+                                   class="btn btn-sm btn-outline-primary">Đọc thêm</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <!-- Popular FAQs -->
+    @if (Model.PopularFAQs.Any())
+    {
+        <div class="row mb-5">
+            <div class="col-12">
+                <h3 class="mb-4">
+                    <i class="fas fa-fire me-2"></i>Câu hỏi phổ biến
+                </h3>
+            </div>
+            <div class="col-12">
+                <div class="accordion" id="faqAccordion">
+                    @for (int i = 0; i < Model.PopularFAQs.Take(5).Count(); i++)
+                    {
+                        var faq = Model.PopularFAQs[i];
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="faq@(i)">
+                                <button class="accordion-button @(i == 0 ? "" : "collapsed")" 
+                                        type="button" 
+                                        data-bs-toggle="collapse" 
+                                        data-bs-target="#collapse@(i)" 
+                                        aria-expanded="@(i == 0 ? "true" : "false")" 
+                                        aria-controls="collapse@(i)">
+                                    @faq.Title
+                                </button>
+                            </h2>
+                            <div id="collapse@(i)" 
+                                 class="accordion-collapse collapse @(i == 0 ? "show" : "")" 
+                                 aria-labelledby="faq@(i)" 
+                                 data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    <p>@faq.Summary</p>
+                                    <a asp-action="Article" asp-route-slug="@faq.Slug" 
+                                       class="btn btn-sm btn-outline-primary">Xem chi tiết</a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+                
+                <div class="text-center mt-4">
+                    <a asp-action="FAQ" class="btn btn-primary">
+                        <i class="fas fa-list me-2"></i>Xem tất cả FAQ
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Contact Section -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card bg-light">
+                <div class="card-body text-center py-5">
+                    <h4 class="mb-3">Không tìm thấy câu trả lời?</h4>
+                    <p class="text-muted mb-4">
+                        Đội ngũ hỗ trợ của chúng tôi luôn sẵn sàng giúp đỡ bạn
+                    </p>
+                    <div class="row justify-content-center">
+                        <div class="col-md-4 mb-3">
+                            <a asp-action="Contact" class="btn btn-primary btn-lg w-100">
+                                <i class="fas fa-envelope me-2"></i>Gửi tin nhắn
+                            </a>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <a href="tel:1900-xxxx" class="btn btn-outline-primary btn-lg w-100">
+                                <i class="fas fa-phone me-2"></i>Gọi hotline
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    string GetCategoryIcon(BookStore.Core.Entities.HelpArticleCategory category)
+    {
+        return category switch
+        {
+            BookStore.Core.Entities.HelpArticleCategory.General => "fas fa-home",
+            BookStore.Core.Entities.HelpArticleCategory.Account => "fas fa-user",
+            BookStore.Core.Entities.HelpArticleCategory.Orders => "fas fa-shopping-cart",
+            BookStore.Core.Entities.HelpArticleCategory.Payment => "fas fa-credit-card",
+            BookStore.Core.Entities.HelpArticleCategory.Shipping => "fas fa-truck",
+            BookStore.Core.Entities.HelpArticleCategory.Returns => "fas fa-undo",
+            BookStore.Core.Entities.HelpArticleCategory.Technical => "fas fa-cog",
+            BookStore.Core.Entities.HelpArticleCategory.Privacy => "fas fa-shield-alt",
+            BookStore.Core.Entities.HelpArticleCategory.Terms => "fas fa-file-contract",
+            BookStore.Core.Entities.HelpArticleCategory.Contact => "fas fa-envelope",
+            _ => "fas fa-question-circle"
+        };
+    }
+}
+
+<style>
+.category-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: 1px solid #e9ecef;
+}
+
+.category-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    text-decoration: none;
+}
+
+.category-icon {
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: #e7f3ff;
+    color: #0d6efd;
+}
+</style>

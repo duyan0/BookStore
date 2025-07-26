@@ -12,11 +12,14 @@ namespace BookStore.API.Mappings
             CreateMap<Book, BookDto>()
                 .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category != null ? src.Category.Name : string.Empty))
                 .ForMember(dest => dest.AuthorName, opt => opt.MapFrom(src => src.Author != null ? $"{src.Author.FirstName} {src.Author.LastName}" : string.Empty))
-                .ForMember(dest => dest.DiscountedPrice, opt => opt.MapFrom(src => src.DiscountedPrice))
-                .ForMember(dest => dest.IsDiscountActive, opt => opt.MapFrom(src => src.IsDiscountActive))
-                .ForMember(dest => dest.TotalDiscountAmount, opt => opt.MapFrom(src => src.TotalDiscountAmount));
-            CreateMap<CreateBookDto, Book>();
-            CreateMap<UpdateBookDto, Book>();
+                .ForMember(dest => dest.DiscountedPrice, opt => opt.MapFrom(src => src.FinalPrice))
+                .ForMember(dest => dest.IsDiscountActive, opt => opt.MapFrom(src => src.HasActiveDiscount))
+                .ForMember(dest => dest.TotalDiscountAmount, opt => opt.MapFrom(src => src.TotalSavings))
+                .ForMember(dest => dest.Price, opt => opt.MapFrom(src => src.OriginalPrice));
+            CreateMap<CreateBookDto, Book>()
+                .ForMember(dest => dest.OriginalPrice, opt => opt.MapFrom(src => src.Price));
+            CreateMap<UpdateBookDto, Book>()
+                .ForMember(dest => dest.OriginalPrice, opt => opt.MapFrom(src => src.Price));
 
             // Category mappings
             CreateMap<Category, CategoryDto>();
@@ -55,6 +58,11 @@ namespace BookStore.API.Mappings
             CreateMap<Banner, BannerDto>();
             CreateMap<CreateBannerDto, Banner>();
             CreateMap<UpdateBannerDto, Banner>();
+
+            // Voucher mappings
+            CreateMap<Voucher, VoucherDto>();
+            CreateMap<CreateVoucherDto, Voucher>();
+            CreateMap<UpdateVoucherDto, Voucher>();
         }
     }
 }

@@ -52,7 +52,18 @@
                                 </div>
                                 <div class="col-md-4">
                                     <h6 class="mb-1">@item.BookTitle</h6>
-                                    <p class="text-danger fw-semibold small mb-0">Đơn giá: @item.BookPriceFormatted</p>
+                                    @if (item.IsDiscountActive)
+                                    {
+                                        <div class="price-section">
+                                            <span class="text-muted text-decoration-line-through small">@item.BookPriceFormatted</span>
+                                            <p class="text-danger fw-semibold mb-0">@item.DiscountedPriceFormatted</p>
+                                            <span class="badge bg-success small">-@item.DiscountPercentageDisplay%</span>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <p class="text-danger fw-semibold small mb-0">Đơn giá: @item.BookPriceFormatted</p>
+                                    }
                                     @if (item.IsOutOfStock)
                                     {
                                         <span class="badge bg-danger">Hết hàng</span>
@@ -99,10 +110,30 @@
                             <span>Tổng số lượng:</span>
                             <strong>@Model.TotalItems sản phẩm</strong>
                         </div>
-                        <div class="d-flex justify-content-between mb-3">
-                            <span>Tạm tính:</span>
-                            <strong>@Model.TotalAmountFormatted</strong>
-                        </div>
+
+                        @if (Model.HasDiscounts)
+                        {
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Tổng tiền gốc:</span>
+                                <span class="text-muted text-decoration-line-through">@Model.TotalOriginalAmountFormatted</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-success">Tiết kiệm:</span>
+                                <strong class="text-success">-@Model.TotalSavingsFormatted</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-3">
+                                <span>Tạm tính:</span>
+                                <strong class="text-danger">@Model.TotalAmountFormatted</strong>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="d-flex justify-content-between mb-3">
+                                <span>Tạm tính:</span>
+                                <strong>@Model.TotalAmountFormatted</strong>
+                            </div>
+                        }
+
                         <hr>
                         <div class="d-flex justify-content-between mb-3">
                             <span class="h5">Tổng cộng:</span>

@@ -48,13 +48,13 @@ namespace BookStore.Core.DTOs
         public VoucherType Type { get; set; }
 
         [Required(ErrorMessage = "Giá trị voucher là bắt buộc")]
-        [Range(0.01, 10000000, ErrorMessage = "Giá trị voucher phải từ 0.01 đến 10,000,000")]
+        [Range(0.01, 999999999, ErrorMessage = "Giá trị voucher phải từ 0.01 đến 999,999,999")]
         public decimal Value { get; set; }
 
-        [Range(0, 10000000, ErrorMessage = "Giá trị đơn hàng tối thiểu phải từ 0 đến 10,000,000")]
+        [Range(0, 999999999, ErrorMessage = "Giá trị đơn hàng tối thiểu phải từ 0 đến 999,999,999")]
         public decimal MinimumOrderAmount { get; set; } = 0;
 
-        [Range(0, 10000000, ErrorMessage = "Giá trị giảm tối đa phải từ 0 đến 10,000,000")]
+        [Range(0, 999999999, ErrorMessage = "Giá trị giảm tối đa phải từ 0 đến 999,999,999")]
         public decimal? MaximumDiscountAmount { get; set; }
 
         [Range(1, int.MaxValue, ErrorMessage = "Giới hạn sử dụng phải lớn hơn 0")]

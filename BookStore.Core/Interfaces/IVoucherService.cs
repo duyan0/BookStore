@@ -18,6 +18,7 @@ namespace BookStore.Core.Interfaces
         // Usage tracking
         Task<IEnumerable<VoucherUsageDto>> GetVoucherUsagesAsync(int voucherId);
         Task<IEnumerable<VoucherUsageDto>> GetUserVoucherUsagesAsync(int userId);
+        Task<IEnumerable<VoucherDto>> GetUserVouchersAsync(int userId);
         Task<int> GetUserVoucherUsageCountAsync(int userId, int voucherId);
         
         // Admin functions

@@ -1,0 +1,332 @@
+@model BookStore.Web.Models.CreateVoucherViewModel
+@{
+    ViewData["Title"] = "Tạo Voucher Mới";
+}
+
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0">
+                <i class="fas fa-plus me-2"></i>Tạo Voucher Mới
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Index">Quản lý Voucher</a></li>
+                    <li class="breadcrumb-item active">Tạo mới</li>
+                </ol>
+            </nav>
+        </div>
+        <div>
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Quay lại
+            </a>
+        </div>
+    </div>
+
+    <!-- Alerts -->
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Form -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-ticket-alt me-2"></i>Thông tin Voucher
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="row">
+                            <!-- Mã voucher -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Code" class="form-label">Mã voucher <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input asp-for="Code" class="form-control" placeholder="Nhập mã voucher (VD: SALE20)" maxlength="50" />
+                                    <button type="button" class="btn btn-outline-secondary" id="generateCodeBtn">
+                                        <i class="fas fa-random"></i> Tạo tự động
+                                    </button>
+                                </div>
+                                <span asp-validation-for="Code" class="text-danger"></span>
+                                <div class="form-text">Mã voucher phải là duy nhất, chỉ chứa chữ hoa và số (tối đa 50 ký tự)</div>
+                            </div>
+
+                            <!-- Tên voucher -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Name" class="form-label">Tên voucher <span class="text-danger">*</span></label>
+                                <input asp-for="Name" class="form-control" placeholder="Nhập tên voucher" />
+                                <span asp-validation-for="Name" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Mô tả -->
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label">Mô tả</label>
+                            <textarea asp-for="Description" class="form-control" rows="3" placeholder="Mô tả chi tiết về voucher..."></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <!-- Loại voucher -->
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="Type" class="form-label">Loại voucher <span class="text-danger">*</span></label>
+                                <select asp-for="Type" class="form-select" id="voucherType">
+                                    <option value="">-- Chọn loại voucher --</option>
+                                    <option value="1">Giảm theo phần trăm</option>
+                                    <option value="2">Giảm số tiền cố định</option>
+                                    <option value="3">Miễn phí vận chuyển</option>
+                                </select>
+                                <span asp-validation-for="Type" class="text-danger"></span>
+                            </div>
+
+                            <!-- Giá trị -->
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="Value" class="form-label">Giá trị <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input asp-for="Value" class="form-control value-input" placeholder="0" id="voucherValue" step="0.01" />
+                                    <span class="input-group-text" id="valueUnit">%</span>
+                                </div>
+                                <span asp-validation-for="Value" class="text-danger"></span>
+                                <div class="form-text" id="valueHelp">Nhập phần trăm giảm giá (1-100)</div>
+                            </div>
+
+                            <!-- Số lượng sử dụng -->
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="UsageLimit" class="form-label">Giới hạn sử dụng</label>
+                                <input asp-for="UsageLimit" class="form-control" placeholder="Không giới hạn" />
+                                <span asp-validation-for="UsageLimit" class="text-danger"></span>
+                                <div class="form-text">Để trống nếu không giới hạn</div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Đơn hàng tối thiểu -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="MinimumOrderAmount" class="form-label">Đơn hàng tối thiểu (VNĐ) <span class="text-danger">*</span></label>
+                                <input asp-for="MinimumOrderAmount" class="form-control currency-input" placeholder="0" step="any" data-original-value="@Model.MinimumOrderAmount" />
+                                <span asp-validation-for="MinimumOrderAmount" class="text-danger"></span>
+                                <div class="form-text">Giá trị đơn hàng tối thiểu để áp dụng voucher</div>
+                            </div>
+
+                            <!-- Giảm giá tối đa -->
+                            <div class="col-md-6 mb-3" id="maxDiscountGroup">
+                                <label asp-for="MaximumDiscountAmount" class="form-label">Giảm giá tối đa (VNĐ)</label>
+                                <input asp-for="MaximumDiscountAmount" class="form-control currency-input" placeholder="Không giới hạn" step="any" data-original-value="@Model.MaximumDiscountAmount" />
+                                <span asp-validation-for="MaximumDiscountAmount" class="text-danger"></span>
+                                <div class="form-text">Để trống nếu không giới hạn</div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Ngày bắt đầu -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="StartDate" class="form-label">Ngày bắt đầu <span class="text-danger">*</span></label>
+                                <input asp-for="StartDate" type="datetime-local" class="form-control" />
+                                <span asp-validation-for="StartDate" class="text-danger"></span>
+                            </div>
+
+                            <!-- Ngày kết thúc -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="EndDate" class="form-label">Ngày kết thúc <span class="text-danger">*</span></label>
+                                <input asp-for="EndDate" type="datetime-local" class="form-control" />
+                                <span asp-validation-for="EndDate" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Trạng thái -->
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                                <label asp-for="IsActive" class="form-check-label">
+                                    Kích hoạt voucher ngay
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="d-flex justify-content-end gap-2">
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Hủy
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Tạo Voucher
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        $(document).ready(function() {
+            // Generate random voucher code
+            $('#generateCodeBtn').on('click', function() {
+                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+                let code = '';
+                for (let i = 0; i < 20; i++) {
+                    code += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                $('#Code').val(code);
+            });
+
+            // Store original values for currency inputs
+            $('.currency-input').each(function() {
+                $(this).data('original-value', $(this).val());
+            });
+
+            // Format currency inputs with better handling
+            $('.currency-input').on('input', function() {
+                let value = $(this).val().replace(/[^\d]/g, '');
+                if (value) {
+                    // Handle large numbers properly
+                    let numValue = parseInt(value);
+                    if (!isNaN(numValue)) {
+                        $(this).val(numValue.toLocaleString('vi-VN'));
+                        // Store the raw value for form submission
+                        $(this).data('raw-value', numValue);
+                    }
+                } else {
+                    $(this).data('raw-value', '');
+                }
+            });
+
+            // Format value input based on type
+            $('.value-input').on('input', function() {
+                const type = $('#voucherType').val();
+                let value = $(this).val().replace(/[^\d.]/g, '');
+
+                if (value && type === '2') { // Fixed Amount (VoucherType.FixedAmount = 2)
+                    let numValue = parseFloat(value);
+                    if (!isNaN(numValue)) {
+                        $(this).val(numValue.toLocaleString('vi-VN'));
+                        $(this).data('raw-value', numValue);
+                    }
+                } else if (value) {
+                    $(this).data('raw-value', value);
+                }
+            });
+
+            // Client-side validation before submit
+            function validateForm() {
+                let isValid = true;
+                let errors = [];
+
+                // Validate voucher code
+                const code = $('#Code').val().trim();
+                if (!code) {
+                    errors.push('Mã voucher là bắt buộc');
+                    isValid = false;
+                }
+
+                // Validate voucher name
+                const name = $('#Name').val().trim();
+                if (!name) {
+                    errors.push('Tên voucher là bắt buộc');
+                    isValid = false;
+                }
+
+                // Validate voucher type
+                const type = $('#voucherType').val();
+                if (!type) {
+                    errors.push('Loại voucher là bắt buộc');
+                    isValid = false;
+                }
+
+                // Validate value
+                const value = $('#voucherValue').data('raw-value') || $('#voucherValue').val().replace(/[^\d.]/g, '');
+                if (!value || parseFloat(value) <= 0) {
+                    errors.push('Giá trị voucher phải lớn hơn 0');
+                    isValid = false;
+                }
+
+                if (!isValid) {
+                    alert('Vui lòng kiểm tra lại:\n' + errors.join('\n'));
+                }
+
+                return isValid;
+            }
+
+            // Remove formatting before form submission
+            $('form').on('submit', function(e) {
+                // Validate form first
+                if (!validateForm()) {
+                    e.preventDefault();
+                    return false;
+                }
+
+                $('.currency-input, .value-input').each(function() {
+                    let rawValue = $(this).data('raw-value');
+                    if (rawValue !== undefined && rawValue !== '') {
+                        $(this).val(rawValue);
+                    } else {
+                        let value = $(this).val().replace(/[^\d.]/g, '');
+                        $(this).val(value);
+                    }
+                });
+
+                // Allow form to submit
+                return true;
+            });
+
+            // Handle voucher type change
+            $('#voucherType').on('change', function() {
+                const type = $(this).val();
+                const valueUnit = $('#valueUnit');
+                const valueHelp = $('#valueHelp');
+                const maxDiscountGroup = $('#maxDiscountGroup');
+                const voucherValue = $('#voucherValue');
+
+                if (type === '1') { // Percentage (VoucherType.Percentage = 1)
+                    valueUnit.text('%');
+                    valueHelp.text('Nhập phần trăm giảm giá (1-100)');
+                    maxDiscountGroup.show();
+                    voucherValue.attr('max', '100').prop('readonly', false);
+                } else if (type === '2') { // Fixed Amount (VoucherType.FixedAmount = 2)
+                    valueUnit.text('VNĐ');
+                    valueHelp.text('Nhập số tiền giảm giá cố định');
+                    maxDiscountGroup.hide();
+                    voucherValue.removeAttr('max').prop('readonly', false);
+                } else if (type === '3') { // Free Shipping (VoucherType.FreeShipping = 3)
+                    valueUnit.text('');
+                    valueHelp.text('Voucher miễn phí vận chuyển (giá trị sẽ được đặt tự động)');
+                    maxDiscountGroup.hide();
+                    voucherValue.val('1').prop('readonly', true);
+                } else {
+                    valueUnit.text('%');
+                    valueHelp.text('Chọn loại voucher trước');
+                    maxDiscountGroup.show();
+                    voucherValue.prop('readonly', false);
+                }
+            });
+
+            // Trigger change event on page load
+            $('#voucherType').trigger('change');
+
+            // Validate dates
+            $('#StartDate, #EndDate').on('change', function() {
+                const startDate = new Date($('#StartDate').val());
+                const endDate = new Date($('#EndDate').val());
+                
+                if (startDate && endDate && startDate >= endDate) {
+                    alert('Ngày kết thúc phải sau ngày bắt đầu');
+                    $(this).focus();
+                }
+            });
+        });
+    </script>
+}

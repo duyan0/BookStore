@@ -52,7 +52,12 @@ function initializeTinyMCE() {
 // Toggle the side navigation
 document.addEventListener('DOMContentLoaded', function() {
     const sidebarToggle = document.body.querySelector('#sidebarToggle');
-    
+
+    // Restore sidebar state from localStorage
+    if (localStorage.getItem('sb|sidebar-toggle') === 'true') {
+        document.body.classList.add('sb-sidenav-toggled');
+    }
+
     if (sidebarToggle) {
         // Toggle the side navigation
         sidebarToggle.addEventListener('click', function(e) {

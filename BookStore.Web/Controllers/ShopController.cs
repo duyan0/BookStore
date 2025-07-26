@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using BookStore.Web.Services;
 using BookStore.Web.Models;
 using BookStore.Core.DTOs;
+using BookStore.Web.Helpers;
 using Newtonsoft.Json;
 
 namespace BookStore.Web.Controllers
@@ -57,8 +58,8 @@ namespace BookStore.Web.Controllers
 
                 var viewModel = new ShopViewModel
                 {
-                    Books = pagedBooks.Select(MapBookToViewModel).ToList(),
-                    Categories = categories.Select(MapCategoryToViewModel).ToList(),
+                    Books = pagedBooks.Select(MappingHelper.MapBookToViewModel).ToList(),
+                    Categories = categories.Select(MappingHelper.MapCategoryToViewModel).ToList(),
                     CurrentPage = page,
                     TotalPages = totalPages,
                     PageSize = pageSize,
@@ -107,8 +108,8 @@ namespace BookStore.Web.Controllers
 
                 var viewModel = new BookDetailsViewModel
                 {
-                    Book = MapBookToViewModel(book),
-                    RelatedBooks = relatedBooks.Select(MapBookToViewModel).ToList(),
+                    Book = MappingHelper.MapBookToViewModel(book),
+                    RelatedBooks = relatedBooks.Select(MappingHelper.MapBookToViewModel).ToList(),
                     Quantity = 1
                 };
 
@@ -239,7 +240,15 @@ namespace BookStore.Web.Controllers
                                     BookPrice = book.Price,
                                     BookImageUrl = book.ImageUrl ?? "/images/no-image.jpg",
                                     Quantity = cartItem.Quantity,
-                                    MaxQuantity = book.Quantity
+                                    MaxQuantity = book.Quantity,
+                                    // Discount information
+                                    DiscountPercentage = book.DiscountPercentage ?? 0,
+                                    DiscountAmount = book.DiscountAmount,
+                                    IsOnSale = book.IsOnSale,
+                                    SaleStartDate = book.SaleStartDate,
+                                    SaleEndDate = book.SaleEndDate,
+                                    DiscountedPrice = book.DiscountedPrice,
+                                    IsDiscountActive = book.IsDiscountActive
                                 });
                             }
                         }
@@ -367,7 +376,15 @@ namespace BookStore.Web.Controllers
                                 BookPrice = book.Price,
                                 BookImageUrl = book.ImageUrl ?? "/images/no-image.jpg",
                                 Quantity = cartItem.Quantity,
-                                MaxQuantity = book.Quantity
+                                MaxQuantity = book.Quantity,
+                                // Discount information
+                                DiscountPercentage = book.DiscountPercentage ?? 0,
+                                DiscountAmount = book.DiscountAmount,
+                                IsOnSale = book.IsOnSale,
+                                SaleStartDate = book.SaleStartDate,
+                                SaleEndDate = book.SaleEndDate,
+                                DiscountedPrice = book.DiscountedPrice,
+                                IsDiscountActive = book.IsDiscountActive
                             });
                         }
                     }
@@ -421,6 +438,14 @@ namespace BookStore.Web.Controllers
                     UserId = userId,
                     ShippingAddress = model.ShippingAddress,
                     PaymentMethod = model.PaymentMethod,
+
+                    // Voucher information
+                    VoucherCode = model.VoucherCode,
+                    VoucherDiscount = model.VoucherDiscount,
+                    FreeShipping = model.VoucherFreeShipping,
+                    ShippingFee = model.ShippingFee,
+                    SubTotal = model.TotalAmount,
+
                     OrderDetails = cart.Select(c => new CreateOrderDetailDto
                     {
                         BookId = c.BookId,
@@ -495,6 +520,54 @@ namespace BookStore.Web.Controllers
             }
         }
 
+        // POST: Shop/ValidateVoucher
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ValidateVoucher(string voucherCode, decimal orderAmount)
+        {
+            try
+            {
+                if (!IsUserLoggedIn())
+                {
+                    return Json(new { success = false, message = "Vui lòng đăng nhập để sử dụng voucher." });
+                }
+
+                if (string.IsNullOrEmpty(voucherCode))
+                {
+                    return Json(new { success = false, message = "Vui lòng nhập mã voucher." });
+                }
+
+                var userId = GetCurrentUserId();
+                var validationDto = new
+                {
+                    Code = voucherCode,
+                    OrderAmount = orderAmount,
+                    UserId = userId
+                };
+
+                var result = await _apiService.PostAsync<dynamic>("vouchers/validate", validationDto);
+
+                if (result != null)
+                {
+                    return Json(new {
+                        success = result.IsValid,
+                        message = result.Message,
+                        discountAmount = result.DiscountAmount,
+                        freeShipping = result.FreeShipping
+                    });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "Không thể kiểm tra voucher. Vui lòng thử lại." });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error validating voucher: {VoucherCode}", voucherCode);
+                return Json(new { success = false, message = "Có lỗi xảy ra khi kiểm tra voucher." });
+            }
+        }
+
         // Helper methods
         private List<CartItemViewModel> GetCartFromSession()
         {
@@ -520,32 +593,6 @@ namespace BookStore.Web.Controllers
             HttpContext.Session.SetString("Cart", cartJson);
         }
 
-        private BookViewModel MapBookToViewModel(BookDto book)
-        {
-            return new BookViewModel
-            {
-                Id = book.Id,
-                Title = book.Title,
-                Description = book.Description ?? "",
-                Price = book.Price,
-                ImageUrl = book.ImageUrl ?? "/images/no-image.jpg",
-                AuthorName = book.AuthorName ?? "Unknown Author",
-                CategoryName = book.CategoryName ?? "Unknown Category",
-                ISBN = book.ISBN ?? "",
-                Publisher = book.Publisher ?? "",
-                PublicationYear = book.PublicationYear ?? 0,
-                Quantity = book.Quantity
-            };
-        }
 
-        private CategoryViewModel MapCategoryToViewModel(CategoryDto category)
-        {
-            return new CategoryViewModel
-            {
-                Id = category.Id,
-                Name = category.Name,
-                Description = category.Description ?? ""
-            };
-        }
     }
 }

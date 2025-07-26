@@ -100,10 +100,11 @@
                                             <div class="form-group mb-3">
                                                 <label asp-for="DiscountPercentage" class="form-label">Phần trăm giảm giá (%)</label>
                                                 <div class="input-group">
-                                                    <input asp-for="DiscountPercentage" class="form-control" placeholder="0" min="0" max="100" step="0.01" type="number" />
+                                                    <input asp-for="DiscountPercentage" class="form-control" placeholder="Để trống nếu không giảm theo %" min="0" max="100" step="0.01" type="number" />
                                                     <span class="input-group-text">%</span>
                                                 </div>
                                                 <span asp-validation-for="DiscountPercentage" class="text-danger"></span>
+                                                <div class="form-text">Để trống nếu không áp dụng giảm giá theo phần trăm</div>
                                             </div>
                                         </div>
                                         <div class="col-md-6">

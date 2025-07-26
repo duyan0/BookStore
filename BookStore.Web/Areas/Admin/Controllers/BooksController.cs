@@ -269,7 +269,7 @@ namespace BookStore.Web.Areas.Admin.Controllers
                 Title = dto.Title,
                 Description = dto.Description,
                 Price = dto.Price,
-                DiscountPercentage = dto.DiscountPercentage,
+                DiscountPercentage = dto.DiscountPercentage ?? 0,
                 DiscountAmount = dto.DiscountAmount,
                 IsOnSale = dto.IsOnSale,
                 SaleStartDate = dto.SaleStartDate,

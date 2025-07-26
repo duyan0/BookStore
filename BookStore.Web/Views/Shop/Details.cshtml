@@ -1,3 +1,4 @@
+@using BookStore.Web.Helpers
 @model BookDetailsViewModel
 @{
     ViewData["Title"] = Model.Book.Title;
@@ -58,8 +59,42 @@
                         </div>
                     </div>
 
+                    <!-- Price Section -->
                     <div class="mb-4">
-                        <h3 class="text-danger fs-4 fw-bold">@Model.Book.Price.ToString("N0") VNĐ</h3>
+                        @{
+                            var hasDiscount = Model.Book.IsDiscountActive;
+                            var finalPrice = Model.Book.DiscountedPrice;
+                            var discountPercent = Model.Book.DiscountPercentageDisplay;
+                            var savings = Model.Book.TotalDiscountAmount;
+                        }
+
+                        @if (hasDiscount)
+                        {
+                            <div class="price-section">
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="original-price text-muted text-decoration-line-through me-3 fs-5">@Model.Book.PriceFormatted</span>
+                                    <span class="discount-badge badge bg-danger fs-6">
+                                        <i class="fas fa-percent me-1"></i>-@discountPercent%
+                                    </span>
+                                </div>
+                                <h3 class="discounted-price text-danger fs-3 fw-bold mb-2">@Model.Book.DiscountedPriceFormatted</h3>
+                                <div class="discount-info">
+                                    <p class="text-success mb-1">
+                                        <i class="fas fa-piggy-bank me-1"></i>Tiết kiệm: @Model.Book.TotalDiscountAmountFormatted
+                                    </p>
+                                    @if (Model.Book.SaleEndDate.HasValue)
+                                    {
+                                        <p class="text-warning mb-0">
+                                            <i class="fas fa-clock me-1"></i>Khuyến mãi đến: @Model.Book.SaleEndDate.Value.ToString("dd/MM/yyyy HH:mm")
+                                        </p>
+                                    }
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <h3 class="text-danger fs-4 fw-bold">@Model.Book.PriceFormatted</h3>
+                        }
                     </div>
 
                     @if (!string.IsNullOrEmpty(Model.Book.Description))

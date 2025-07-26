@@ -33,6 +33,14 @@ namespace BookStore.Core.DTOs
         public int UserId { get; set; }
         public string ShippingAddress { get; set; } = string.Empty;
         public string PaymentMethod { get; set; } = string.Empty;
+
+        // Voucher fields
+        public string? VoucherCode { get; set; }
+        public decimal VoucherDiscount { get; set; } = 0;
+        public bool FreeShipping { get; set; } = false;
+        public decimal ShippingFee { get; set; } = 0;
+        public decimal SubTotal { get; set; } = 0;
+
         public List<CreateOrderDetailDto> OrderDetails { get; set; } = new List<CreateOrderDetailDto>();
     }
 

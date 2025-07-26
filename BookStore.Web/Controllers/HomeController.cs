@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using BookStore.Web.Models;
 using BookStore.Web.Services;
+using BookStore.Web.Helpers;
 using BookStore.Core.DTOs;
 using System.Diagnostics;
 
@@ -43,13 +44,13 @@ namespace BookStore.Web.Controllers
                 var allBooks = await booksTask ?? new List<BookDto>();
 
                 // Get best sellers (books with highest sales - for now, we'll use random selection)
-                model.BestSellerBooks = allBooks.Take(8).ToList();
+                model.BestSellerBooks = allBooks.Take(8).Select(MappingHelper.MapBookToViewModel).ToList();
 
                 // Get featured books (newest books)
-                model.FeaturedBooks = allBooks.OrderByDescending(b => b.CreatedAt).Take(4).ToList();
+                model.FeaturedBooks = allBooks.OrderByDescending(b => b.CreatedAt).Take(4).Select(MappingHelper.MapBookToViewModel).ToList();
 
                 // Get new books
-                model.NewBooks = allBooks.OrderByDescending(b => b.CreatedAt).Take(6).ToList();
+                model.NewBooks = allBooks.OrderByDescending(b => b.CreatedAt).Take(6).Select(MappingHelper.MapBookToViewModel).ToList();
 
                 return View(model);
             }

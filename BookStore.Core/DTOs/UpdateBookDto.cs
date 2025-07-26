@@ -13,11 +13,11 @@ namespace BookStore.Core.DTOs
 
         [Required]
         [Range(0, 10000000)]
-        public decimal Price { get; set; }
+        public decimal Price { get; set; } // This will be mapped to OriginalPrice
 
         // Discount fields
         [Range(0, 100)]
-        public decimal DiscountPercentage { get; set; } = 0;
+        public decimal? DiscountPercentage { get; set; } // 0-100%, null means no discount
 
         [Range(0, 10000000)]
         public decimal DiscountAmount { get; set; } = 0;
