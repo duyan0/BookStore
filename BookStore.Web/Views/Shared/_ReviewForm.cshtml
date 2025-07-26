@@ -1,0 +1,155 @@
+@model BookStore.Web.Models.CreateReviewViewModel
+
+<div class="review-form-container">
+    <div class="card">
+        <div class="card-header">
+            <h6 class="mb-0">
+                <i class="fas fa-star me-2"></i>Viết đánh giá
+            </h6>
+        </div>
+        <div class="card-body">
+            <form id="reviewForm" asp-action="CreateReview" asp-controller="Shop" method="post">
+                <input type="hidden" asp-for="BookId" />
+                
+                <div class="mb-3">
+                    <label class="form-label">Đánh giá của bạn <span class="text-danger">*</span></label>
+                    @await Html.PartialAsync("_InteractiveStarRating", Model.Rating, new ViewDataDictionary(ViewData) 
+                    { 
+                        { "FieldName", "Rating" }, 
+                        { "FieldId", "Rating" } 
+                    })
+                    <span asp-validation-for="Rating" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Comment" class="form-label">Nhận xét</label>
+                    <textarea asp-for="Comment" 
+                              class="form-control" 
+                              rows="4" 
+                              placeholder="Chia sẻ trải nghiệm của bạn về cuốn sách này..."></textarea>
+                    <span asp-validation-for="Comment" class="text-danger"></span>
+                    <div class="form-text">Tối đa 1000 ký tự</div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="agreeTerms" required>
+                        <label class="form-check-label" for="agreeTerms">
+                            Tôi đồng ý với <a href="#" data-bs-toggle="modal" data-bs-target="#reviewGuidelinesModal">quy định đánh giá</a>
+                        </label>
+                    </div>
+                    
+                    <div>
+                        <button type="button" class="btn btn-secondary me-2" onclick="cancelReview()">Hủy</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-2"></i>Gửi đánh giá
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Review Guidelines Modal -->
+<div class="modal fade" id="reviewGuidelinesModal" tabindex="-1" aria-labelledby="reviewGuidelinesModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reviewGuidelinesModalLabel">Quy định đánh giá</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h6>Để đảm bảo chất lượng đánh giá, vui lòng:</h6>
+                <ul>
+                    <li>Viết đánh giá dựa trên trải nghiệm thực tế với sản phẩm</li>
+                    <li>Sử dụng ngôn ngữ lịch sự, tránh từ ngữ thô tục</li>
+                    <li>Không đăng thông tin cá nhân hoặc liên hệ</li>
+                    <li>Không spam hoặc đăng nội dung không liên quan</li>
+                    <li>Tôn trọng ý kiến của người khác</li>
+                </ul>
+                <p class="text-muted">
+                    <small>Đánh giá sẽ được kiểm duyệt trước khi hiển thị công khai.</small>
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Đã hiểu</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function cancelReview() {
+    const form = document.getElementById('reviewForm');
+    form.reset();
+    
+    // Reset star rating
+    const ratingInput = document.getElementById('Rating');
+    const ratingText = document.getElementById('RatingText');
+    const stars = document.querySelectorAll('.interactive-star-rating .star-icon');
+    
+    if (ratingInput) ratingInput.value = '0';
+    if (ratingText) ratingText.textContent = 'Chọn đánh giá';
+    
+    stars.forEach(star => {
+        star.style.color = '#dee2e6';
+    });
+    
+    // Hide form if needed
+    const container = document.querySelector('.review-form-container');
+    if (container && container.style.display !== 'none') {
+        container.style.display = 'none';
+    }
+}
+
+// Form submission handling
+document.getElementById('reviewForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const rating = document.getElementById('Rating').value;
+    if (!rating || rating === '0') {
+        alert('Vui lòng chọn số sao đánh giá');
+        return;
+    }
+    
+    const agreeTerms = document.getElementById('agreeTerms').checked;
+    if (!agreeTerms) {
+        alert('Vui lòng đồng ý với quy định đánh giá');
+        return;
+    }
+    
+    // Submit form
+    this.submit();
+});
+</script>
+
+<style>
+.review-form-container {
+    margin-top: 2rem;
+}
+
+.review-form-container .card {
+    border: 1px solid #e9ecef;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.review-form-container .card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+}
+
+#reviewForm textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.form-check-label a {
+    color: #0d6efd;
+    text-decoration: none;
+}
+
+.form-check-label a:hover {
+    text-decoration: underline;
+}
+</style>

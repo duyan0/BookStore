@@ -1,0 +1,34 @@
+@model int
+
+@{
+    var rating = Model;
+    var fullStars = rating;
+    var emptyStars = 5 - rating;
+}
+
+<div class="star-rating">
+    @for (int i = 0; i < fullStars; i++)
+    {
+        <i class="fas fa-star text-warning"></i>
+    }
+    @for (int i = 0; i < emptyStars; i++)
+    {
+        <i class="far fa-star text-muted"></i>
+    }
+</div>
+
+<style>
+    .star-rating {
+        display: inline-block;
+    }
+    .star-rating i {
+        font-size: 1rem;
+        margin-right: 2px;
+    }
+    .star-rating.large i {
+        font-size: 1.5rem;
+    }
+    .star-rating.small i {
+        font-size: 0.8rem;
+    }
+</style>

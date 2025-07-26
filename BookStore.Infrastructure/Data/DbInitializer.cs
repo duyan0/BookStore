@@ -17,9 +17,10 @@ namespace BookStore.Infrastructure.Data
             if (await context.Users.AnyAsync() || await context.Categories.AnyAsync() ||
                 await context.Authors.AnyAsync() || await context.Books.AnyAsync())
             {
-                // Main data exists, but check if Sliders and Banners need seeding
+                // Main data exists, but check if Sliders, Banners, and Help Articles need seeding
                 await SeedSlidersIfNeeded(context);
                 await SeedBannersIfNeeded(context);
+                await HelpCenterSeeder.SeedHelpArticlesAsync(context);
                 return; // DB has been seeded
             }
 
@@ -240,6 +241,9 @@ namespace BookStore.Infrastructure.Data
             await context.Banners.AddRangeAsync(banners);
 
             await context.SaveChangesAsync();
+
+            // Seed Help Articles
+            await HelpCenterSeeder.SeedHelpArticlesAsync(context);
         }
 
         private static async Task SeedSlidersIfNeeded(ApplicationDbContext context)

@@ -88,6 +88,47 @@ namespace BookStore.API.Controllers
             return Ok(orders);
         }
 
+        // POST: api/Orders/reorder/5
+        [HttpPost("reorder/{id}")]
+        [Authorize]
+        public async Task<ActionResult<ReorderResultDto>> ReorderOrder(int id)
+        {
+            try
+            {
+                var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(currentUserId))
+                {
+                    return Unauthorized();
+                }
+
+                var order = await _orderService.GetOrderByIdAsync(id);
+                if (order == null)
+                {
+                    return NotFound(new { message = "Không tìm thấy đơn hàng" });
+                }
+
+                // Check if user owns this order
+                if (order.UserId.ToString() != currentUserId)
+                {
+                    return Forbid("Bạn không có quyền truy cập đơn hàng này");
+                }
+
+                // Check if order is completed
+                if (order.Status != "Completed")
+                {
+                    return BadRequest(new { message = "Chỉ có thể mua lại đơn hàng đã hoàn thành" });
+                }
+
+                var result = await _orderService.ReorderAsync(id, int.Parse(currentUserId));
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error reordering order {OrderId}", id);
+                return StatusCode(500, new { message = "Có lỗi xảy ra khi mua lại đơn hàng" });
+            }
+        }
+
         // GET: api/Orders/statistics
         [HttpGet("statistics")]
         [Authorize(Roles = "Admin")]

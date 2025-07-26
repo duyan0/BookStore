@@ -181,6 +181,26 @@ namespace BookStore.Web.Controllers
             }
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ReorderOrder(int id)
+        {
+            try
+            {
+                var result = await _apiService.PostAsync<object>($"orders/{id}/reorder", new { });
+                return Json(result);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Json(new { success = false, message = "Bạn cần đăng nhập để thực hiện chức năng này" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error reordering order ID: {OrderId}", id);
+                return Json(new { success = false, message = "Có lỗi xảy ra khi mua lại đơn hàng" });
+            }
+        }
+
         private BookViewModel MapBookToViewModel(BookDto book)
         {
             return new BookViewModel

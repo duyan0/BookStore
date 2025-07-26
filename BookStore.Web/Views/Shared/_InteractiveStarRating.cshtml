@@ -1,0 +1,97 @@
+@model int?
+
+@{
+    var currentRating = Model ?? 0;
+    var fieldName = ViewData["FieldName"]?.ToString() ?? "Rating";
+    var fieldId = ViewData["FieldId"]?.ToString() ?? "rating";
+}
+
+<div class="interactive-star-rating" data-rating="@currentRating">
+    <input type="hidden" name="@fieldName" id="@fieldId" value="@currentRating" />
+    
+    @for (int i = 1; i <= 5; i++)
+    {
+        <i class="star-icon fas fa-star" 
+           data-rating="@i" 
+           style="cursor: pointer; font-size: 1.5rem; margin-right: 3px; color: @(i <= currentRating ? "#ffc107" : "#dee2e6");"></i>
+    }
+    
+    <div class="rating-text mt-2">
+        <span id="@(fieldId)Text">
+            @switch (currentRating)
+            {
+                case 1: <text>Rất tệ</text> break;
+                case 2: <text>Tệ</text> break;
+                case 3: <text>Bình thường</text> break;
+                case 4: <text>Tốt</text> break;
+                case 5: <text>Rất tốt</text> break;
+                default: <text>Chọn đánh giá</text> break;
+            }
+        </span>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ratingContainer = document.querySelector('.interactive-star-rating[data-rating="@currentRating"]');
+    if (!ratingContainer) return;
+    
+    const stars = ratingContainer.querySelectorAll('.star-icon');
+    const hiddenInput = ratingContainer.querySelector('input[type="hidden"]');
+    const ratingText = ratingContainer.querySelector('#@(fieldId)Text');
+    
+    const ratingTexts = {
+        0: 'Chọn đánh giá',
+        1: 'Rất tệ',
+        2: 'Tệ', 
+        3: 'Bình thường',
+        4: 'Tốt',
+        5: 'Rất tốt'
+    };
+    
+    stars.forEach((star, index) => {
+        // Hover effect
+        star.addEventListener('mouseenter', function() {
+            highlightStars(index + 1);
+        });
+        
+        // Click to select rating
+        star.addEventListener('click', function() {
+            const rating = index + 1;
+            hiddenInput.value = rating;
+            ratingContainer.setAttribute('data-rating', rating);
+            highlightStars(rating);
+            ratingText.textContent = ratingTexts[rating];
+        });
+    });
+    
+    // Reset on mouse leave
+    ratingContainer.addEventListener('mouseleave', function() {
+        const currentRating = parseInt(hiddenInput.value) || 0;
+        highlightStars(currentRating);
+    });
+    
+    function highlightStars(rating) {
+        stars.forEach((star, index) => {
+            if (index < rating) {
+                star.style.color = '#ffc107';
+            } else {
+                star.style.color = '#dee2e6';
+            }
+        });
+    }
+});
+</script>
+
+<style>
+.interactive-star-rating .star-icon:hover {
+    transform: scale(1.1);
+    transition: transform 0.1s ease;
+}
+
+.rating-text {
+    font-size: 0.9rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+</style>

@@ -11,7 +11,10 @@ namespace BookStore.API.Mappings
             // Book mappings
             CreateMap<Book, BookDto>()
                 .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category != null ? src.Category.Name : string.Empty))
-                .ForMember(dest => dest.AuthorName, opt => opt.MapFrom(src => src.Author != null ? $"{src.Author.FirstName} {src.Author.LastName}" : string.Empty));
+                .ForMember(dest => dest.AuthorName, opt => opt.MapFrom(src => src.Author != null ? $"{src.Author.FirstName} {src.Author.LastName}" : string.Empty))
+                .ForMember(dest => dest.DiscountedPrice, opt => opt.MapFrom(src => src.DiscountedPrice))
+                .ForMember(dest => dest.IsDiscountActive, opt => opt.MapFrom(src => src.IsDiscountActive))
+                .ForMember(dest => dest.TotalDiscountAmount, opt => opt.MapFrom(src => src.TotalDiscountAmount));
             CreateMap<CreateBookDto, Book>();
             CreateMap<UpdateBookDto, Book>();
 

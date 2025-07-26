@@ -205,7 +205,23 @@ if (!Directory.Exists(uploadsDir))
     Directory.CreateDirectory(uploadsDir);
 }
 
-// Tạo thư mục uploads/books cho ảnh sách
+// Tạo thư mục uploads cho các loại ảnh
+var imageCategories = new[] { "books", "sliders", "banners", "authors", "categories" };
+foreach (var category in imageCategories)
+{
+    var categoryDir = Path.Combine(uploadsDir, category);
+    if (!Directory.Exists(categoryDir))
+    {
+        Directory.CreateDirectory(categoryDir);
+    }
+}
+
+// Configure static files to serve images publicly
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(uploadsDir),
+    RequestPath = "/uploads"
+});
 var booksUploadsDir = Path.Combine(uploadsDir, "books");
 if (!Directory.Exists(booksUploadsDir))
 {

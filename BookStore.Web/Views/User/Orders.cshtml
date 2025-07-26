@@ -92,7 +92,8 @@ Lịch sử đơn hàng                </h2>
                                 {
                                     <button class="btn btn-success btn-sm"
                                             onclick="reorderItems(@order.Id)"
-                                            id="reorderBtn_@order.Id">
+                                            id="reorderBtn_@order.Id"
+                                            title="Đặt lại các sản phẩm trong đơn hàng này">
                                         <i class="fas fa-redo me-1"></i>Mua lại
                                     </button>
                                 }
@@ -131,6 +132,12 @@ Lịch sử đơn hàng                </h2>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body" id="reorderModalBody">
+                <div class="text-center py-4" id="reorderLoading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Đang tải...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Đang chuẩn bị danh sách sản phẩm...</p>
+                </div>
                 <!-- Content will be loaded here -->
             </div>
             <div class="modal-footer">
@@ -153,12 +160,17 @@ Lịch sử đơn hàng                </h2>
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Đang xử lý...';
 
+            // Show modal immediately with loading state
+            const modal = new bootstrap.Modal(document.getElementById('reorderModal'));
+            modal.show();
+
             try {
-                const response = await fetch(`/api/orders/${orderId}/reorder`, {
+                // Use the Web app's API proxy instead of direct API call
+                const response = await fetch(`/User/ReorderOrder/${orderId}`, {
                     method: 'POST',
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
                     }
                 });
 
@@ -167,11 +179,21 @@ Lịch sử đơn hàng                </h2>
                 if (result.success) {
                     showReorderModal(result);
                 } else {
-                    alert(result.message || 'Có lỗi xảy ra khi chuẩn bị đặt lại đơn hàng');
+                    document.getElementById('reorderModalBody').innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            ${result.message || 'Có lỗi xảy ra khi chuẩn bị đặt lại đơn hàng'}
+                        </div>
+                    `;
                 }
             } catch (error) {
                 console.error('Reorder error:', error);
-                alert('Có lỗi xảy ra khi kết nối đến server');
+                document.getElementById('reorderModalBody').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Có lỗi xảy ra khi kết nối đến server
+                    </div>
+                `;
             } finally {
                 // Restore button state
                 btn.disabled = false;
@@ -180,6 +202,12 @@ Lịch sử đơn hàng                </h2>
         }
 
         function showReorderModal(reorderData) {
+            // Hide loading spinner
+            const loadingElement = document.getElementById('reorderLoading');
+            if (loadingElement) {
+                loadingElement.style.display = 'none';
+            }
+
             const modalBody = document.getElementById('reorderModalBody');
             const confirmBtn = document.getElementById('confirmReorderBtn');
 
@@ -274,17 +302,108 @@ Lịch sử đơn hàng                </h2>
             modal.show();
         }
 
-        function addReorderItemsToCart(items) {
-            // This would integrate with your existing cart functionality
-            // For now, we'll show a success message
-            alert(`Đã thêm ${items.length} sản phẩm vào giỏ hàng!`);
+        async function addReorderItemsToCart(items) {
+            try {
+                let addedCount = 0;
+                let failedCount = 0;
 
-            // Close modal
-            const modal = bootstrap.Modal.getInstance(document.getElementById('reorderModal'));
-            modal.hide();
+                // Add each item to cart
+                for (const item of items) {
+                    try {
+                        const response = await fetch('/Shop/AddToCart', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                            },
+                            body: JSON.stringify({
+                                bookId: item.bookId,
+                                quantity: item.availableQuantity
+                            })
+                        });
 
-            // Optionally redirect to cart page
-            // window.location.href = '/Shop/Cart';
+                        if (response.ok) {
+                            addedCount++;
+                        } else {
+                            failedCount++;
+                            console.error(`Failed to add ${item.bookTitle} to cart`);
+                        }
+                    } catch (error) {
+                        failedCount++;
+                        console.error(`Error adding ${item.bookTitle} to cart:`, error);
+                    }
+                }
+
+                // Show result message
+                if (addedCount > 0) {
+                    showMessage('success', `Đã thêm ${addedCount} sản phẩm vào giỏ hàng!`);
+
+                    // Update cart counter if it exists
+                    updateCartCounter();
+                }
+
+                if (failedCount > 0) {
+                    showMessage('warning', `${failedCount} sản phẩm không thể thêm vào giỏ hàng`);
+                }
+
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('reorderModal'));
+                modal.hide();
+
+                // Optionally redirect to cart page after a delay
+                if (addedCount > 0) {
+                    setTimeout(() => {
+                        if (confirm('Bạn có muốn xem giỏ hàng không?')) {
+                            window.location.href = '/Shop/Cart';
+                        }
+                    }, 1500);
+                }
+
+            } catch (error) {
+                console.error('Error adding items to cart:', error);
+                showMessage('error', 'Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng');
+            }
+        }
+
+        // Helper function to update cart counter
+        function updateCartCounter() {
+            const cartCounters = document.querySelectorAll('.cart-counter');
+            if (cartCounters.length > 0) {
+                fetch('/Shop/GetCartCount')
+                    .then(response => response.json())
+                    .then(data => {
+                        cartCounters.forEach(counter => {
+                            if (data.count > 0) {
+                                counter.textContent = data.count;
+                                counter.style.display = 'inline-block';
+                            } else {
+                                counter.style.display = 'none';
+                            }
+                        });
+                    })
+                    .catch(error => console.error('Error updating cart counter:', error));
+            }
+        }
+
+        // Helper function to show messages
+        function showMessage(type, message) {
+            // Create toast or alert
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type === 'success' ? 'success' : type === 'warning' ? 'warning' : 'danger'} alert-dismissible fade show position-fixed`;
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+
+            document.body.appendChild(alertDiv);
+
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
         }
     </script>
 }

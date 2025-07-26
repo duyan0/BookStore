@@ -43,6 +43,18 @@ namespace BookStore.Core.DTOs
         public decimal UnitPrice { get; set; }
     }
 
+    public class ReorderResponseDto
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public List<ReorderItemDto> AddedItems { get; set; } = new List<ReorderItemDto>();
+        public List<ReorderItemDto> UnavailableItems { get; set; } = new List<ReorderItemDto>();
+        public int TotalItemsAdded { get; set; }
+        public int TotalItemsUnavailable { get; set; }
+    }
+
+
+
     public class UpdateOrderDto
     {
         public string Status { get; set; } = string.Empty;

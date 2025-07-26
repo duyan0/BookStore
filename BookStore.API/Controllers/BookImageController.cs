@@ -24,10 +24,7 @@ namespace BookStore.API.Controllers
             _logger = logger;
         }
 
-        /// <summary>
-        /// Upload book cover image
-        /// </summary>
-        /// <returns>Upload result with image URL</returns>
+      
         [HttpPost("upload")]
         public async Task<IActionResult> UploadBookImage()
         {
@@ -100,11 +97,7 @@ namespace BookStore.API.Controllers
             }
         }
 
-        /// <summary>
-        /// Delete book image
-        /// </summary>
-        /// <param name="fileName">Image file name</param>
-        /// <returns>Delete result</returns>
+       
         [HttpDelete("{fileName}")]
         public IActionResult DeleteBookImage(string fileName)
         {

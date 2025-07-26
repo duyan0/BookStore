@@ -15,6 +15,18 @@ namespace BookStore.Core.DTOs
         [Range(0, 10000000)]
         public decimal Price { get; set; }
 
+        // Discount fields
+        [Range(0, 100)]
+        public decimal DiscountPercentage { get; set; } = 0;
+
+        [Range(0, 10000000)]
+        public decimal DiscountAmount { get; set; } = 0;
+
+        public bool IsOnSale { get; set; } = false;
+
+        public DateTime? SaleStartDate { get; set; }
+        public DateTime? SaleEndDate { get; set; }
+
         [Required]
         [Range(0, 10000)]
         public int Quantity { get; set; }

@@ -3451,11 +3451,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\BookStore\\BookStore.Web\\BookStore.Web.csproj",
+      "projectUniqueName": "C:\\BookStore\\bookstore.web\\BookStore.Web.csproj",
       "projectName": "BookStore.Web",
-      "projectPath": "C:\\BookStore\\BookStore.Web\\BookStore.Web.csproj",
+      "projectPath": "C:\\BookStore\\bookstore.web\\BookStore.Web.csproj",
       "packagesPath": "C:\\Users\\DUYANxHUYNHU\\.nuget\\packages\\",
-      "outputPath": "C:\\BookStore\\BookStore.Web\\obj\\",
+      "outputPath": "C:\\BookStore\\bookstore.web\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

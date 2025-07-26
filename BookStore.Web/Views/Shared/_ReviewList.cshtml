@@ -1,0 +1,225 @@
+@model List<BookStore.Web.Models.ReviewViewModel>
+
+<div class="reviews-section">
+    @if (Model != null && Model.Any())
+    {
+        <div class="reviews-header mb-4">
+            <h5>
+                <i class="fas fa-comments me-2"></i>
+                Đánh giá từ khách hàng (@Model.Count)
+            </h5>
+        </div>
+
+        <div class="reviews-list">
+            @foreach (var review in Model)
+            {
+                <div class="review-item mb-4 p-3 border rounded">
+                    <div class="review-header d-flex justify-content-between align-items-start mb-2">
+                        <div class="reviewer-info">
+                            <div class="d-flex align-items-center mb-1">
+                                <div class="reviewer-avatar me-2">
+                                    <i class="fas fa-user-circle fa-2x text-muted"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">@review.UserName</h6>
+                                    <small class="text-muted">@review.CreatedAt.ToString("dd/MM/yyyy HH:mm")</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="review-rating">
+                            @await Html.PartialAsync("_StarRating", review.Rating)
+                        </div>
+                    </div>
+
+                    @if (review.IsVerifiedPurchase)
+                    {
+                        <div class="verified-purchase mb-2">
+                            <span class="badge bg-success">
+                                <i class="fas fa-check-circle me-1"></i>Đã mua hàng
+                            </span>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(review.Comment))
+                    {
+                        <div class="review-comment mb-3">
+                            <p class="mb-0">@review.Comment</p>
+                        </div>
+                    }
+
+                    <div class="review-actions d-flex justify-content-between align-items-center">
+                        <div class="helpfulness-buttons">
+                            <button class="btn btn-sm btn-outline-success me-2" 
+                                    onclick="markHelpful(@review.Id, true)"
+                                    title="Đánh giá này có hữu ích không?">
+                                <i class="fas fa-thumbs-up me-1"></i>
+                                Hữu ích (@review.HelpfulCount)
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" 
+                                    onclick="markHelpful(@review.Id, false)"
+                                    title="Đánh giá này không hữu ích">
+                                <i class="fas fa-thumbs-down me-1"></i>
+                                Không hữu ích (@review.NotHelpfulCount)
+                            </button>
+                        </div>
+
+                        @if (review.Status != BookStore.Core.Entities.ReviewStatus.Approved)
+                        {
+                            <div class="review-status">
+                                @switch (review.Status)
+                                {
+                                    case BookStore.Core.Entities.ReviewStatus.Pending:
+                                        <span class="badge bg-warning">Chờ duyệt</span>
+                                        break;
+                                    case BookStore.Core.Entities.ReviewStatus.Rejected:
+                                        <span class="badge bg-danger">Bị từ chối</span>
+                                        break;
+                                    case BookStore.Core.Entities.ReviewStatus.Hidden:
+                                        <span class="badge bg-secondary">Đã ẩn</span>
+                                        break;
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Load More Button -->
+        @if (ViewBag.HasMoreReviews == true)
+        {
+            <div class="text-center mt-4">
+                <button class="btn btn-outline-primary" onclick="loadMoreReviews()">
+                    <i class="fas fa-chevron-down me-2"></i>Xem thêm đánh giá
+                </button>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="no-reviews text-center py-5">
+            <i class="fas fa-comment-slash fa-3x text-muted mb-3"></i>
+            <h6 class="text-muted">Chưa có đánh giá nào</h6>
+            <p class="text-muted">Hãy là người đầu tiên đánh giá cuốn sách này!</p>
+        </div>
+    }
+</div>
+
+<script>
+async function markHelpful(reviewId, isHelpful) {
+    try {
+        const response = await fetch('/Shop/MarkReviewHelpful', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+            },
+            body: JSON.stringify({
+                reviewId: reviewId,
+                isHelpful: isHelpful
+            })
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+            // Update the button counts
+            location.reload(); // Simple reload for now
+        } else {
+            alert(result.message || 'Có lỗi xảy ra');
+        }
+    } catch (error) {
+        console.error('Error marking review helpful:', error);
+        alert('Có lỗi xảy ra khi đánh giá');
+    }
+}
+
+let currentPage = 1;
+async function loadMoreReviews() {
+    const bookId = @ViewBag.BookId;
+    currentPage++;
+    
+    try {
+        const response = await fetch(`/Shop/GetBookReviews?bookId=${bookId}&page=${currentPage}`);
+        const html = await response.text();
+        
+        // Append new reviews to the list
+        const reviewsList = document.querySelector('.reviews-list');
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        
+        const newReviews = tempDiv.querySelectorAll('.review-item');
+        newReviews.forEach(review => {
+            reviewsList.appendChild(review);
+        });
+        
+        // Hide load more button if no more reviews
+        if (newReviews.length === 0) {
+            document.querySelector('.text-center button').style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Error loading more reviews:', error);
+        alert('Có lỗi xảy ra khi tải thêm đánh giá');
+    }
+}
+</script>
+
+<style>
+.reviews-section {
+    margin-top: 2rem;
+}
+
+.review-item {
+    background-color: #fff;
+    transition: box-shadow 0.2s ease;
+}
+
+.review-item:hover {
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+}
+
+.reviewer-avatar {
+    flex-shrink: 0;
+}
+
+.review-comment {
+    line-height: 1.6;
+    color: #495057;
+}
+
+.helpfulness-buttons .btn {
+    font-size: 0.875rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.verified-purchase .badge {
+    font-size: 0.75rem;
+}
+
+.no-reviews {
+    background-color: #f8f9fa;
+    border-radius: 0.5rem;
+    margin: 2rem 0;
+}
+
+@@media (max-width: 768px) {
+    .review-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+    
+    .review-rating {
+        margin-top: 0.5rem;
+    }
+    
+    .review-actions {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+    
+    .review-status {
+        margin-top: 0.5rem;
+    }
+}
+</style>

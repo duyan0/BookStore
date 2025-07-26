@@ -56,7 +56,7 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label asp-for="Price" class="form-label">Giá (VNĐ) <span class="text-danger">*</span></label>
+                                    <label asp-for="Price" class="form-label">Giá gốc (VNĐ) <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" placeholder="0" id="priceInput">
                                     <input asp-for="Price" type="hidden" id="priceHidden">
                                     <span asp-validation-for="Price" class="text-danger"></span>
@@ -75,6 +75,71 @@
                             <label asp-for="ISBN" class="form-label">ISBN</label>
                             <input asp-for="ISBN" class="form-control" placeholder="Nhập mã ISBN">
                             <span asp-validation-for="ISBN" class="text-danger"></span>
+                        </div>
+
+                        <!-- Discount Section -->
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-percentage me-2"></i>Khuyến mãi
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-check mb-3">
+                                    <input asp-for="IsOnSale" class="form-check-input" type="checkbox" id="isOnSaleCheck" />
+                                    <label class="form-check-label" for="isOnSaleCheck">
+                                        Đang khuyến mãi
+                                    </label>
+                                </div>
+
+                                <div id="discountFields" style="display: none;">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                <label asp-for="DiscountPercentage" class="form-label">Phần trăm giảm giá (%)</label>
+                                                <div class="input-group">
+                                                    <input asp-for="DiscountPercentage" class="form-control" placeholder="0" min="0" max="100" step="0.01" type="number" />
+                                                    <span class="input-group-text">%</span>
+                                                </div>
+                                                <span asp-validation-for="DiscountPercentage" class="text-danger"></span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                <label asp-for="DiscountAmount" class="form-label">Số tiền giảm (VND)</label>
+                                                <div class="input-group">
+                                                    <input type="text" class="form-control" placeholder="0" id="discountAmountInput">
+                                                    <input asp-for="DiscountAmount" type="hidden" id="discountAmountHidden">
+                                                    <span class="input-group-text">₫</span>
+                                                </div>
+                                                <span asp-validation-for="DiscountAmount" class="text-danger"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                <label asp-for="SaleStartDate" class="form-label">Ngày bắt đầu khuyến mãi</label>
+                                                <input asp-for="SaleStartDate" class="form-control" type="datetime-local" />
+                                                <span asp-validation-for="SaleStartDate" class="text-danger"></span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                <label asp-for="SaleEndDate" class="form-label">Ngày kết thúc khuyến mãi</label>
+                                                <input asp-for="SaleEndDate" class="form-control" type="datetime-local" />
+                                                <span asp-validation-for="SaleEndDate" class="text-danger"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <strong>Lưu ý:</strong> Nếu cả phần trăm và số tiền giảm đều được nhập, hệ thống sẽ áp dụng cả hai loại giảm giá.
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -495,6 +560,53 @@
                 this.value = formatted;
                 priceHidden.value = parseVND(formatted);
             });
+
+            // Handle discount amount formatting
+            const discountAmountInput = document.getElementById('discountAmountInput');
+            const discountAmountHidden = document.getElementById('discountAmountHidden');
+
+            if (discountAmountInput && discountAmountHidden) {
+                // Initialize with existing value
+                if (discountAmountHidden.value) {
+                    discountAmountInput.value = formatVND(discountAmountHidden.value);
+                }
+
+                // Handle input formatting
+                discountAmountInput.addEventListener('input', function() {
+                    const formatted = formatVND(this.value);
+                    this.value = formatted;
+                    discountAmountHidden.value = parseVND(formatted);
+                });
+            }
+
+            // Toggle discount fields based on IsOnSale checkbox
+            const isOnSaleCheck = document.getElementById('isOnSaleCheck');
+            const discountFields = document.getElementById('discountFields');
+
+            if (isOnSaleCheck && discountFields) {
+                // Show/hide discount fields on page load
+                if (isOnSaleCheck.checked) {
+                    discountFields.style.display = 'block';
+                }
+
+                isOnSaleCheck.addEventListener('change', function(e) {
+                    if (e.target.checked) {
+                        discountFields.style.display = 'block';
+                    } else {
+                        discountFields.style.display = 'none';
+                        // Clear discount values when hiding
+                        const discountPercentage = document.getElementById('DiscountPercentage');
+                        const saleStartDate = document.getElementById('SaleStartDate');
+                        const saleEndDate = document.getElementById('SaleEndDate');
+
+                        if (discountPercentage) discountPercentage.value = '0';
+                        if (discountAmountInput) discountAmountInput.value = '';
+                        if (discountAmountHidden) discountAmountHidden.value = '0';
+                        if (saleStartDate) saleStartDate.value = '';
+                        if (saleEndDate) saleEndDate.value = '';
+                    }
+                });
+            }
 
             // Handle form submission - ensure hidden field has the numeric value
             const form = priceInput.closest('form');
