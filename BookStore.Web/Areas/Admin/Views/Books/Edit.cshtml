@@ -150,8 +150,9 @@
 
                         <div class="mb-3">
                             <label asp-for="Description" class="form-label">Mô tả</label>
-                            <textarea asp-for="Description" class="form-control" rows="5" placeholder="Nhập mô tả về sách..."></textarea>
+                            <textarea asp-for="Description" class="form-control rich-text-editor" rows="5" placeholder="Nhập mô tả về sách..."></textarea>
                             <span asp-validation-for="Description" class="text-danger"></span>
+                            <div class="form-text">Sử dụng rich text editor để định dạng nội dung</div>
                         </div>
                     </div>
                 </div>
@@ -225,25 +226,51 @@
 
         // Open image library modal
         async function openImageLibrary() {
+            console.log('Opening image library modal...');
+
+            // Temporarily disable TinyMCE to prevent conflicts
+            if (typeof tinymce !== 'undefined') {
+                tinymce.activeEditor?.windowManager?.close();
+            }
+
             const modal = document.getElementById('imageLibraryModal');
-            const grid = document.getElementById('imageLibraryGrid');
-            const loading = document.getElementById('libraryLoading');
 
             if (modal) {
-                modal.style.display = 'block';
-                modal.classList.add('show');
+                // Use Bootstrap modal properly
+                const bootstrapModal = new bootstrap.Modal(modal, {
+                    backdrop: 'static',
+                    keyboard: false
+                });
+
+                bootstrapModal.show();
 
                 // Load images from API
                 await loadImageLibrary();
+            } else {
+                console.error('Image library modal not found');
+                showMessage('error', 'Không tìm thấy modal thư viện ảnh');
             }
         }
 
         // Close image library modal
         function closeImageLibrary() {
+            console.log('Closing image library modal...');
+
             const modal = document.getElementById('imageLibraryModal');
             if (modal) {
-                modal.style.display = 'none';
-                modal.classList.remove('show');
+                const bootstrapModal = bootstrap.Modal.getInstance(modal);
+                if (bootstrapModal) {
+                    bootstrapModal.hide();
+                } else {
+                    // Fallback
+                    modal.style.display = 'none';
+                    modal.classList.remove('show');
+                    document.body.classList.remove('modal-open');
+                    const backdrop = document.querySelector('.modal-backdrop');
+                    if (backdrop) {
+                        backdrop.remove();
+                    }
+                }
             }
         }
 

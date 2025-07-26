@@ -148,8 +148,9 @@
 
                         <div class="mb-3">
                             <label asp-for="Description" class="form-label">Mô tả</label>
-                            <textarea asp-for="Description" class="form-control" rows="5" placeholder="Nhập mô tả về sách..."></textarea>
+                            <textarea asp-for="Description" class="form-control rich-text-editor" rows="5" placeholder="Nhập mô tả về sách..."></textarea>
                             <span asp-validation-for="Description" class="text-danger"></span>
+                            <div class="form-text">Sử dụng rich text editor để định dạng nội dung</div>
                         </div>
                     </div>
                 </div>
@@ -204,25 +205,51 @@
 
         // Open image library modal
         async function openImageLibrary() {
+            console.log('Opening image library modal...');
+
+            // Temporarily disable TinyMCE to prevent conflicts
+            if (typeof tinymce !== 'undefined') {
+                tinymce.activeEditor?.windowManager?.close();
+            }
+
             const modal = document.getElementById('imageLibraryModal');
-            const grid = document.getElementById('imageLibraryGrid');
-            const loading = document.getElementById('libraryLoading');
 
             if (modal) {
-                modal.style.display = 'block';
-                modal.classList.add('show');
+                // Use Bootstrap modal properly
+                const bootstrapModal = new bootstrap.Modal(modal, {
+                    backdrop: 'static',
+                    keyboard: false
+                });
+
+                bootstrapModal.show();
 
                 // Load images from API
                 await loadImageLibrary();
+            } else {
+                console.error('Image library modal not found');
+                showMessage('error', 'Không tìm thấy modal thư viện ảnh');
             }
         }
 
         // Close image library modal
         function closeImageLibrary() {
+            console.log('Closing image library modal...');
+
             const modal = document.getElementById('imageLibraryModal');
             if (modal) {
-                modal.style.display = 'none';
-                modal.classList.remove('show');
+                const bootstrapModal = bootstrap.Modal.getInstance(modal);
+                if (bootstrapModal) {
+                    bootstrapModal.hide();
+                } else {
+                    // Fallback
+                    modal.style.display = 'none';
+                    modal.classList.remove('show');
+                    document.body.classList.remove('modal-open');
+                    const backdrop = document.querySelector('.modal-backdrop');
+                    if (backdrop) {
+                        backdrop.remove();
+                    }
+                }
             }
         }
 
@@ -235,12 +262,18 @@
                 loading.style.display = 'block';
                 grid.innerHTML = '';
 
+                console.log('Loading image library...');
+
                 const token = getJwtToken();
+                console.log('JWT Token available:', !!token);
+
                 if (!token) {
                     showMessage('error', 'Không tìm thấy token xác thực. Vui lòng đăng nhập lại.');
+                    grid.innerHTML = '<div class="col-12 text-center text-warning py-4">Vui lòng đăng nhập lại để xem thư viện ảnh</div>';
                     return;
                 }
 
+                console.log('Making API request to load images...');
                 const response = await fetch('http://localhost:5274/api/BookImage/list', {
                     method: 'GET',
                     headers: {
@@ -249,22 +282,40 @@
                     }
                 });
 
+                console.log('API Response status:', response.status);
+
                 if (!response.ok) {
-                    throw new Error('Không thể tải danh sách ảnh');
+                    const errorText = await response.text();
+                    console.error('API Error:', errorText);
+                    throw new Error(`API Error: ${response.status} - ${errorText}`);
                 }
 
                 const result = await response.json();
+                console.log('API Result:', result);
+
                 imageLibraryImages = result.data || [];
+                console.log('Images loaded:', imageLibraryImages.length);
 
                 if (imageLibraryImages.length === 0) {
-                    grid.innerHTML = '<div class="col-12 text-center text-muted py-4">Chưa có ảnh nào trong thư viện</div>';
+                    grid.innerHTML = '<div class="col-12 text-center text-muted py-4">Chưa có ảnh nào trong thư viện. <a href="/Admin/ImageGallery" target="_blank">Upload ảnh mới</a></div>';
                 } else {
                     displayImageLibrary();
                 }
+
             } catch (error) {
                 console.error('Error loading image library:', error);
-                showMessage('error', 'Lỗi khi tải thư viện ảnh: ' + error.message);
-                grid.innerHTML = '<div class="col-12 text-center text-danger py-4">Lỗi khi tải ảnh</div>';
+                grid.innerHTML = `
+                    <div class="col-12 text-center text-danger py-4">
+                        <div class="mb-2">Lỗi khi tải thư viện ảnh:</div>
+                        <div class="small">${error.message}</div>
+                        <div class="mt-2">
+                            <a href="/Admin/ImageGallery" target="_blank" class="btn btn-sm btn-primary">
+                                Mở Image Gallery
+                            </a>
+                        </div>
+                    </div>
+                `;
+                showMessage('error', 'Không thể tải thư viện ảnh: ' + error.message);
             } finally {
                 loading.style.display = 'none';
             }
@@ -376,7 +427,21 @@
         function getJwtToken() {
             // This should get the token from your session/localStorage
             // For now, we'll try to get it from a meta tag or global variable
-            return document.querySelector('meta[name="jwt-token"]')?.getAttribute('content') || '';
+            const token = document.querySelector('meta[name="jwt-token"]')?.getAttribute('content') || '';
+            console.log('Getting JWT token, length:', token.length);
+            return token;
+        }
+
+        // Fallback: Show file upload if image library fails
+        function showFileUploadFallback() {
+            const fileUploadSection = document.getElementById('fileUploadSection');
+            const librarySection = document.getElementById('librarySection');
+
+            if (fileUploadSection && librarySection) {
+                fileUploadSection.style.display = 'block';
+                librarySection.style.display = 'none';
+                showMessage('info', 'Đang sử dụng upload file thay vì thư viện ảnh');
+            }
         }
 
         // Validate URL

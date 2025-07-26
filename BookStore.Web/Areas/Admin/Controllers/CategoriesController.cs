@@ -222,7 +222,7 @@ namespace BookStore.Web.Areas.Admin.Controllers
                 Id = dto.Id,
                 Name = dto.Name,
                 Description = dto.Description,
-                BookCount = 0, // Will be populated from API if needed
+                BookCount = dto.BookCount, // Use actual book count from DTO
                 CreatedAt = dto.CreatedAt,
                 UpdatedAt = dto.UpdatedAt
             };

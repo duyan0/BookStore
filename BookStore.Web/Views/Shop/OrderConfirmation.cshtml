@@ -38,7 +38,7 @@
                         <div class="col-md-6">
                             <p><strong>Phương thức thanh toán:</strong> @Model.PaymentMethod</p>
                             <p><strong>Tổng tiền:</strong> 
-                                <strong class="text-success">@Model.TotalAmount.ToString("N0") VNĐ</strong>
+                                <strong class="text-danger">@Model.TotalAmount.ToString("N0") VNĐ</strong>
                             </p>
                         </div>
                     </div>
@@ -80,7 +80,7 @@
                                                     @if (!string.IsNullOrEmpty(item.BookImageUrl))
                                                     {
                                                         <img src="@item.BookImageUrl" alt="@item.BookTitle" 
-                                                             class="me-3 rounded" style="width: 50px; height: 60px; object-fit: cover;">
+                                                             class="me-3 rounded" style="width: 50px; height: 60px; object-fit: contain;">
                                                     }
                                                     else
                                                     {
@@ -95,17 +95,17 @@
                                                 </div>
                                             </td>
                                             <td class="text-center">
-                                                <span class="badge bg-info">@item.Quantity</span>
+                                                <span class="fw-semibold ">@item.Quantity</span>
                                             </td>
-                                            <td class="text-end">@item.UnitPrice.ToString("N0") VNĐ</td>
-                                            <td class="text-end"><strong>@item.TotalPrice.ToString("N0") VNĐ</strong></td>
+                                            <td class="text-end ">@item.UnitPrice.ToString("N0") VNĐ</td>
+                                            <td class="text-end text-danger"><strong>@item.TotalPrice.ToString("N0") VNĐ</strong></td>
                                         </tr>
                                     }
                                 </tbody>
                                 <tfoot class="table-light">
                                     <tr>
-                                        <th colspan="3" class="text-end">Tổng cộng:</th>
-                                        <th class="text-end text-success">@Model.TotalAmount.ToString("N0") VNĐ</th>
+                                        <th colspan="3" class="text-end ">Tổng cộng:</th>
+                                        <th class="text-end text-danger fw-semibold">@Model.TotalAmount.ToString("N0") VNĐ</th>
                                     </tr>
                                 </tfoot>
                             </table>

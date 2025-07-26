@@ -20,7 +20,7 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2>
-                    <i class="fas fa-receipt me-2 text-primary"></i>Chi tiết đơn hàng #@Model.Id
+                   Chi tiết đơn hàng #@Model.Id
                 </h2>
                 <a asp-action="Orders" class="btn btn-secondary">
                     <i class="fas fa-arrow-left me-1"></i>Quay lại
@@ -58,7 +58,7 @@
                         <div class="col-md-6">
                             <p><strong>Phương thức thanh toán:</strong> @Model.PaymentMethod</p>
                             <p><strong>Tổng tiền:</strong> 
-                                <strong class="text-success">@Model.TotalAmountFormatted</strong>
+                                <strong class="text-danger fw-semibold">@Model.TotalAmountFormatted</strong>
                             </p>
                             @if (Model.UpdatedAt.HasValue)
                             {
@@ -79,7 +79,7 @@
             <div class="card mb-4">
                 <div class="card-header">
                     <h5 class="mb-0">
-                        <i class="fas fa-list me-2"></i>Chi tiết sản phẩm
+                        Chi tiết sản phẩm
                     </h5>
                 </div>
                 <div class="card-body">
@@ -104,7 +104,7 @@
                                                     @if (!string.IsNullOrEmpty(item.BookImageUrl))
                                                     {
                                                         <img src="@item.BookImageUrl" alt="@item.BookTitle" 
-                                                             class="me-3 rounded" style="width: 60px; height: 80px; object-fit: cover;">
+                                                             class="me-3 rounded" style="width: 60px; height: 80px; object-fit: contain;">
                                                     }
                                                     else
                                                     {
@@ -119,17 +119,17 @@
                                                 </div>
                                             </td>
                                             <td class="text-center">
-                                                <span class="badge bg-info fs-6">@item.Quantity</span>
+                                                <span class=" fs-6">@item.Quantity</span>
                                             </td>
                                             <td class="text-end">@item.UnitPriceFormatted</td>
-                                            <td class="text-end"><strong>@item.TotalPriceFormatted</strong></td>
+                                            <td class="text-end text-danger "><strong>@item.TotalPriceFormatted</strong></td>
                                         </tr>
                                     }
                                 </tbody>
                                 <tfoot class="table-light">
                                     <tr>
                                         <th colspan="3" class="text-end">Tổng cộng:</th>
-                                        <th class="text-end text-success">@Model.TotalAmountFormatted</th>
+                                        <th class="text-end text-danger fw-semibold">@Model.TotalAmountFormatted</th>
                                     </tr>
                                 </tfoot>
                             </table>
@@ -160,7 +160,7 @@
                             <div class="timeline-marker">
                                 <i class="fas fa-check-circle"></i>
                             </div>
-                            <div class="timeline-content">
+                            <div class="timeline-content mx-3">
                                 <h6>Đơn hàng đã được tiếp nhận</h6>
                                 <small class="text-muted">@Model.OrderDateFormatted</small>
                             </div>
@@ -170,7 +170,7 @@
                             <div class="timeline-marker">
                                 <i class="fas fa-box"></i>
                             </div>
-                            <div class="timeline-content">
+                            <div class="timeline-content mx-3">
                                 <h6>Đang chuẩn bị hàng</h6>
                                 <small class="text-muted">
                                     @if (Model.Status == "Processing" || Model.Status == "Completed")
@@ -189,7 +189,7 @@
                             <div class="timeline-marker">
                                 <i class="fas fa-shipping-fast"></i>
                             </div>
-                            <div class="timeline-content">
+                            <div class="timeline-content  mx-3">
                                 <h6>Đã giao hàng</h6>
                                 <small class="text-muted">
                                     @if (Model.Status == "Completed")

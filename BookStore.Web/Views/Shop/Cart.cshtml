@@ -8,7 +8,7 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2>
-                    <i class="fas fa-shopping-cart me-2 text-primary"></i>Giỏ hàng của bạn
+                    <i class="fas fa-shopping-cart me-2 text-dark"></i>Giỏ hàng của bạn
                 </h2>
                 <a href="@Url.Action("Index", "Shop")" class="btn btn-outline-primary">
                     <i class="fas fa-arrow-left me-1"></i>Tiếp tục mua sắm
@@ -40,7 +40,7 @@
                 <div class="card shadow">
                     <div class="card-header bg-light">
                         <h5 class="mb-0">
-                            <i class="fas fa-list me-2"></i>Danh sách sản phẩm (@Model.TotalItemsText)
+                            <i class="me-0"></i>Danh sách sản phẩm (@Model.TotalItemsText)
                         </h5>
                     </div>
                     <div class="card-body p-0">
@@ -52,7 +52,7 @@
                                 </div>
                                 <div class="col-md-4">
                                     <h6 class="mb-1">@item.BookTitle</h6>
-                                    <p class="text-muted small mb-0">Đơn giá: @item.BookPriceFormatted</p>
+                                    <p class="text-danger fw-semibold small mb-0">Đơn giá: @item.BookPriceFormatted</p>
                                     @if (item.IsOutOfStock)
                                     {
                                         <span class="badge bg-danger">Hết hàng</span>
@@ -70,7 +70,7 @@
                                     </form>
                                 </div>
                                 <div class="col-md-2">
-                                    <strong class="text-primary">@item.TotalPriceFormatted</strong>
+                                    <strong class="text-danger">@item.TotalPriceFormatted</strong>
                                 </div>
                                 <div class="col-md-1">
                                     <form asp-action="RemoveFromCart" method="post" class="d-inline">
@@ -89,8 +89,8 @@
             <!-- Cart Summary -->
             <div class="col-lg-4">
                 <div class="card shadow">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0 text-white">
                             <i class="fas fa-calculator me-2"></i>Tổng kết đơn hàng
                         </h5>
                     </div>
@@ -106,11 +106,11 @@
                         <hr>
                         <div class="d-flex justify-content-between mb-3">
                             <span class="h5">Tổng cộng:</span>
-                            <strong class="h5 text-primary">@Model.TotalAmountFormatted</strong>
+                            <strong class="h5 text-danger">@Model.TotalAmountFormatted</strong>
                         </div>
                         
                         <div class="d-grid gap-2">
-                            <a asp-action="Checkout" class="btn btn-success btn-lg">
+                            <a asp-action="Checkout" class="btn btn-danger btn-lg">
                                 <i class="fas fa-credit-card me-2"></i>Thanh toán
                             </a>
                             <a href="@Url.Action("Index", "Shop")" class="btn btn-outline-primary">
@@ -121,9 +121,9 @@
                 </div>
 
                 <!-- Cart Tips -->
-                <div class="card shadow mt-4">
-                    <div class="card-header bg-info text-white">
-                        <h6 class="mb-0">
+                <div class="card shadow rounded-2 mt-4">
+                    <div class="card-header bg-dark text-white">
+                        <h6 class="mb-0 text-white">
                             <i class="fas fa-lightbulb me-2"></i>Gợi ý
                         </h6>
                     </div>

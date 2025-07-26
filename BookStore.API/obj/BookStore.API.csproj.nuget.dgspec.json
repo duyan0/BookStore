@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\BookStore\\BookStore.API\\BookStore.API.csproj": {}
+    "C:\\BookStore\\bookstore.api\\BookStore.API.csproj": {}
   },
   "projects": {
-    "C:\\BookStore\\BookStore.API\\BookStore.API.csproj": {
+    "C:\\BookStore\\bookstore.api\\BookStore.API.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\BookStore\\BookStore.API\\BookStore.API.csproj",
+        "projectUniqueName": "C:\\BookStore\\bookstore.api\\BookStore.API.csproj",
         "projectName": "BookStore.API",
-        "projectPath": "C:\\BookStore\\BookStore.API\\BookStore.API.csproj",
+        "projectPath": "C:\\BookStore\\bookstore.api\\BookStore.API.csproj",
         "packagesPath": "C:\\Users\\DUYANxHUYNHU\\.nuget\\packages\\",
-        "outputPath": "C:\\BookStore\\BookStore.API\\obj\\",
+        "outputPath": "C:\\BookStore\\bookstore.api\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

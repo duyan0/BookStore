@@ -49,7 +49,7 @@
                 <div class="card-body text-center">
                     @if (!string.IsNullOrEmpty(Model.ImageUrl))
                     {
-                        <img src="@Model.ImageUrl" alt="@Model.Title" class="img-fluid rounded shadow" style="max-height: 400px; width: 100%; object-fit: cover;">
+                        <img src="@Model.ImageUrl" alt="@Model.Title" class="img-fluid rounded-2 " style="max-height: 400px; width: 100%; object-fit: contain;">
                         @if (!string.IsNullOrEmpty(Model.LinkUrl))
                         {
                             <div class="mt-3">

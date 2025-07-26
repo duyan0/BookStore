@@ -68,9 +68,9 @@
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label asp-for="Biography" class="form-label">Tiểu sử</label>
-                            <textarea asp-for="Biography" class="form-control" rows="10" placeholder="Nhập tiểu sử của tác giả..."></textarea>
+                            <textarea asp-for="Biography" class="form-control rich-text-editor" rows="10" placeholder="Nhập tiểu sử của tác giả..."></textarea>
                             <span asp-validation-for="Biography" class="text-danger"></span>
-                            <div class="form-text">Mô tả về cuộc đời và sự nghiệp của tác giả</div>
+                            <div class="form-text">Mô tả về cuộc đời và sự nghiệp của tác giả (sử dụng rich text editor)</div>
                         </div>
 
                         <!-- Preview area for new image -->

@@ -1,5 +1,54 @@
 // Scripts for admin panel
 
+// Initialize TinyMCE Rich Text Editor
+function initializeTinyMCE() {
+    // Wait for TinyMCE to be available
+    if (typeof tinymce === 'undefined') {
+        console.log('TinyMCE not loaded yet, retrying...');
+        setTimeout(initializeTinyMCE, 500);
+        return;
+    }
+
+    // Remove any existing TinyMCE instances
+    tinymce.remove('textarea.rich-text-editor');
+
+    tinymce.init({
+        selector: 'textarea.rich-text-editor',
+        height: 400,
+        menubar: false,
+        plugins: [
+            'advlist', 'autolink', 'lists', 'link', 'charmap', 'preview',
+            'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+            'insertdatetime', 'table', 'help', 'wordcount'
+        ],
+        toolbar: 'undo redo | blocks | ' +
+            'bold italic underline forecolor backcolor | alignleft aligncenter ' +
+            'alignright alignjustify | bullist numlist outdent indent | ' +
+            'link table | code preview fullscreen | removeformat help',
+        content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 14px; line-height: 1.6; margin: 1rem; }',
+        branding: false,
+        promotion: false,
+        skin: 'oxide',
+        content_css: 'default',
+        block_formats: 'Paragraph=p; Heading 1=h1; Heading 2=h2; Heading 3=h3; Heading 4=h4; Heading 5=h5; Heading 6=h6; Preformatted=pre',
+        setup: function (editor) {
+            editor.on('change', function () {
+                editor.save();
+            });
+            editor.on('init', function () {
+                console.log('TinyMCE initialized successfully for:', editor.id);
+            });
+        },
+        init_instance_callback: function (editor) {
+            console.log('TinyMCE instance ready:', editor.id);
+        }
+    }).then(function(editors) {
+        console.log('TinyMCE editors initialized:', editors.length);
+    }).catch(function(error) {
+        console.error('TinyMCE initialization failed:', error);
+    });
+}
+
 // Toggle the side navigation
 document.addEventListener('DOMContentLoaded', function() {
     const sidebarToggle = document.body.querySelector('#sidebarToggle');
@@ -18,6 +67,11 @@ document.addEventListener('DOMContentLoaded', function() {
     if (datatablesSimple) {
         new simpleDatatables.DataTable(datatablesSimple);
     }
+
+    // Initialize TinyMCE with delay to ensure DOM is ready
+    setTimeout(function() {
+        initializeTinyMCE();
+    }, 100);
 
     // Initialize image preview for file inputs
     const fileInputs = document.querySelectorAll('.custom-file-input');

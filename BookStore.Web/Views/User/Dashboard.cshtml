@@ -7,10 +7,10 @@
     <div class="row">
         <!-- Welcome Section -->
         <div class="col-12">
-            <div class="jumbotron bg-primary text-white rounded mb-4">
+            <div class="jumbotron bg-secondary text-white rounded mb-4">
                 <div class="container">
-                    <h1 class="display-4">
-                        <i class="fas fa-user-circle me-3"></i>@Model.WelcomeMessage
+                    <h1 class="display-4 text-white">
+                        <i class="fas fa-user-circle me-3 text-white"></i>@Model.WelcomeMessage
                     </h1>
                     <p class="lead">Khám phá thế giới sách cùng BookStore - nơi tri thức không giới hạn!</p>
                     <hr class="my-4">
@@ -27,7 +27,7 @@
         <!-- Quick Actions -->
         <div class="col-md-3 mb-4">
             <div class="card h-100 border-0 shadow-sm">
-                <div class="card-body text-center">
+                <div class="card-body text-center rounded-2 border-1">
                     <div class="mb-3">
                         <i class="fas fa-user-edit fa-3x text-primary"></i>
                     </div>
@@ -100,16 +100,15 @@
         <div class="row">
             @foreach (var book in Model.RecentBooks)
             {
-                <div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-4">
+                <div class="col-lg-3 col-md-3 col-sm-4 col-6 mb-4">
                     <div class="card h-100 border-0 shadow-sm book-card">
-                        <img src="@book.ImageUrl" class="card-img-top" alt="@book.Title" style="height: 200px; object-fit: cover;">
+                        <img src="@book.ImageUrl" class="card-img-top" alt="@book.Title" style="height: 200px; object-fit: contain;">
                         <div class="card-body d-flex flex-column">
                             <h6 class="card-title text-truncate" title="@book.Title">@book.Title</h6>
-                            <p class="card-text text-muted small">@book.AuthorName</p>
-                            <p class="card-text text-primary fw-bold">@book.Price.ToString("N0") VNĐ</p>
+                            <p class="card-text text-danger fw-bold">@book.Price.ToString("N0") VNĐ</p>
                             <div class="mt-auto">
-                                <a href="@Url.Action("Details", "Shop", new { id = book.Id })" class="btn btn-sm btn-outline-primary w-100">
-                                    <i class="fas fa-eye me-1"></i>Xem chi tiết
+                                <a href="@Url.Action("Details", "Shop", new { id = book.Id })" class="btn btn-sm text-white btn-dark w-100">
+                                    <i class="fas fa-eye me-1 text-white"></i>Xem chi tiết
                                 </a>
                             </div>
                         </div>
@@ -139,9 +138,7 @@
             transition: transform 0.2s ease-in-out;
         }
         
-        .book-card:hover {
-            transform: translateY(-5px);
-        }
+        
         
         .card {
             transition: box-shadow 0.2s ease-in-out;

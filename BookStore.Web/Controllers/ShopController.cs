@@ -130,6 +130,10 @@ namespace BookStore.Web.Controllers
             {
                 if (!IsUserLoggedIn())
                 {
+                    if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                    {
+                        return Json(new { success = false, message = "Vui lòng đăng nhập để thêm sách vào giỏ hàng." });
+                    }
                     TempData["Warning"] = "Vui lòng đăng nhập để thêm sách vào giỏ hàng.";
                     return RedirectToAction("Login", "Account");
                 }
@@ -151,15 +155,49 @@ namespace BookStore.Web.Controllers
                 }
 
                 SaveCartToSession(cart);
-                TempData["Success"] = "Đã thêm sách vào giỏ hàng!";
 
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                {
+                    return Json(new { success = true, message = "Đã thêm sách vào giỏ hàng!" });
+                }
+
+                TempData["Success"] = "Đã thêm sách vào giỏ hàng!";
                 return RedirectToAction("Details", new { id = bookId });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error adding book to cart: {BookId}", bookId);
+
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                {
+                    return Json(new { success = false, message = "Không thể thêm sách vào giỏ hàng." });
+                }
+
                 TempData["Error"] = "Không thể thêm sách vào giỏ hàng.";
                 return RedirectToAction("Details", new { id = bookId });
+            }
+        }
+
+        // GET: Shop/GetCartCount
+        [HttpGet]
+        public IActionResult GetCartCount()
+        {
+            try
+            {
+                if (!IsUserLoggedIn())
+                {
+                    return Json(new { count = 0 });
+                }
+
+                var cart = GetCartFromSession();
+                var totalItems = cart.Sum(c => c.Quantity);
+
+                return Json(new { count = totalItems });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting cart count");
+                return Json(new { count = 0 });
             }
         }
 
