@@ -166,6 +166,7 @@ namespace BookStore.Web.Models
         public static List<SelectListItem> PaymentMethods => new List<SelectListItem>
         {
             new SelectListItem { Value = "COD", Text = "Thanh toán khi nhận hàng (COD)" },
+            new SelectListItem { Value = "PayOS", Text = "Thanh toán online qua PayOS" },
             new SelectListItem { Value = "BankTransfer", Text = "Chuyển khoản ngân hàng" },
             new SelectListItem { Value = "CreditCard", Text = "Thẻ tín dụng" },
             new SelectListItem { Value = "EWallet", Text = "Ví điện tử" }

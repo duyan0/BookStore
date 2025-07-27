@@ -52,6 +52,8 @@ builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<ISliderRepository, SliderRepository>();
 builder.Services.AddScoped<IBannerRepository, BannerRepository>();
 builder.Services.AddScoped<IVoucherRepository, VoucherRepository>();
+builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
+builder.Services.AddScoped<IHelpArticleRepository, HelpArticleRepository>();
 
 // Configure services
 builder.Services.AddScoped<IBookService, BookService>();
@@ -63,6 +65,8 @@ builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<ISliderService, SliderService>();
 builder.Services.AddScoped<IBannerService, BannerService>();
 builder.Services.AddScoped<IVoucherService, VoucherService>();
+builder.Services.AddScoped<IReviewService, ReviewService>();
+builder.Services.AddScoped<IHelpArticleService, HelpArticleService>();
 builder.Services.AddScoped<BookStore.Core.Services.ITimezoneService, TimezoneService>();
 builder.Services.AddScoped<BookStore.Core.Services.IEmailService, BookStore.Infrastructure.Services.EmailService>();
 

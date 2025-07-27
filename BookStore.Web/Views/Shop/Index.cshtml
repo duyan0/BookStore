@@ -27,7 +27,28 @@
                         <div class="row align-items-end">
                             <div class="col-md-4">
                                 <label class="form-label">Tìm kiếm sách</label>
-                                <input type="text" name="search" value="@Model.SearchTerm" class="form-control" placeholder="Nhập tên sách, tác giả...">
+                                <div class="search-container position-relative">
+                                    <div class="input-group">
+                                        <input type="text" name="search" id="shopSearchInput" value="@Model.SearchTerm"
+                                               class="form-control" placeholder="Nhập tên sách, tác giả..." autocomplete="off">
+                                        <button type="button" class="btn btn-outline-secondary" id="clearShopSearch">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+
+                                    <!-- Search Results Dropdown -->
+                                    <div id="shopSearchResults" class="search-results position-absolute w-100 bg-white border rounded-bottom shadow-lg d-none" style="z-index: 1000; max-height: 400px; overflow-y: auto;">
+                                        <!-- Results will be populated here -->
+                                    </div>
+
+                                    <!-- Loading indicator -->
+                                    <div id="shopSearchLoading" class="text-center py-2 d-none">
+                                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                            <span class="visually-hidden">Đang tìm kiếm...</span>
+                                        </div>
+                                        <small class="text-muted ms-2">Đang tìm kiếm...</small>
+                                    </div>
+                                </div>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Danh mục</label>
@@ -224,6 +245,239 @@
 
 
 
+@section Styles {
+    <style>
+        /* Search Results Styles */
+        .search-results {
+            border-top: none !important;
+            border-top-left-radius: 0 !important;
+            border-top-right-radius: 0 !important;
+        }
+
+        .search-result-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e9ecef;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .search-result-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-result-item.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            background-color: #f8f9fa;
+        }
+
+        .search-result-item.disabled:hover {
+            background-color: #f8f9fa;
+        }
+
+        .search-result-item.active {
+            background-color: #e3f2fd;
+        }
+    </style>
+}
+
 @section Scripts {
-    <!-- Book grid and pagination scripts are included in the partial views -->
+    <script>
+        // Global variables for shop search
+        let shopSearchTimeout = null;
+
+        // Initialize shop search when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeShopSearch();
+        });
+
+        // ===== SHOP SEARCH FUNCTIONALITY =====
+        function initializeShopSearch() {
+            const searchInput = document.getElementById('shopSearchInput');
+            const searchResults = document.getElementById('shopSearchResults');
+            const clearButton = document.getElementById('clearShopSearch');
+            const loadingIndicator = document.getElementById('shopSearchLoading');
+
+            if (!searchInput) return;
+
+            // Search input event
+            searchInput.addEventListener('input', function(e) {
+                const term = e.target.value.trim();
+
+                if (term.length < 2) {
+                    hideShopSearchResults();
+                    return;
+                }
+
+                // Debounce search
+                clearTimeout(shopSearchTimeout);
+                shopSearchTimeout = setTimeout(() => {
+                    performShopSearch(term);
+                }, 300);
+            });
+
+            // Clear search
+            clearButton.addEventListener('click', function() {
+                searchInput.value = '';
+                hideShopSearchResults();
+                searchInput.focus();
+            });
+
+            // Hide results when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                    hideShopSearchResults();
+                }
+            });
+
+            // Keyboard navigation
+            searchInput.addEventListener('keydown', function(e) {
+                const items = searchResults.querySelectorAll('.search-result-item:not(.disabled)');
+                const activeItem = searchResults.querySelector('.search-result-item.active');
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    navigateShopSearchResults(items, activeItem, 'down');
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    navigateShopSearchResults(items, activeItem, 'up');
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (activeItem && !activeItem.classList.contains('disabled')) {
+                        const bookId = activeItem.dataset.bookId;
+                        window.location.href = `@Url.Action("Details", "Shop")/${bookId}`;
+                    }
+                } else if (e.key === 'Escape') {
+                    hideShopSearchResults();
+                }
+            });
+        }
+
+        function performShopSearch(term) {
+            const loadingIndicator = document.getElementById('shopSearchLoading');
+            const searchResults = document.getElementById('shopSearchResults');
+
+            // Show loading
+            loadingIndicator.classList.remove('d-none');
+            searchResults.classList.add('d-none');
+
+            fetch(`@Url.Action("SearchProducts", "Shop")?term=${encodeURIComponent(term)}`)
+                .then(response => response.json())
+                .then(data => {
+                    loadingIndicator.classList.add('d-none');
+
+                    if (data.success && data.results && data.results.length > 0) {
+                        displayShopSearchResults(data.results);
+                    } else {
+                        displayShopNoResults();
+                    }
+                })
+                .catch(error => {
+                    console.error('Search error:', error);
+                    loadingIndicator.classList.add('d-none');
+                    displayShopSearchError();
+                });
+        }
+
+        function displayShopSearchResults(results) {
+            const searchResults = document.getElementById('shopSearchResults');
+
+            let html = '';
+            results.forEach(book => {
+                const isDisabled = !book.isInStock;
+                const priceDisplay = book.isDiscountActive ?
+                    `<span class="text-muted text-decoration-line-through small">${book.priceFormatted}</span>
+                     <span class="text-danger fw-bold">${book.discountedPriceFormatted}</span>` :
+                    `<span class="text-danger fw-bold">${book.priceFormatted}</span>`;
+
+                html += `
+                    <div class="search-result-item ${isDisabled ? 'disabled' : ''}" data-book-id="${book.id}">
+                        <div class="d-flex align-items-center">
+                            <img src="${book.imageUrl}" alt="${book.title}" class="me-3 rounded" style="width: 50px; height: 60px; object-fit: contain;">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">${book.title}</h6>
+                                <p class="mb-1 text-muted small">Tác giả: ${book.author}</p>
+                                <p class="mb-1 text-muted small">Danh mục: ${book.category}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>${priceDisplay}</div>
+                                    <div class="text-end">
+                                        ${isDisabled ?
+                                            '<span class="badge bg-danger">Hết hàng</span>' :
+                                            `<span class="badge bg-success">Còn ${book.quantity}</span>`
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            searchResults.innerHTML = html;
+            searchResults.classList.remove('d-none');
+
+            // Add click handlers
+            searchResults.querySelectorAll('.search-result-item:not(.disabled)').forEach(item => {
+                item.addEventListener('click', function() {
+                    const bookId = this.dataset.bookId;
+                    window.location.href = `@Url.Action("Details", "Shop")/${bookId}`;
+                });
+            });
+        }
+
+        function displayShopNoResults() {
+            const searchResults = document.getElementById('shopSearchResults');
+            searchResults.innerHTML = `
+                <div class="text-center py-3">
+                    <i class="fas fa-search text-muted mb-2"></i>
+                    <p class="text-muted mb-0">Không tìm thấy sản phẩm nào</p>
+                    <small class="text-muted">Thử tìm kiếm với từ khóa khác</small>
+                </div>
+            `;
+            searchResults.classList.remove('d-none');
+        }
+
+        function displayShopSearchError() {
+            const searchResults = document.getElementById('shopSearchResults');
+            searchResults.innerHTML = `
+                <div class="text-center py-3">
+                    <i class="fas fa-exclamation-triangle text-warning mb-2"></i>
+                    <p class="text-muted mb-0">Có lỗi xảy ra khi tìm kiếm</p>
+                </div>
+            `;
+            searchResults.classList.remove('d-none');
+        }
+
+        function hideShopSearchResults() {
+            const searchResults = document.getElementById('shopSearchResults');
+            const loadingIndicator = document.getElementById('shopSearchLoading');
+
+            searchResults.classList.add('d-none');
+            loadingIndicator.classList.add('d-none');
+        }
+
+        function navigateShopSearchResults(items, activeItem, direction) {
+            if (items.length === 0) return;
+
+            // Remove current active
+            if (activeItem) {
+                activeItem.classList.remove('active');
+            }
+
+            let newIndex = 0;
+            if (activeItem) {
+                const currentIndex = Array.from(items).indexOf(activeItem);
+                newIndex = direction === 'down' ?
+                    (currentIndex + 1) % items.length :
+                    (currentIndex - 1 + items.length) % items.length;
+            }
+
+            items[newIndex].classList.add('active');
+            items[newIndex].scrollIntoView({ block: 'nearest' });
+        }
+    </script>
 }

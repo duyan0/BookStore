@@ -1,3 +1,4 @@
+@using BookStore.Web.Helpers
 @model List<BookViewModel>
 @{
     ViewData["Title"] = "Quản lý Sách";
@@ -80,7 +81,7 @@
                                     <td>@book.AuthorName</td>
                                     <td>@book.CategoryName</td>
                                     <td>
-                                        <span class="fw-bold text-success">@book.Price.ToString("C0", new System.Globalization.CultureInfo("vi-VN"))</span>
+                                        <span class="fw-bold text-success">@CurrencyHelper.FormatVND(book.Price)</span>
                                     </td>
                                     <td>
                                         <span class="badge @(book.Quantity > 10 ? "bg-success" : book.Quantity > 0 ? "bg-warning" : "bg-danger")">

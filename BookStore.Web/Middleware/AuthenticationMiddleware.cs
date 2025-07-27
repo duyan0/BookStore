@@ -11,11 +11,27 @@ namespace BookStore.Web.Middleware
         private readonly string[] _publicRoutes = {
             "/",
             "/home",
+            "/shop",
             "/account/login",
             "/account/register",
             "/account/logout",
             "/account/forgotpassword",
+            "/account/verifyotp",
             "/debug"
+        };
+
+        // Routes that are publicly accessible for specific actions
+        private readonly string[] _publicSpecificRoutes = {
+            "/reviews/book"  // Allow public access to book reviews
+        };
+
+        // Routes that require authentication but not admin role
+        private readonly string[] _userRoutes = {
+            "/vouchers",
+            "/reviews/myreviews",
+            "/reviews/create",
+            "/reviews/edit",
+            "/reviews/delete"
         };
 
         // Routes that require Admin role
@@ -72,20 +88,31 @@ namespace BookStore.Web.Middleware
                 }
             }
 
+            // For user routes, authentication is already verified above
+            // No additional checks needed - user is authenticated and route is not admin-only
+
             await _next(context);
         }
 
         private bool IsPublicRoute(string path)
         {
-            // Check exact matches and prefixes
-            return _publicRoutes.Any(route =>
+            // Check exact matches and prefixes for general public routes
+            var isGeneralPublic = _publicRoutes.Any(route =>
                 path.Equals(route, StringComparison.OrdinalIgnoreCase) ||
-                path.StartsWith(route + "/", StringComparison.OrdinalIgnoreCase)) ||
-                path.StartsWith("/css/", StringComparison.OrdinalIgnoreCase) ||
+                path.StartsWith(route + "/", StringComparison.OrdinalIgnoreCase));
+
+            // Check specific public routes (like /reviews/book/*)
+            var isSpecificPublic = _publicSpecificRoutes.Any(route =>
+                path.StartsWith(route + "/", StringComparison.OrdinalIgnoreCase));
+
+            // Check static resources
+            var isStaticResource = path.StartsWith("/css/", StringComparison.OrdinalIgnoreCase) ||
                 path.StartsWith("/js/", StringComparison.OrdinalIgnoreCase) ||
                 path.StartsWith("/lib/", StringComparison.OrdinalIgnoreCase) ||
                 path.StartsWith("/images/", StringComparison.OrdinalIgnoreCase) ||
                 path.StartsWith("/favicon", StringComparison.OrdinalIgnoreCase);
+
+            return isGeneralPublic || isSpecificPublic || isStaticResource;
         }
 
         private bool IsAdminOnlyRoute(string path)

@@ -1,0 +1,235 @@
+@model BookStore.Web.Models.BookReviewsViewModel
+@{
+    Layout = null; // This is a partial view for AJAX loading
+}
+
+@if (Model.Reviews.Any())
+{
+    <!-- Review Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="text-center">
+                <div class="display-4 text-warning fw-bold">@Model.AverageRating.ToString("F1")</div>
+                <div class="text-warning fs-4 mb-2">
+                    @{
+                        var fullStars = (int)Math.Floor(Model.AverageRating);
+                        var hasHalfStar = Model.AverageRating - fullStars >= 0.5;
+                        var emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+                    }
+                    @for (int i = 0; i < fullStars; i++)
+                    {
+                        <i class="fas fa-star"></i>
+                    }
+                    @if (hasHalfStar)
+                    {
+                        <i class="fas fa-star-half-alt"></i>
+                    }
+                    @for (int i = 0; i < emptyStars; i++)
+                    {
+                        <i class="far fa-star"></i>
+                    }
+                </div>
+                <p class="text-muted">@Model.TotalReviews đánh giá</p>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="rating-breakdown">
+                @for (int star = 5; star >= 1; star--)
+                {
+                    var count = Model.RatingDistribution[star];
+                    var percentage = Model.TotalReviews > 0 ? (double)count / Model.TotalReviews * 100 : 0;
+                    
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="me-2" style="width: 60px;">@star sao</span>
+                        <div class="progress flex-grow-1 me-2" style="height: 8px;">
+                            <div class="progress-bar bg-warning" role="progressbar" 
+                                 style="width: @percentage%" aria-valuenow="@percentage" 
+                                 aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        <span class="text-muted" style="width: 40px;">@count</span>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- User's Review (if exists) -->
+    @if (Model.UserReviewViewModel != null)
+    {
+        <div class="alert alert-info">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h6 class="alert-heading">
+                        <i class="fas fa-user me-2"></i>Đánh giá của bạn
+                    </h6>
+                    <div class="text-warning mb-2">@Model.UserReviewViewModel.RatingStars</div>
+                    @if (!string.IsNullOrEmpty(Model.UserReviewViewModel.Comment))
+                    {
+                        <p class="mb-2">@Model.UserReviewViewModel.Comment</p>
+                    }
+                    <small class="text-muted">
+                        @Model.UserReviewViewModel.CreatedAtFormatted
+                        @if (Model.UserReviewViewModel.Status != BookStore.Core.Entities.ReviewStatus.Approved)
+                        {
+                            <span class="badge bg-warning ms-2">@Model.UserReviewViewModel.StatusText</span>
+                        }
+                    </small>
+                </div>
+                <div>
+                    <a href="@Url.Action("Edit", "Reviews", new { id = Model.UserReviewViewModel.Id })" 
+                       class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-edit me-1"></i>Sửa
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+    else if (Model.CanUserReview)
+    {
+        <div class="text-center mb-4">
+            <a href="@Url.Action("Create", "Reviews", new { bookId = Model.Book.Id })" 
+               class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>Viết đánh giá đầu tiên
+            </a>
+        </div>
+    }
+
+    <!-- Reviews List -->
+    <div class="reviews-list">
+        <h5 class="mb-3">Tất cả đánh giá (@Model.TotalReviews)</h5>
+        
+        @foreach (var review in Model.Reviews.Take(10)) // Show first 10 reviews
+        {
+            <div class="review-item border-bottom pb-3 mb-3">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <div class="d-flex align-items-center mb-1">
+                            <strong class="me-2">@review.UserFullName</strong>
+                            @if (review.IsVerifiedPurchase)
+                            {
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check-circle me-1"></i>Đã mua
+                                </span>
+                            }
+                        </div>
+                        <div class="text-warning mb-1">@review.RatingStars</div>
+                        <small class="text-muted">@review.CreatedAtFormatted</small>
+                    </div>
+                </div>
+                
+                @if (!string.IsNullOrEmpty(review.Comment))
+                {
+                    <p class="mb-2">@review.Comment</p>
+                }
+                
+                @if (review.HelpfulCount > 0 || review.NotHelpfulCount > 0)
+                {
+                    <div class="d-flex align-items-center">
+                        <small class="text-muted me-3">
+                            Hữu ích? 
+                            <span class="text-success">@review.HelpfulCount có</span> / 
+                            <span class="text-danger">@review.NotHelpfulCount không</span>
+                        </small>
+                        
+                        @if (Context.Session.GetString("Token") != null)
+                        {
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button type="button" class="btn btn-outline-success" 
+                                        onclick="markHelpful(@review.Id, true)">
+                                    <i class="fas fa-thumbs-up"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-danger" 
+                                        onclick="markHelpful(@review.Id, false)">
+                                    <i class="fas fa-thumbs-down"></i>
+                                </button>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+        
+        @if (Model.Reviews.Count > 10)
+        {
+            <div class="text-center">
+                <button class="btn btn-outline-primary" onclick="loadMoreReviews()">
+                    <i class="fas fa-chevron-down me-1"></i>Xem thêm đánh giá
+                </button>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <!-- No Reviews -->
+    <div class="text-center py-5">
+        <i class="fas fa-star fa-3x text-muted mb-3"></i>
+        <h5 class="text-muted">Chưa có đánh giá nào</h5>
+        <p class="text-muted">Hãy là người đầu tiên đánh giá cuốn sách này!</p>
+        
+        @if (Model.CanUserReview)
+        {
+            <a href="@Url.Action("Create", "Reviews", new { bookId = Model.Book.Id })" 
+               class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>Viết đánh giá đầu tiên
+            </a>
+        }
+        else if (Context.Session.GetString("Token") == null)
+        {
+            <a href="@Url.Action("Login", "Account")" class="btn btn-outline-primary">
+                <i class="fas fa-sign-in-alt me-1"></i>Đăng nhập để đánh giá
+            </a>
+        }
+    </div>
+}
+
+<script>
+    function markHelpful(reviewId, isHelpful) {
+        $.post('@Url.Action("MarkHelpful", "Reviews")', {
+            id: reviewId,
+            isHelpful: isHelpful
+        })
+        .done(function(response) {
+            if (response.success) {
+                // Reload reviews to show updated counts
+                loadReviews(@Model.Book.Id);
+                
+                // Show success message
+                showToast('success', response.message);
+            } else {
+                showToast('error', response.message);
+            }
+        })
+        .fail(function() {
+            showToast('error', 'Có lỗi xảy ra. Vui lòng thử lại.');
+        });
+    }
+    
+    function loadMoreReviews() {
+        // This would implement pagination for reviews
+        // For now, just show a message
+        showToast('info', 'Tính năng đang được phát triển.');
+    }
+    
+    function showToast(type, message) {
+        // Simple toast notification
+        const toast = $(`
+            <div class="toast align-items-center text-white bg-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info'} border-0" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body">${message}</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        `);
+        
+        // Add to page and show
+        $('body').append(toast);
+        const bsToast = new bootstrap.Toast(toast[0]);
+        bsToast.show();
+        
+        // Remove after hiding
+        toast.on('hidden.bs.toast', function() {
+            $(this).remove();
+        });
+    }
+</script>

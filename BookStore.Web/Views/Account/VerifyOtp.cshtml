@@ -1,0 +1,204 @@
+@model BookStore.Web.Models.OtpVerificationViewModel
+@{
+    ViewData["Title"] = "Xác thực OTP";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-lg border-0 rounded-lg mt-5">
+                <div class="card-header">
+                    <h3 class="text-center font-weight-light my-4">
+                        <i class="fas fa-shield-alt text-white me-2"></i>
+                        Xác thực OTP
+                    </h3>
+                </div>
+                <div class="card-body">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle me-2"></i>
+                            @TempData["Success"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            @TempData["Error"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <div class="text-center mb-4">
+                        <p class="text-muted">
+                            Chúng tôi đã gửi mã OTP 6 chữ số đến email:
+                        </p>
+                        <strong class="text-primary">@Model.Email</strong>
+                        <p class="small text-muted mt-2">
+                            Vui lòng kiểm tra hộp thư và nhập mã OTP để hoàn tất đăng ký.
+                        </p>
+                    </div>
+
+                    <form asp-action="VerifyOtp" method="post" id="otpForm">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                        
+                        <input type="hidden" asp-for="Email" />
+
+                        <div class="form-floating mb-3">
+                            <input asp-for="OtpCode" class="form-control text-center" 
+                                   placeholder="000000" maxlength="6" 
+                                   style="font-size: 1.5rem; letter-spacing: 0.5rem;"
+                                   autocomplete="off" />
+                            <label asp-for="OtpCode">Mã OTP (6 chữ số)</label>
+                            <span asp-validation-for="OtpCode" class="text-danger"></span>
+                        </div>
+
+                        <div class="text-center mb-3">
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i>
+                                Mã OTP có hiệu lực trong 10 phút
+                            </small>
+                            <br>
+                            <small class="text-warning">
+                                <i class="fas fa-exclamation-circle me-1"></i>
+                                Còn lại <span id="remainingAttempts">@Model.RemainingAttempts</span> lần thử
+                            </small>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-check me-2"></i>
+                                Xác thực OTP
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="text-center mt-4">
+                        <p class="text-muted">Không nhận được mã OTP?</p>
+                        <button type="button" class="btn btn-outline-secondary" id="resendBtn">
+                            <i class="fas fa-redo me-2"></i>
+                            Gửi lại mã OTP
+                        </button>
+                        <div id="resendMessage" class="mt-2"></div>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <a asp-action="Register" class="btn btn-link">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Quay lại đăng ký
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        $(document).ready(function() {
+            // Auto-focus on OTP input
+            $('#OtpCode').focus();
+
+            // Format OTP input (numbers only)
+            $('#OtpCode').on('input', function() {
+                this.value = this.value.replace(/[^0-9]/g, '');
+            });
+
+            // Auto-submit when 6 digits are entered
+            $('#OtpCode').on('input', function() {
+                if (this.value.length === 6) {
+                    // Small delay to allow user to see the complete code
+                    setTimeout(function() {
+                        $('#otpForm').submit();
+                    }, 500);
+                }
+            });
+
+            // Resend OTP functionality
+            $('#resendBtn').click(function() {
+                var btn = $(this);
+                var originalText = btn.html();
+                
+                btn.prop('disabled', true);
+                btn.html('<i class="fas fa-spinner fa-spin me-2"></i>Đang gửi...');
+                
+                $.ajax({
+                    url: '@Url.Action("ResendOtp")',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ email: '@Model.Email' }),
+                    headers: {
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            $('#resendMessage').html('<div class="alert alert-success alert-sm"><i class="fas fa-check me-2"></i>' + response.message + '</div>');
+                            
+                            // Start countdown timer
+                            startResendTimer(60);
+                        } else {
+                            $('#resendMessage').html('<div class="alert alert-danger alert-sm"><i class="fas fa-times me-2"></i>' + response.message + '</div>');
+                            btn.prop('disabled', false);
+                            btn.html(originalText);
+                        }
+                    },
+                    error: function() {
+                        $('#resendMessage').html('<div class="alert alert-danger alert-sm"><i class="fas fa-times me-2"></i>Có lỗi xảy ra. Vui lòng thử lại.</div>');
+                        btn.prop('disabled', false);
+                        btn.html(originalText);
+                    }
+                });
+            });
+
+            function startResendTimer(seconds) {
+                var btn = $('#resendBtn');
+                var originalText = '<i class="fas fa-redo me-2"></i>Gửi lại mã OTP';
+                
+                var timer = setInterval(function() {
+                    btn.html('<i class="fas fa-clock me-2"></i>Gửi lại sau ' + seconds + 's');
+                    seconds--;
+                    
+                    if (seconds < 0) {
+                        clearInterval(timer);
+                        btn.prop('disabled', false);
+                        btn.html(originalText);
+                        $('#resendMessage').empty();
+                    }
+                }, 1000);
+            }
+
+            // Clear messages after 5 seconds
+            setTimeout(function() {
+                $('.alert').fadeOut();
+            }, 5000);
+        });
+    </script>
+
+    <style>
+        .alert-sm {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+        }
+        
+        #OtpCode:focus {
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+            border-color: #007bff;
+        }
+        
+        .card {
+            border-radius: 1rem;
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            border-radius: 1rem 1rem 0 0 !important;
+        }
+    </style>
+}

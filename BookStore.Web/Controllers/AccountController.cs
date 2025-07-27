@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using BookStore.Web.Services;
 using BookStore.Web.Models;
 using BookStore.Core.DTOs;
+using Newtonsoft.Json;
 
 namespace BookStore.Web.Controllers
 {
@@ -9,11 +10,16 @@ namespace BookStore.Web.Controllers
     {
         private readonly ApiService _apiService;
         private readonly ILogger<AccountController> _logger;
+        private readonly IOtpService _otpService;
+        private readonly IEmailService _emailService;
 
-        public AccountController(ApiService apiService, ILogger<AccountController> logger)
+        public AccountController(ApiService apiService, ILogger<AccountController> logger,
+            IOtpService otpService, IEmailService emailService)
         {
             _apiService = apiService;
             _logger = logger;
+            _otpService = otpService;
+            _emailService = emailService;
         }
 
         // GET: Account/Login
@@ -125,16 +131,233 @@ namespace BookStore.Web.Controllers
             return View(new RegisterViewModel());
         }
 
-        // POST: Account/Register
+        // POST: Account/Register - Step 1: Generate and send OTP
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
+            _logger.LogInformation("=== REGISTER POST ACTION STARTED ===");
+            _logger.LogInformation("Received registration request for email: {Email}", model?.Email ?? "NULL");
+
             if (!ModelState.IsValid)
             {
+                _logger.LogWarning("ModelState is invalid. Returning view with errors.");
+                foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    _logger.LogWarning("ModelState error: {Error}", error.ErrorMessage);
+                }
                 return View(model);
             }
 
+            _logger.LogInformation("ModelState is valid. Processing registration for {Email}", model.Email);
+
+            try
+            {
+                _logger.LogInformation("Step 1: Serializing user data for OTP storage");
+                // Serialize user data for OTP storage
+                var userData = System.Text.Json.JsonSerializer.Serialize(model);
+                _logger.LogInformation("User data serialized successfully");
+
+                _logger.LogInformation("Step 2: Generating OTP for email {Email}", model.Email);
+                // Generate OTP
+                var otpCode = await _otpService.GenerateOtpAsync(model.Email, userData);
+                _logger.LogInformation("OTP generated successfully: {OtpCode}", otpCode);
+
+                _logger.LogInformation("Step 3: Attempting to send OTP email to {Email}", model.Email);
+                // Send OTP email
+                var emailSent = await _emailService.SendOtpEmailAsync(model.Email, $"{model.FirstName} {model.LastName}", otpCode);
+
+                _logger.LogInformation("Step 4: Email service result for {Email}: {EmailSent}", model.Email, emailSent);
+
+                if (emailSent)
+                {
+                    _logger.LogInformation("✅ SUCCESS: OTP sent successfully to {Email}. Preparing redirect to VerifyOtp.", model.Email);
+                    TempData["Success"] = "Mã OTP đã được gửi đến email của bạn. Vui lòng kiểm tra và nhập mã để hoàn tất đăng ký.";
+
+                    _logger.LogInformation("Step 5: About to redirect to VerifyOtp with email: {Email}", model.Email);
+                    var redirectResult = RedirectToAction("VerifyOtp", new { email = model.Email });
+                    _logger.LogInformation("✅ REDIRECT CREATED: Returning RedirectToAction result");
+                    return redirectResult;
+                }
+                else
+                {
+                    _logger.LogError("❌ FAILED: Email service returned false for {Email}", model.Email);
+                    ModelState.AddModelError("", "Không thể gửi email xác thực. Vui lòng thử lại.");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ EXCEPTION: Error during registration process for email {Email}", model.Email);
+                ModelState.AddModelError("", "Có lỗi xảy ra trong quá trình đăng ký. Vui lòng thử lại.");
+            }
+
+            _logger.LogWarning("⚠️ FALLBACK: Returning view due to error or email send failure");
+            return View(model);
+        }
+
+        // GET: Account/VerifyOtp
+        public async Task<IActionResult> VerifyOtp(string email)
+        {
+            _logger.LogInformation("VerifyOtp GET action called with email: {Email}", email);
+
+            if (string.IsNullOrEmpty(email))
+            {
+                _logger.LogWarning("VerifyOtp called with empty email. Redirecting to Register.");
+                TempData["Error"] = "Email không hợp lệ.";
+                return RedirectToAction("Register");
+            }
+
+            // Check if OTP is still valid
+            var isOtpValid = await _otpService.IsOtpValidAsync(email);
+            _logger.LogInformation("OTP validity check for {Email}: {IsValid}", email, isOtpValid);
+
+            if (!isOtpValid)
+            {
+                _logger.LogWarning("OTP not valid for {Email}. Redirecting to Register.", email);
+                TempData["Error"] = "Mã OTP đã hết hạn hoặc không tồn tại. Vui lòng đăng ký lại.";
+                return RedirectToAction("Register");
+            }
+
+            var remainingAttempts = await _otpService.GetRemainingAttemptsAsync(email);
+            _logger.LogInformation("Creating VerifyOtp view model for {Email} with {RemainingAttempts} attempts", email, remainingAttempts);
+
+            var model = new OtpVerificationViewModel
+            {
+                Email = email,
+                RemainingAttempts = remainingAttempts,
+                CanResend = true
+            };
+
+            _logger.LogInformation("Returning VerifyOtp view for {Email}", email);
+            return View(model);
+        }
+
+        // POST: Account/VerifyOtp
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> VerifyOtp(OtpVerificationViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                model.RemainingAttempts = await _otpService.GetRemainingAttemptsAsync(model.Email);
+                return View(model);
+            }
+
+            try
+            {
+                var isValid = await _otpService.ValidateOtpAsync(model.Email, model.OtpCode);
+
+                if (isValid)
+                {
+                    // Get user data from OTP service
+                    var userDataJson = await _otpService.GetUserDataAsync(model.Email);
+
+                    if (string.IsNullOrEmpty(userDataJson))
+                    {
+                        TempData["Error"] = "Dữ liệu đăng ký không tồn tại. Vui lòng đăng ký lại.";
+                        await _otpService.ClearOtpAsync(model.Email);
+                        return RedirectToAction("Register");
+                    }
+
+                    // Deserialize user data
+                    var registerModel = System.Text.Json.JsonSerializer.Deserialize<RegisterViewModel>(userDataJson);
+
+                    if (registerModel == null)
+                    {
+                        TempData["Error"] = "Dữ liệu đăng ký không hợp lệ. Vui lòng đăng ký lại.";
+                        await _otpService.ClearOtpAsync(model.Email);
+                        return RedirectToAction("Register");
+                    }
+
+                    // Now create the actual user account
+                    var success = await CreateUserAccountAsync(registerModel);
+
+                    if (success)
+                    {
+                        // Clear OTP after successful registration
+                        await _otpService.ClearOtpAsync(model.Email);
+
+                        TempData["Success"] = "Đăng ký thành công! Chào mừng bạn đến với BookStore.";
+                        return RedirectToAction("Login");
+                    }
+                    else
+                    {
+                        TempData["Error"] = "Không thể tạo tài khoản. Vui lòng thử lại.";
+                        model.RemainingAttempts = await _otpService.GetRemainingAttemptsAsync(model.Email);
+                        return View(model);
+                    }
+                }
+                else
+                {
+                    var remainingAttempts = await _otpService.GetRemainingAttemptsAsync(model.Email);
+
+                    if (remainingAttempts <= 0)
+                    {
+                        TempData["Error"] = "Bạn đã nhập sai mã OTP quá nhiều lần. Vui lòng đăng ký lại.";
+                        await _otpService.ClearOtpAsync(model.Email);
+                        return RedirectToAction("Register");
+                    }
+
+                    ModelState.AddModelError("OtpCode", $"Mã OTP không đúng. Còn lại {remainingAttempts} lần thử.");
+                    model.RemainingAttempts = remainingAttempts;
+                    return View(model);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error verifying OTP for email {Email}", model.Email);
+                ModelState.AddModelError("", "Có lỗi xảy ra khi xác thực OTP. Vui lòng thử lại.");
+                model.RemainingAttempts = await _otpService.GetRemainingAttemptsAsync(model.Email);
+                return View(model);
+            }
+        }
+
+        // POST: Account/ResendOtp
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResendOtp([FromBody] ResendOtpRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(request.Email))
+                {
+                    return Json(new { success = false, message = "Email không hợp lệ." });
+                }
+
+                var resent = await _otpService.ResendOtpAsync(request.Email);
+
+                if (resent)
+                {
+                    var userData = await _otpService.GetUserDataAsync(request.Email);
+                    if (!string.IsNullOrEmpty(userData))
+                    {
+                        var registerModel = System.Text.Json.JsonSerializer.Deserialize<RegisterViewModel>(userData);
+                        if (registerModel != null)
+                        {
+                            var newOtpCode = await _otpService.GenerateOtpAsync(request.Email, userData);
+                            var emailSent = await _emailService.SendOtpEmailAsync(request.Email,
+                                $"{registerModel.FirstName} {registerModel.LastName}", newOtpCode);
+
+                            if (emailSent)
+                            {
+                                return Json(new { success = true, message = "Mã OTP mới đã được gửi đến email của bạn." });
+                            }
+                        }
+                    }
+                }
+
+                return Json(new { success = false, message = "Không thể gửi lại mã OTP. Vui lòng thử lại." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error resending OTP for email {Email}", request.Email);
+                return Json(new { success = false, message = "Có lỗi xảy ra. Vui lòng thử lại." });
+            }
+        }
+
+        // Helper method to create user account after OTP verification
+        private async Task<bool> CreateUserAccountAsync(RegisterViewModel model)
+        {
             try
             {
                 var registerDto = new RegisterUserDto
@@ -154,38 +377,21 @@ namespace BookStore.Web.Controllers
 
                 if (response != null && response.Success)
                 {
-                    // Save token and user info to session
-                    HttpContext.Session.SetString("Token", response.Token);
-                    HttpContext.Session.SetString("Username", response.User?.Username ?? "");
-                    HttpContext.Session.SetString("FullName", response.User?.FullName ?? "");
-                    HttpContext.Session.SetString("IsAdmin", response.User?.IsAdmin.ToString() ?? "false");
-                    HttpContext.Session.SetInt32("UserId", response.User?.Id ?? 0);
-
-                    TempData["Success"] = "Đăng ký thành công! Chào mừng bạn đến với BookStore.";
-
-                    // Redirect based on user role (new users are typically not admin)
-                    var isAdmin = response.User?.IsAdmin == true;
-                    if (isAdmin)
-                    {
-                        return RedirectToAction("Index", "Home", new { area = "Admin" }); // Admin dashboard
-                    }
-                    else
-                    {
-                        return RedirectToAction("Dashboard", "User"); // User dashboard
-                    }
+                    _logger.LogInformation("User account created successfully for email {Email}", model.Email);
+                    return true;
                 }
                 else
                 {
-                    ModelState.AddModelError("", response?.Message ?? "Đăng ký thất bại. Vui lòng thử lại.");
+                    _logger.LogWarning("Failed to create user account for email {Email}. Response: {Message}",
+                        model.Email, response?.Message);
+                    return false;
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error during registration for user: {Username}", model.Username);
-                ModelState.AddModelError("", "Có lỗi xảy ra trong quá trình đăng ký. Vui lòng thử lại sau.");
+                _logger.LogError(ex, "Error creating user account for email {Email}", model.Email);
+                return false;
             }
-
-            return View(model);
         }
 
         // GET: Account/Logout

@@ -1,0 +1,185 @@
+@model IEnumerable<BookStore.Web.Models.ReviewViewModel>
+@{
+    ViewData["Title"] = "Đánh giá của tôi";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-star me-2 text-warning"></i>
+                    Đánh giá của tôi
+                </h2>
+            </div>
+
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-star fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">Bạn chưa có đánh giá nào</h4>
+                    <p class="text-muted">Hãy mua sách và để lại đánh giá để chia sẻ trải nghiệm của bạn!</p>
+                    <a href="@Url.Action("Index", "Shop")" class="btn btn-primary">
+                        <i class="fas fa-shopping-cart me-1"></i>Mua sắm ngay
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="row">
+                    @foreach (var review in Model)
+                    {
+                        <div class="col-lg-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0">@review.BookTitle</h6>
+                                    <span class="badge @GetStatusBadgeClass(review.Status)">@review.StatusText</span>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Book Information -->
+                                    <div class="row mb-3">
+                                        <div class="col-4">
+                                            <a href="@Url.Action("Details", "Shop", new { id = review.BookId })"
+                                               class="text-decoration-none">
+                                                @if (!string.IsNullOrEmpty(review.BookImageUrl))
+                                                {
+                                                    <img src="@review.BookImageUrl" alt="@review.BookTitle"
+                                                         class="img-fluid rounded shadow-sm">
+                                                }
+                                                else
+                                                {
+                                                    <div class="bg-light rounded d-flex align-items-center justify-content-center"
+                                                         style="height: 120px;">
+                                                        <i class="fas fa-book fa-2x text-muted"></i>
+                                                    </div>
+                                                }
+                                            </a>
+                                        </div>
+                                        <div class="col-8">
+                                            <h6 class="mb-1">
+                                                <a href="@Url.Action("Details", "Shop", new { id = review.BookId })"
+                                                   class="text-decoration-none text-dark">
+                                                    @review.BookTitle
+                                                </a>
+                                            </h6>
+                                            @if (!string.IsNullOrEmpty(review.BookAuthor))
+                                            {
+                                                <p class="text-muted mb-1">
+                                                    <i class="fas fa-user me-1"></i>@review.BookAuthor
+                                                </p>
+                                            }
+                                            @if (!string.IsNullOrEmpty(review.BookCategory))
+                                            {
+                                                <p class="text-muted mb-1">
+                                                    <i class="fas fa-tag me-1"></i>@review.BookCategory
+                                                </p>
+                                            }
+                                            <p class="text-primary mb-1">
+                                                <strong>@review.BookPriceFormatted</strong>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <div class="text-warning mb-1">
+                                            @review.RatingStars
+                                        </div>
+                                        <small class="text-muted">@review.CreatedAtFormatted</small>
+                                        @if (review.IsVerifiedPurchase)
+                                        {
+                                            <span class="badge bg-success ms-2">
+                                                <i class="fas fa-check-circle me-1"></i>Đã mua
+                                            </span>
+                                        }
+                                    </div>
+
+                                    @if (!string.IsNullOrEmpty(review.Comment))
+                                    {
+                                        <p class="card-text">@review.Comment</p>
+                                    }
+
+                                    @if (!string.IsNullOrEmpty(review.AdminNote))
+                                    {
+                                        <div class="alert alert-info">
+                                            <strong>Ghi chú từ admin:</strong> @review.AdminNote
+                                        </div>
+                                    }
+
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            @if (review.HelpfulCount > 0 || review.NotHelpfulCount > 0)
+                                            {
+                                                <small class="text-muted">
+                                                    <i class="fas fa-thumbs-up me-1"></i>@review.HelpfulCount
+                                                    <i class="fas fa-thumbs-down ms-2 me-1"></i>@review.NotHelpfulCount
+                                                </small>
+                                            }
+                                        </div>
+                                        <div>
+                                            @if (review.Status == BookStore.Core.Entities.ReviewStatus.Pending || 
+                                                 review.Status == BookStore.Core.Entities.ReviewStatus.Approved)
+                                            {
+                                                <a href="@Url.Action("Edit", new { id = review.Id })" 
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-edit me-1"></i>Sửa
+                                                </a>
+                                            }
+                                            <button type="button" class="btn btn-sm btn-outline-danger ms-1" 
+                                                    onclick="confirmDelete(@review.Id)">
+                                                <i class="fas fa-trash me-1"></i>Xóa
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Xác nhận xóa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                Bạn có chắc chắn muốn xóa đánh giá này không?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <form id="deleteForm" method="post" style="display: inline;">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger">Xóa</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmDelete(reviewId) {
+            document.getElementById('deleteForm').action = '@Url.Action("Delete")/' + reviewId;
+            new bootstrap.Modal(document.getElementById('deleteModal')).show();
+        }
+    </script>
+}
+
+@functions {
+    string GetStatusBadgeClass(BookStore.Core.Entities.ReviewStatus status)
+    {
+        return status switch
+        {
+            BookStore.Core.Entities.ReviewStatus.Pending => "bg-warning",
+            BookStore.Core.Entities.ReviewStatus.Approved => "bg-success",
+            BookStore.Core.Entities.ReviewStatus.Rejected => "bg-danger",
+            BookStore.Core.Entities.ReviewStatus.Hidden => "bg-secondary",
+            _ => "bg-secondary"
+        };
+    }
+}

@@ -965,6 +965,22 @@
           }
         }
       },
+      "payOS/1.0.9": {
+        "type": "package",
+        "dependencies": {
+          "Newtonsoft.Json": "13.0.3"
+        },
+        "compile": {
+          "lib/net6.0/payos-lib-backend-dotnet.dll": {
+            "related": ".runtimeconfig.json"
+          }
+        },
+        "runtime": {
+          "lib/net6.0/payos-lib-backend-dotnet.dll": {
+            "related": ".runtimeconfig.json"
+          }
+        }
+      },
       "System.Buffers/4.6.0": {
         "type": "package",
         "compile": {
@@ -2736,6 +2752,20 @@
         "packageIcon.png"
       ]
     },
+    "payOS/1.0.9": {
+      "sha512": "LPfIWXg0Oo8mPk8l3otrqtH4iQcjaG+ughDp2DS3gS52s7bs8eEtU+uXflu32GPDCFKksfFyAAOLUoPDva4/Gw==",
+      "type": "package",
+      "path": "payos/1.0.9",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "lib/net6.0/payos-lib-backend-dotnet.dll",
+        "lib/net6.0/payos-lib-backend-dotnet.runtimeconfig.json",
+        "payos.1.0.9.nupkg.sha512",
+        "payos.nuspec"
+      ]
+    },
     "System.Buffers/4.6.0": {
       "sha512": "lN6tZi7Q46zFzAbRYXTIvfXcyvQQgxnY7Xm6C6xQ9784dEL1amjM6S6Iw4ZpsvesAKnRVsM4scrDQaDqSClkjA==",
       "type": "package",
@@ -3441,7 +3471,8 @@
     "net9.0": [
       "BookStore.Core >= 1.0.0",
       "BookStore.Infrastructure >= 1.0.0",
-      "Newtonsoft.Json >= 13.0.3"
+      "Newtonsoft.Json >= 13.0.3",
+      "PayOS >= 1.0.9"
     ]
   },
   "packageFolders": {
@@ -3451,11 +3482,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\BookStore\\bookstore.web\\BookStore.Web.csproj",
+      "projectUniqueName": "C:\\BookStore\\BookStore.Web\\BookStore.Web.csproj",
       "projectName": "BookStore.Web",
-      "projectPath": "C:\\BookStore\\bookstore.web\\BookStore.Web.csproj",
+      "projectPath": "C:\\BookStore\\BookStore.Web\\BookStore.Web.csproj",
       "packagesPath": "C:\\Users\\DUYANxHUYNHU\\.nuget\\packages\\",
-      "outputPath": "C:\\BookStore\\bookstore.web\\obj\\",
+      "outputPath": "C:\\BookStore\\BookStore.Web\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -3504,6 +3535,10 @@
           "Newtonsoft.Json": {
             "target": "Package",
             "version": "[13.0.3, )"
+          },
+          "PayOS": {
+            "target": "Package",
+            "version": "[1.0.9, )"
           }
         },
         "imports": [

@@ -75,12 +75,43 @@
                                                     @Html.HiddenFor(m => m.Items[i].BookPrice)
                                                     @Html.HiddenFor(m => m.Items[i].BookImageUrl)
                                                     @Html.HiddenFor(m => m.Items[i].Quantity)
+                                                    @Html.HiddenFor(m => m.Items[i].DiscountPercentage)
+                                                    @Html.HiddenFor(m => m.Items[i].DiscountAmount)
+                                                    @Html.HiddenFor(m => m.Items[i].IsOnSale)
+                                                    @Html.HiddenFor(m => m.Items[i].DiscountedPrice)
+                                                    @Html.HiddenFor(m => m.Items[i].IsDiscountActive)
                                                 </td>
                                                 <td class="text-center">
                                                     <span class="text-dark fw-semibold fs-6">@Model.Items[i].Quantity</span>
                                                 </td>
-                                                <td class="text-end ">@Model.Items[i].BookPriceFormatted</td>
-                                                <td class="text-end text-danger"><strong>@Model.Items[i].TotalPriceFormatted</strong></td>
+                                                <td class="text-end">
+                                                    @if (Model.Items[i].IsDiscountActive)
+                                                    {
+                                                        <div class="price-section">
+                                                            <div class="text-muted text-decoration-line-through small">@Model.Items[i].BookPriceFormatted</div>
+                                                            <div class="text-danger fw-bold">@Model.Items[i].EffectivePriceFormatted</div>
+                                                            <span class="badge bg-danger small">-@((Model.Items[i].BookPrice - Model.Items[i].DiscountedPrice) / Model.Items[i].BookPrice * 100)</span>
+                                                        </div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="text-danger fw-bold">@Model.Items[i].BookPriceFormatted</span>
+                                                    }
+                                                </td>
+                                                <td class="text-end">
+                                                    @if (Model.Items[i].IsDiscountActive)
+                                                    {
+                                                        <div>
+                                                            <div class="text-muted text-decoration-line-through small">@((Model.Items[i].BookPrice * Model.Items[i].Quantity).ToString("N0")) VNĐ</div>
+                                                            <strong class="text-danger">@Model.Items[i].TotalPriceFormatted</strong>
+                                                            <div class="text-success small">Tiết kiệm: @Model.Items[i].TotalSavings.ToString("N0") VNĐ</div>
+                                                        </div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <strong class="text-danger">@Model.Items[i].TotalPriceFormatted</strong>
+                                                    }
+                                                </td>
                                             </tr>
                                         }
                                     </tbody>
@@ -99,18 +130,46 @@
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <label asp-for="ShippingAddress" class="form-label">Địa chỉ giao hàng</label>
-                            <textarea asp-for="ShippingAddress" class="form-control" rows="3" 
-                                      placeholder="Nhập địa chỉ đầy đủ để giao hàng..."></textarea>
+                            <label asp-for="ShippingAddress" class="form-label">
+                                Địa chỉ giao hàng
+                                <span id="apiStatus" class="badge bg-success ms-2 d-none">
+                                    <i class="fas fa-check-circle me-1"></i>API sẵn sàng
+                                </span>
+                            </label>
+
+                            <!-- Address Input with Autocomplete -->
+                            <div class="position-relative">
+                                <input asp-for="ShippingAddress" id="shippingAddressInput" class="form-control"
+                                       placeholder="Nhập địa chỉ đầy đủ để giao hàng..." autocomplete="off" />
+
+                                <!-- Address Suggestions Dropdown -->
+                                <div id="addressSuggestions" class="address-suggestions position-absolute w-100 bg-white border rounded-bottom shadow-lg d-none" style="z-index: 1001; max-height: 300px; overflow-y: auto;">
+                                    <!-- Address suggestions will be populated here -->
+                                </div>
+                            </div>
                             <span asp-validation-for="ShippingAddress" class="text-danger"></span>
                         </div>
 
                         <div class="mb-3">
                             <label asp-for="PaymentMethod" class="form-label">Phương thức thanh toán</label>
-                            <select asp-for="PaymentMethod" class="form-select" asp-items="@CheckoutViewModel.PaymentMethods">
+                            <select asp-for="PaymentMethod" class="form-select" asp-items="@CheckoutViewModel.PaymentMethods" id="paymentMethodSelect">
                                 <option value="">-- Chọn phương thức thanh toán --</option>
                             </select>
                             <span asp-validation-for="PaymentMethod" class="text-danger"></span>
+
+                            <!-- PayOS Payment Info -->
+                            <div id="payosInfo" class="mt-2 p-3 bg-light rounded d-none">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-credit-card text-primary me-2"></i>
+                                    <strong class="text-primary">Thanh toán online qua PayOS</strong>
+                                </div>
+                                <ul class="mb-0 small text-muted">
+                                    <li>Hỗ trợ thanh toán qua ATM, Internet Banking, Ví điện tử</li>
+                                    <li>Bảo mật cao với công nghệ mã hóa SSL</li>
+                                    <li>Giao dịch được xử lý ngay lập tức</li>
+                                    <li>Sau khi thanh toán thành công, bạn sẽ được chuyển về trang xác nhận đơn hàng</li>
+                                </ul>
+                            </div>
                         </div>
 
                         <div class="mb-3">
@@ -135,6 +194,17 @@
                             <span>Tổng tiền hàng:</span>
                             <strong id="subtotal">@(Model.TotalAmountFormatted)</strong>
                         </div>
+
+                        @{
+                            var totalSavings = Model.Items.Sum(i => i.TotalSavings);
+                        }
+                        @if (totalSavings > 0)
+                        {
+                            <div class="d-flex justify-content-between mb-2 text-success">
+                                <span>Tiết kiệm từ khuyến mãi:</span>
+                                <strong>-@totalSavings.ToString("N0") VNĐ</strong>
+                            </div>
+                        }
 
                         <!-- Voucher Section -->
                         <div class="voucher-section mb-3">
@@ -213,10 +283,335 @@
     </form>
 </div>
 
+@section Styles {
+    <style>
+        /* Address Suggestions Styles */
+        .address-suggestions {
+            border-top: none !important;
+            border-top-left-radius: 0 !important;
+            border-top-right-radius: 0 !important;
+            top: 100% !important;
+            left: 0 !important;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        .address-suggestion-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e9ecef;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            background-color: white;
+        }
+
+        .address-suggestion-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .address-suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        /* Ensure the container is properly positioned */
+        #addressSuggestions {
+            margin-top: 1px;
+            border: 1px solid #ced4da;
+            border-top: none;
+            background-color: white !important;
+            z-index: 1050 !important;
+        }
+
+        /* Make sure suggestions are visible */
+        #addressSuggestions:not(.d-none) {
+            display: block !important;
+        }
+
+        /* Debug styles - remove after testing */
+        #addressSuggestions.debug {
+            background-color: yellow !important;
+            border: 2px solid red !important;
+        }
+    </style>
+}
+
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
 
-    <script>
+<!-- Address Autocomplete Script - Moved outside section for immediate loading -->
+<script>
+        // Debug: Script loading check
+        console.log('🚀 Address Autocomplete Script Loading...');
+
+        // Configuration
+        const GOONG_API_KEY = 'UcgP2TVpMRCoR1V7iLaL6yHuPhtTYDfFxlkSVChD'; // GOONG API key for geocoding
+        console.log('✅ GOONG_API_KEY defined:', typeof GOONG_API_KEY);
+
+        // Global variables
+        let addressSearchTimeout = null;
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeAddressAutocomplete();
+            initializeVoucherFeatures();
+            initializePaymentMethodHandling();
+            checkApiStatus();
+        });
+
+        // Check API status
+        function checkApiStatus() {
+            const apiStatus = document.getElementById('apiStatus');
+
+            // Check if API key is configured
+            if (GOONG_API_KEY && GOONG_API_KEY !== 'YOUR_GOONG_API_KEY_HERE') {
+                // Test API connectivity
+                fetch(`https://rsapi.goong.io/Place/AutoComplete?api_key=${GOONG_API_KEY}&input=test&location=10.8231,106.6297&radius=1000`)
+                    .then(response => {
+                        if (response.ok) {
+                            apiStatus.className = 'badge bg-success ms-2';
+                            apiStatus.innerHTML = '<i class="fas fa-check-circle me-1"></i>API sẵn sàng';
+                            apiStatus.classList.remove('d-none');
+                        } else {
+                            throw new Error('API response not ok');
+                        }
+                    })
+                    .catch(error => {
+                        console.warn('GOONG API test failed:', error);
+                        apiStatus.className = 'badge bg-warning ms-2';
+                        apiStatus.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>API không khả dụng';
+                        apiStatus.classList.remove('d-none');
+                    });
+            } else {
+                apiStatus.className = 'badge bg-danger ms-2';
+                apiStatus.innerHTML = '<i class="fas fa-times-circle me-1"></i>Chưa cấu hình API';
+                apiStatus.classList.remove('d-none');
+            }
+        }
+
+        // ===== ADDRESS AUTOCOMPLETE FUNCTIONALITY =====
+        function initializeAddressAutocomplete() {
+            console.log('Initializing address autocomplete...');
+            const addressInput = document.getElementById('shippingAddressInput');
+            const addressSuggestions = document.getElementById('addressSuggestions');
+
+            console.log('Address input found:', !!addressInput);
+            console.log('Address suggestions container found:', !!addressSuggestions);
+
+            if (!addressInput) {
+                console.error('Address input not found!');
+                return;
+            }
+
+            if (!addressSuggestions) {
+                console.error('Address suggestions container not found!');
+                return;
+            }
+
+            // Address autocomplete
+            addressInput.addEventListener('input', function(e) {
+                const query = e.target.value.trim();
+                console.log('Input changed, query:', query, 'length:', query.length);
+
+                if (query.length < 3) {
+                    console.log('Query too short, hiding suggestions');
+                    hideAddressSuggestions();
+                    return;
+                }
+
+                console.log('Starting search with debounce...');
+                // Debounce address search
+                clearTimeout(addressSearchTimeout);
+                addressSearchTimeout = setTimeout(() => {
+                    searchAddresses(query);
+                }, 500);
+            });
+
+            // Hide suggestions when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!addressInput.contains(e.target) && !addressSuggestions.contains(e.target)) {
+                    hideAddressSuggestions();
+                }
+            });
+
+            console.log('Address autocomplete initialized successfully');
+        }
+
+        function searchAddresses(query) {
+            // Validate API key
+            if (!GOONG_API_KEY || GOONG_API_KEY === 'YOUR_GOONG_API_KEY_HERE') {
+                console.warn('GOONG API key not configured');
+                hideAddressSuggestions();
+                return;
+            }
+
+            console.log('Searching addresses for:', query);
+            const url = `https://rsapi.goong.io/Place/AutoComplete?api_key=${GOONG_API_KEY}&input=${encodeURIComponent(query)}&location=10.8231,106.6297&radius=50000`;
+
+            fetch(url)
+                .then(response => {
+                    console.log('API Response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('API Response data:', data);
+                    if (data.status === 'OK' && data.predictions && data.predictions.length > 0) {
+                        displayAddressSuggestions(data.predictions);
+                    } else {
+                        console.log('No predictions found or API error');
+                        hideAddressSuggestions();
+                    }
+                })
+                .catch(error => {
+                    console.error('Address search error:', error);
+                    hideAddressSuggestions();
+                });
+        }
+
+        function displayAddressSuggestions(predictions) {
+            console.log('Displaying address suggestions:', predictions);
+            const addressSuggestions = document.getElementById('addressSuggestions');
+
+            if (!addressSuggestions) {
+                console.error('Address suggestions container not found');
+                return;
+            }
+
+            let html = '';
+            predictions.slice(0, 5).forEach(prediction => {
+                // Handle different response formats
+                const mainText = prediction.structured_formatting?.main_text || prediction.description || 'Unknown address';
+                const secondaryText = prediction.structured_formatting?.secondary_text || '';
+
+                html += `
+                    <div class="address-suggestion-item" data-place-id="${prediction.place_id}" style="cursor: pointer;">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-map-marker-alt text-muted me-2 mt-1"></i>
+                            <div>
+                                <div class="fw-semibold">${mainText}</div>
+                                ${secondaryText ? `<small class="text-muted">${secondaryText}</small>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            addressSuggestions.innerHTML = html;
+            addressSuggestions.classList.remove('d-none');
+            addressSuggestions.style.display = 'block';
+            addressSuggestions.style.zIndex = '1050';
+
+            console.log('Address suggestions displayed');
+            console.log('Container classes:', addressSuggestions.className);
+            console.log('Container style display:', addressSuggestions.style.display);
+            console.log('Container visible:', !addressSuggestions.classList.contains('d-none'));
+            console.log('Container HTML:', addressSuggestions.innerHTML.substring(0, 200) + '...');
+
+            // Add click handlers
+            addressSuggestions.querySelectorAll('.address-suggestion-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const placeId = this.dataset.placeId;
+                    console.log('Address suggestion clicked:', placeId);
+                    selectAddressSuggestion(placeId);
+                });
+            });
+        }
+
+        function selectAddressSuggestion(placeId) {
+            // Validate API key
+            if (!GOONG_API_KEY || GOONG_API_KEY === 'YOUR_GOONG_API_KEY_HERE') {
+                showNotification('error', 'Chưa cấu hình API key cho dịch vụ địa chỉ.');
+                return;
+            }
+
+            const url = `https://rsapi.goong.io/Place/Detail?place_id=${placeId}&api_key=${GOONG_API_KEY}`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'OK' && data.result) {
+                        const place = data.result;
+                        const address = place.formatted_address;
+
+                        // Update address input
+                        document.getElementById('shippingAddressInput').value = address;
+
+                        hideAddressSuggestions();
+                        showNotification('success', 'Đã chọn địa chỉ.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Place detail error:', error);
+                    showNotification('error', 'Có lỗi xảy ra khi chọn địa chỉ.');
+                });
+        }
+
+        function hideAddressSuggestions() {
+            console.log('Hiding address suggestions');
+            const addressSuggestions = document.getElementById('addressSuggestions');
+            if (addressSuggestions) {
+                addressSuggestions.classList.add('d-none');
+                console.log('Address suggestions hidden');
+            } else {
+                console.error('Address suggestions container not found when trying to hide');
+            }
+        }
+
+        // ===== UTILITY FUNCTIONS =====
+        function showNotification(type, message) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type === 'success' ? 'success' : type === 'error' ? 'danger' : type === 'warning' ? 'warning' : 'info'} alert-dismissible fade show position-fixed`;
+            notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+
+            // Add to page
+            document.body.appendChild(notification);
+
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        function initializeVoucherFeatures() {
+            // Allow Enter key to apply voucher
+            const voucherInput = document.getElementById('voucherCode');
+            if (voucherInput) {
+                voucherInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        applyVoucher();
+                    }
+                });
+            }
+        }
+
+        function initializePaymentMethodHandling() {
+            const paymentMethodSelect = document.getElementById('paymentMethodSelect');
+            const payosInfo = document.getElementById('payosInfo');
+
+            if (paymentMethodSelect && payosInfo) {
+                // Show/hide PayOS info based on selection
+                paymentMethodSelect.addEventListener('change', function() {
+                    if (this.value === 'PayOS') {
+                        payosInfo.classList.remove('d-none');
+                    } else {
+                        payosInfo.classList.add('d-none');
+                    }
+                });
+
+                // Check initial value
+                if (paymentMethodSelect.value === 'PayOS') {
+                    payosInfo.classList.remove('d-none');
+                }
+            }
+        }
+
         // Voucher functionality
         function applyVoucher() {
             const voucherCode = document.getElementById('voucherCode').value.trim();
@@ -264,13 +659,11 @@
                     showVoucherMessage(data.message, 'success');
                 } else {
                     showVoucherMessage(data.message, 'danger');
-                    clearVoucher();
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
+                console.error('Voucher validation error:', error);
                 showVoucherMessage('Có lỗi xảy ra khi kiểm tra voucher', 'danger');
-                clearVoucher();
             })
             .finally(() => {
                 // Hide loading
@@ -278,6 +671,89 @@
                 spinner.classList.add('d-none');
             });
         }
+
+        function updateVoucherUI(discountAmount, freeShipping, subtotalAmount) {
+            // Update discount display
+            const voucherDiscountRow = document.getElementById('voucher-discount-row');
+            const voucherDiscountAmount = document.getElementById('voucher-discount-amount');
+
+            if (discountAmount > 0) {
+                voucherDiscountRow.classList.remove('d-none');
+                voucherDiscountAmount.textContent = `-${discountAmount.toLocaleString()} VNĐ`;
+            } else {
+                voucherDiscountRow.classList.add('d-none');
+            }
+
+            // Update shipping fee display
+            const shippingFeeElement = document.getElementById('shipping-fee');
+            if (freeShipping) {
+                shippingFeeElement.innerHTML = '<span class="text-success">Miễn phí</span> <small class="text-success">(Voucher)</small>';
+            }
+
+            // Calculate and update final amount
+            let finalAmount = subtotalAmount - discountAmount;
+            if (!freeShipping && subtotalAmount < 500000) {
+                finalAmount += 30000; // Add shipping fee if not free shipping
+            }
+
+            const finalAmountElement = document.getElementById('final-amount');
+            finalAmountElement.textContent = `${finalAmount.toLocaleString()} VNĐ`;
+        }
+
+        function showVoucherMessage(message, type) {
+            const messageDiv = document.getElementById('voucher-message');
+            messageDiv.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>`;
+
+            // Auto hide after 5 seconds
+            setTimeout(() => {
+                messageDiv.innerHTML = '';
+            }, 5000);
+        }
+
+
+
+
+
+        // ===== UTILITY FUNCTIONS =====
+        function showNotification(type, message) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type === 'success' ? 'success' : type === 'error' ? 'danger' : type === 'warning' ? 'warning' : 'info'} alert-dismissible fade show position-fixed`;
+            notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+
+            // Add to page
+            document.body.appendChild(notification);
+
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        function initializeVoucherFeatures() {
+            // Allow Enter key to apply voucher
+            const voucherInput = document.getElementById('voucherCode');
+            if (voucherInput) {
+                voucherInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        applyVoucher();
+                    }
+                });
+            }
+        }
+
+
 
         function updateVoucherUI(discountAmount, freeShipping, subtotalAmount) {
             console.log('updateVoucherUI called with:', { discountAmount, freeShipping, subtotalAmount });
@@ -345,28 +821,62 @@
             }
         }
 
-        function showVoucherMessage(message, type) {
-            const messageEl = document.getElementById('voucher-message');
-            messageEl.textContent = message;
-            messageEl.className = `small text-${type}`;
-        }
+        // ===== DEBUG FUNCTIONS =====
+        console.log('🔧 Defining debug functions...');
 
-        function formatCurrency(amount) {
-            return new Intl.NumberFormat('vi-VN').format(amount) + ' VNĐ';
-        }
+        // Test function - call from browser console: testAddressAutocomplete()
+        window.testAddressAutocomplete = function() {
+            console.log('=== Testing Address Autocomplete ===');
+            console.log('API Key:', GOONG_API_KEY);
 
-        // Payment method change handler
-        document.addEventListener('DOMContentLoaded', function() {
-            // Allow Enter key to apply voucher
-            const voucherInput = document.getElementById('voucherCode');
-            if (voucherInput) {
-                voucherInput.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        applyVoucher();
-                    }
-                });
+            const addressInput = document.getElementById('shippingAddressInput');
+            const addressSuggestions = document.getElementById('addressSuggestions');
+
+            console.log('Address input element:', addressInput);
+            console.log('Address suggestions element:', addressSuggestions);
+
+            if (addressInput && addressSuggestions) {
+                console.log('Testing with query "95 Nguyen"...');
+                // Force show suggestions for testing
+                addressSuggestions.innerHTML = `
+                    <div class="address-suggestion-item" style="padding: 12px; border-bottom: 1px solid #eee; cursor: pointer;">
+                        <i class="fas fa-map-marker-alt text-muted me-2"></i>
+                        Test Address - 95 Nguyen Du, Quan 1
+                    </div>
+                `;
+                addressSuggestions.classList.remove('d-none');
+                console.log('Test suggestions displayed');
+
+                // Also test real API
+                searchAddresses('95 Nguyen');
+            } else {
+                console.error('Required elements not found!');
             }
-        });
-    </script>
-}
+        };
+
+        // Force show suggestions for debugging
+        window.showTestSuggestions = function() {
+            const addressSuggestions = document.getElementById('addressSuggestions');
+            if (addressSuggestions) {
+                addressSuggestions.innerHTML = `
+                    <div class="address-suggestion-item" style="padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; background: white;">
+                        <i class="fas fa-map-marker-alt text-muted me-2"></i>
+                        Test Address 1 - 95 Nguyen Du, Quan 1, TP.HCM
+                    </div>
+                    <div class="address-suggestion-item" style="padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; background: white;">
+                        <i class="fas fa-map-marker-alt text-muted me-2"></i>
+                        Test Address 2 - 123 Le Loi, Quan 1, TP.HCM
+                    </div>
+                `;
+                addressSuggestions.classList.remove('d-none');
+                addressSuggestions.style.display = 'block';
+                console.log('Test suggestions forced to show');
+            }
+        };
+
+        // Payment method change handler (if needed for future enhancements)
+
+        // Script loaded confirmation
+        console.log('✅ Address Autocomplete Script Loaded Successfully!');
+        console.log('🔧 Available functions: testAddressAutocomplete(), showTestSuggestions()');
+</script>

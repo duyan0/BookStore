@@ -1,0 +1,182 @@
+@model BookStore.Web.Models.EditReviewViewModel
+@{
+    ViewData["Title"] = "Chỉnh sửa đánh giá";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-edit me-2 text-primary"></i>
+                        Chỉnh sửa đánh giá
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Book Info -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            @if (!string.IsNullOrEmpty(Model.BookImageUrl))
+                            {
+                                <img src="@Model.BookImageUrl" alt="@Model.BookTitle" 
+                                     class="img-fluid rounded shadow-sm">
+                            }
+                            else
+                            {
+                                <div class="bg-light rounded d-flex align-items-center justify-content-center" 
+                                     style="height: 200px;">
+                                    <i class="fas fa-book fa-3x text-muted"></i>
+                                </div>
+                            }
+                        </div>
+                        <div class="col-md-9">
+                            <h5 class="mb-3">@Model.BookTitle</h5>
+                            <p class="text-muted">
+                                Cập nhật đánh giá của bạn về cuốn sách này.
+                            </p>
+                        </div>
+                    </div>
+
+                    <form asp-action="Edit" method="post">
+                        @Html.AntiForgeryToken()
+                        <input asp-for="Id" type="hidden" />
+                        <input asp-for="BookId" type="hidden" />
+                        <input asp-for="BookTitle" type="hidden" />
+                        <input asp-for="BookImageUrl" type="hidden" />
+
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <strong>Đánh giá sao <span class="text-danger">*</span></strong>
+                            </label>
+                            <div class="rating-input">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    @if (Model.Rating == i)
+                                    {
+                                        <input type="radio" asp-for="Rating" value="@i" id="star@(i)" checked="checked" />
+                                    }
+                                    else
+                                    {
+                                        <input type="radio" asp-for="Rating" value="@i" id="star@(i)" />
+                                    }
+                                    <label for="star@(i)" class="star-label">
+                                        <i class="fas fa-star"></i>
+                                    </label>
+                                }
+                            </div>
+                            <span asp-validation-for="Rating" class="text-danger"></span>
+                            <div class="rating-text mt-2">
+                                <small class="text-muted" id="ratingText">@GetRatingText(Model.Rating)</small>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="Comment" class="form-label">
+                                <strong>Nhận xét của bạn</strong>
+                            </label>
+                            <textarea asp-for="Comment" class="form-control" rows="5" 
+                                      placeholder="Chia sẻ cảm nhận của bạn về cuốn sách này..."></textarea>
+                            <span asp-validation-for="Comment" class="text-danger"></span>
+                            <div class="form-text">@Model.Comment.Length/1000 ký tự</div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Lưu ý:</strong> Sau khi chỉnh sửa, đánh giá của bạn sẽ được chuyển về trạng thái chờ duyệt.
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="@Url.Action("MyReviews")" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>Quay lại
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>Cập nhật đánh giá
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .rating-input {
+            display: flex;
+            flex-direction: row-reverse;
+            justify-content: flex-end;
+        }
+
+        .rating-input input[type="radio"] {
+            display: none;
+        }
+
+        .star-label {
+            font-size: 2rem;
+            color: #ddd;
+            cursor: pointer;
+            transition: color 0.2s;
+            margin-right: 5px;
+        }
+
+        .star-label:hover,
+        .star-label:hover ~ .star-label {
+            color: #ffc107;
+        }
+
+        .rating-input input[type="radio"]:checked ~ .star-label {
+            color: #ffc107;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            const ratingTexts = {
+                1: "Rất tệ - Không khuyến khích",
+                2: "Tệ - Có nhiều vấn đề",
+                3: "Bình thường - Có thể đọc",
+                4: "Tốt - Đáng đọc",
+                5: "Xuất sắc - Rất khuyến khích"
+            };
+
+            $('input[name="Rating"]').change(function() {
+                const rating = $(this).val();
+                $('#ratingText').text(ratingTexts[rating] || "Chọn số sao để đánh giá");
+            });
+
+            // Character counter for comment
+            $('#Comment').on('input', function() {
+                const maxLength = 1000;
+                const currentLength = $(this).val().length;
+                const remaining = maxLength - currentLength;
+                
+                let counterText = `${currentLength}/${maxLength} ký tự`;
+                if (remaining < 100) {
+                    counterText += ` (còn ${remaining})`;
+                }
+                
+                $(this).siblings('.form-text').text(counterText);
+            });
+        });
+    </script>
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+
+@functions {
+    string GetRatingText(int rating)
+    {
+        return rating switch
+        {
+            1 => "Rất tệ - Không khuyến khích",
+            2 => "Tệ - Có nhiều vấn đề",
+            3 => "Bình thường - Có thể đọc",
+            4 => "Tốt - Đáng đọc",
+            5 => "Xuất sắc - Rất khuyến khích",
+            _ => "Chọn số sao để đánh giá"
+        };
+    }
+}

@@ -1,3 +1,4 @@
+@using BookStore.Web.Helpers
 @model BookViewModel
 @{
     ViewData["Title"] = "Chi tiết Sách";
@@ -79,7 +80,7 @@
                                 <dt class="col-sm-4">Giá:</dt>
                                 <dd class="col-sm-8">
                                     <span class="fw-bold text-success fs-5">
-                                        @Model.Price.ToString("C0", new System.Globalization.CultureInfo("vi-VN"))
+                                        @CurrencyHelper.FormatVND(Model.Price)
                                     </span>
                                 </dd>
 

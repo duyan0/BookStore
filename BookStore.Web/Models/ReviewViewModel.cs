@@ -1,3 +1,4 @@
+using BookStore.Core.DTOs;
 using BookStore.Core.Entities;
 using System.ComponentModel.DataAnnotations;
 
@@ -8,6 +9,13 @@ namespace BookStore.Web.Models
         public int Id { get; set; }
         public int BookId { get; set; }
         public string BookTitle { get; set; } = string.Empty;
+
+        // Book information
+        public string BookImageUrl { get; set; } = string.Empty;
+        public decimal BookPrice { get; set; }
+        public string BookAuthor { get; set; } = string.Empty;
+        public string BookCategory { get; set; } = string.Empty;
+
         public int UserId { get; set; }
         public string UserName { get; set; } = string.Empty;
         public string UserFullName { get; set; } = string.Empty;
@@ -39,11 +47,14 @@ namespace BookStore.Web.Models
         public int TotalVotes => HelpfulCount + NotHelpfulCount;
         public double HelpfulPercentage => TotalVotes > 0 ? (double)HelpfulCount / TotalVotes * 100 : 0;
         public string CreatedAtFormatted => CreatedAt.ToString("dd/MM/yyyy HH:mm");
+        public string BookPriceFormatted => BookPrice > 0 ? BookPrice.ToString("N0") + " VND" : "Chưa có giá";
     }
 
     public class CreateReviewViewModel
     {
         public int BookId { get; set; }
+        public string BookTitle { get; set; } = string.Empty;
+        public string BookImageUrl { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Vui lòng chọn số sao đánh giá")]
         [Range(1, 5, ErrorMessage = "Đánh giá phải từ 1 đến 5 sao")]
@@ -51,8 +62,45 @@ namespace BookStore.Web.Models
 
         [StringLength(1000, ErrorMessage = "Bình luận không được vượt quá 1000 ký tự")]
         public string Comment { get; set; } = string.Empty;
+    }
 
-        public int? OrderId { get; set; } // For purchase verification
+    public class EditReviewViewModel
+    {
+        public int Id { get; set; }
+        public int BookId { get; set; }
+        public string BookTitle { get; set; } = string.Empty;
+        public string BookImageUrl { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Vui lòng chọn số sao đánh giá")]
+        [Range(1, 5, ErrorMessage = "Đánh giá phải từ 1 đến 5 sao")]
+        public int Rating { get; set; }
+
+        [StringLength(1000, ErrorMessage = "Bình luận không được vượt quá 1000 ký tự")]
+        public string Comment { get; set; } = string.Empty;
+    }
+
+    public class BookReviewsViewModel
+    {
+        public BookViewModel Book { get; set; } = new BookViewModel();
+        public List<ReviewViewModel> Reviews { get; set; } = new List<ReviewViewModel>();
+        public bool CanUserReview { get; set; }
+        public ReviewDto? UserReview { get; set; }
+        public ReviewViewModel? UserReviewViewModel { get; set; }
+
+        // Statistics
+        public double AverageRating => Reviews.Any() ? Reviews.Average(r => r.Rating) : 0;
+        public int TotalReviews => Reviews.Count;
+        public Dictionary<int, int> RatingDistribution => GetRatingDistribution();
+
+        private Dictionary<int, int> GetRatingDistribution()
+        {
+            var distribution = new Dictionary<int, int>();
+            for (int i = 1; i <= 5; i++)
+            {
+                distribution[i] = Reviews.Count(r => r.Rating == i);
+            }
+            return distribution;
+        }
     }
 
     public class UpdateReviewViewModel
@@ -67,24 +115,7 @@ namespace BookStore.Web.Models
         public string Comment { get; set; } = string.Empty;
     }
 
-    public class ModerateReviewViewModel
-    {
-        public int Id { get; set; }
-        public int BookId { get; set; }
-        public string BookTitle { get; set; } = string.Empty;
-        public string UserName { get; set; } = string.Empty;
-        public int Rating { get; set; }
-        public string Comment { get; set; } = string.Empty;
-        public ReviewStatus CurrentStatus { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public bool IsVerifiedPurchase { get; set; }
 
-        [Required(ErrorMessage = "Vui lòng chọn trạng thái")]
-        public ReviewStatus NewStatus { get; set; }
-
-        [StringLength(500, ErrorMessage = "Ghi chú không được vượt quá 500 ký tự")]
-        public string? AdminNote { get; set; }
-    }
 
     public class ReviewHelpfulnessViewModel
     {
@@ -136,5 +167,27 @@ namespace BookStore.Web.Models
 
         // Top reviewed books
         public List<BookReviewSummaryViewModel> TopReviewedBooks { get; set; } = new List<BookReviewSummaryViewModel>();
+    }
+
+    public class ModerateReviewViewModel
+    {
+        public int ReviewId { get; set; }
+        public string BookTitle { get; set; } = string.Empty;
+        public string UserName { get; set; } = string.Empty;
+        public int Rating { get; set; }
+        public string Comment { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
+        public bool IsVerifiedPurchase { get; set; }
+        public ReviewStatus CurrentStatus { get; set; }
+        public string? CurrentAdminNote { get; set; }
+
+        [Required(ErrorMessage = "Vui lòng chọn trạng thái")]
+        public ReviewStatus Status { get; set; }
+
+        [StringLength(500, ErrorMessage = "Ghi chú không được vượt quá 500 ký tự")]
+        public string? AdminNote { get; set; }
+
+        public string RatingStars => new string('★', Rating) + new string('☆', 5 - Rating);
+        public string CreatedAtFormatted => CreatedAt.ToString("dd/MM/yyyy HH:mm");
     }
 }

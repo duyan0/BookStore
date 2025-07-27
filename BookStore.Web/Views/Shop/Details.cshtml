@@ -11,7 +11,7 @@
     <nav aria-label="breadcrumb" class="mb-4">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="@Url.Action("Index", "Shop")">Cửa hàng</a></li>
-            <li class="breadcrumb-item"><a href="@Url.Action("Index", "Shop", new { categoryId = Model.Book.Id })">@Model.Book.CategoryName</a></li>
+            <li class="breadcrumb-item"><a href="@Url.Action("Index", "Shop", new { categoryId = Model.Book.CategoryId })">@Model.Book.CategoryName</a></li>
             <li class="breadcrumb-item active" aria-current="page">@Model.Book.Title</li>
         </ol>
     </nav>
@@ -181,6 +181,36 @@
         </div>
     </div>
 
+    <!-- Reviews Section -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="mb-0">
+                    <i class="fas fa-star me-2 text-warning"></i>Đánh giá sách
+                </h3>
+                @if (Context.Session.GetString("Token") != null)
+                {
+                    <a href="@Url.Action("Create", "Reviews", new { bookId = Model.Book.Id })"
+                       class="btn btn-outline-primary">
+                        <i class="fas fa-plus me-1"></i>Viết đánh giá
+                    </a>
+                }
+            </div>
+
+            <div class="card">
+                <div class="card-body" id="reviews-container">
+                    <div class="text-center py-4">
+                        <i class="fas fa-star fa-2x text-muted mb-3"></i>
+                        <p class="text-muted">Đang tải đánh giá...</p>
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Related Books -->
     @if (Model.RelatedBooks.Any())
     {
@@ -197,11 +227,22 @@
             {
                 <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
                     <div class="card h-100 border-0 shadow-sm book-card">
-                        <img src="@book.ImageUrl" class="card-img-top" alt="@book.Title" style="height: ; object-fit: contain;">
+                        <img src="@book.ImageUrl" class="card-img-top" alt="@book.Title" style="height: 250px; object-fit: contain;">
                         <div class="card-body d-flex flex-column">
                             <h6 class="card-title text-truncate" title="@book.Title">@book.Title</h6>
                             <p class="card-text text-muted small">@book.AuthorName</p>
-                            <p class="card-text text-danger fw-bold">@book.Price.ToString("N0") VNĐ</p>
+                            @if (book.IsDiscountActive)
+                            {
+                                <div class="price-section">
+                                    <p class="card-text text-muted small text-decoration-line-through mb-1">@book.PriceFormatted</p>
+                                    <p class="card-text text-danger fw-bold">@book.DiscountedPriceFormatted</p>
+                                    <span class="badge bg-danger small">-@book.DiscountPercentageDisplay%</span>
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="card-text text-danger fw-bold">@book.PriceFormatted</p>
+                            }
                             <div class="mt-auto">
                                 <a href="@Url.Action("Details", new { id = book.Id })" class="btn btn-outline-primary btn-sm w-100">
                                     <i class="fas fa-eye me-1"></i>Xem chi tiết
@@ -237,9 +278,92 @@
 
 @section Scripts {
     <script>
+        // Load reviews when page loads
+        $(document).ready(function() {
+            loadReviews(@Model.Book.Id);
+        });
+
+        function loadReviews(bookId) {
+            console.log('Loading reviews for book ID:', bookId);
+            const url = '@Url.Action("Book", "Reviews")' + '/' + bookId;
+            console.log('AJAX URL:', url);
+            $.get(url)
+                .done(function(data) {
+                    // Replace the loading section with actual reviews
+                    $('#reviews-container').html(data);
+                })
+                .fail(function() {
+                    $('#reviews-container').html(`
+                        <div class="text-center py-4">
+                            <i class="fas fa-exclamation-triangle fa-2x text-warning mb-3"></i>
+                            <p class="text-muted">Không thể tải đánh giá. Vui lòng thử lại sau.</p>
+                            <button class="btn btn-outline-primary" onclick="loadReviews(${bookId})">
+                                <i class="fas fa-redo me-1"></i>Thử lại
+                            </button>
+                        </div>
+                    `);
+                });
+        }
+
+        function addToCartWithQuantity(bookId) {
+            // Get quantity from the form
+            const quantityInput = document.getElementById('quantityInput');
+            const quantity = quantityInput ? quantityInput.value : 1;
+
+            // Show loading state
+            const addBtn = document.querySelector('.add-to-cart-btn');
+            const originalContent = addBtn.innerHTML;
+            addBtn.disabled = true;
+            addBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang thêm...';
+
+            // Add to cart
+            fetch('@Url.Action("AddToCart", "Shop")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: `bookId=${bookId}&quantity=${quantity}&__RequestVerificationToken=${encodeURIComponent(document.querySelector('input[name="__RequestVerificationToken"]').value)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    alert(data.message || 'Đã thêm sách vào giỏ hàng!');
+
+                    // Update cart count if there's a cart counter on the page
+                    updateCartCount();
+                } else {
+                    alert(data.message || 'Không thể thêm sách vào giỏ hàng.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng. Vui lòng thử lại.');
+            })
+            .finally(() => {
+                // Restore button state
+                addBtn.disabled = false;
+                addBtn.innerHTML = originalContent;
+            });
+        }
+
+        function updateCartCount() {
+            // Update cart count in navigation if exists
+            fetch('@Url.Action("GetCartCount", "Shop")')
+                .then(response => response.json())
+                .then(data => {
+                    const cartCountElement = document.querySelector('.cart-count');
+                    if (cartCountElement && data.count !== undefined) {
+                        cartCountElement.textContent = data.count;
+                    }
+                })
+                .catch(error => console.error('Error updating cart count:', error));
+        }
+
         function buyNow(bookId) {
             // Get quantity from the form
-            const quantityInput = document.querySelector('input[name="quantity"]');
+            const quantityInput = document.getElementById('quantityInput');
             const quantity = quantityInput ? quantityInput.value : 1;
 
             // Show loading state
@@ -253,9 +377,9 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
-                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
-                body: `bookId=${bookId}&quantity=${quantity}`
+                body: `bookId=${bookId}&quantity=${quantity}&__RequestVerificationToken=${encodeURIComponent(document.querySelector('input[name="__RequestVerificationToken"]').value)}`
             })
             .then(response => {
                 if (response.ok) {

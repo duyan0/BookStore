@@ -6,7 +6,6 @@ using BookStore.Core.DTOs;
 
 namespace BookStore.Web.Controllers
 {
-    [Authorize]
     public class VouchersController : Controller
     {
         private readonly ApiService _apiService;
@@ -23,6 +22,11 @@ namespace BookStore.Web.Controllers
         {
             try
             {
+                // Check if user is authenticated via session
+                if (!IsUserLoggedIn())
+                {
+                    return RedirectToAction("Login", "Account");
+                }
                 var vouchers = await _apiService.GetAsync<List<VoucherDto>>("vouchers/available");
                 
                 var viewModel = new VouchersViewModel
@@ -47,6 +51,11 @@ namespace BookStore.Web.Controllers
         {
             try
             {
+                // Check if user is authenticated via session
+                if (!IsUserLoggedIn())
+                {
+                    return RedirectToAction("Login", "Account");
+                }
                 var userId = GetCurrentUserId();
                 var vouchers = await _apiService.GetAsync<List<VoucherDto>>($"vouchers/user/{userId}");
                 
@@ -138,17 +147,19 @@ namespace BookStore.Web.Controllers
         // Helper methods
         private int GetCurrentUserId()
         {
-            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
-            if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId.HasValue)
             {
-                return userId;
+                return userId.Value;
             }
             throw new UnauthorizedAccessException("User not found");
         }
 
         private bool IsUserLoggedIn()
         {
-            return User.Identity?.IsAuthenticated == true;
+            var token = HttpContext.Session.GetString("Token");
+            var userId = HttpContext.Session.GetInt32("UserId");
+            return !string.IsNullOrEmpty(token) && userId.HasValue;
         }
     }
 }

@@ -63,6 +63,28 @@ namespace BookStore.API.Mappings
             CreateMap<Voucher, VoucherDto>();
             CreateMap<CreateVoucherDto, Voucher>();
             CreateMap<UpdateVoucherDto, Voucher>();
+
+            // Review mappings
+            CreateMap<Review, ReviewDto>()
+                .ForMember(dest => dest.BookTitle, opt => opt.MapFrom(src => src.Book != null ? src.Book.Title : string.Empty))
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User != null ? src.User.Username : string.Empty))
+                .ForMember(dest => dest.UserFullName, opt => opt.MapFrom(src => src.User != null ? $"{src.User.FirstName} {src.User.LastName}".Trim() : string.Empty))
+                .ForMember(dest => dest.ReviewedByAdminName, opt => opt.MapFrom(src => src.ReviewedByAdmin != null ? $"{src.ReviewedByAdmin.FirstName} {src.ReviewedByAdmin.LastName}".Trim() : string.Empty));
+            CreateMap<CreateReviewDto, Review>();
+            CreateMap<UpdateReviewDto, Review>();
+
+            // HelpArticle mappings
+            CreateMap<HelpArticle, HelpArticleDto>()
+                .ForMember(dest => dest.AuthorName, opt => opt.MapFrom(src => src.Author != null ? $"{src.Author.FirstName} {src.Author.LastName}".Trim() : string.Empty))
+                .ForMember(dest => dest.LastModifiedByName, opt => opt.MapFrom(src => src.LastModifiedBy != null ? $"{src.LastModifiedBy.FirstName} {src.LastModifiedBy.LastName}".Trim() : string.Empty))
+                .ForMember(dest => dest.TypeName, opt => opt.MapFrom(src => src.TypeName))
+                .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.CategoryName))
+                .ForMember(dest => dest.IsRecentlyUpdated, opt => opt.MapFrom(src => src.IsRecentlyUpdated));
+            CreateMap<CreateHelpArticleDto, HelpArticle>();
+            CreateMap<UpdateHelpArticleDto, HelpArticle>();
+            CreateMap<HelpArticle, HelpArticleListDto>()
+                .ForMember(dest => dest.TypeName, opt => opt.MapFrom(src => src.TypeName))
+                .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.CategoryName));
         }
     }
 }

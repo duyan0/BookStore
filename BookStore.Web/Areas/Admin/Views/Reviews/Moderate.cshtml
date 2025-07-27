@@ -1,0 +1,214 @@
+@model BookStore.Web.Models.ModerateReviewViewModel
+@{
+    ViewData["Title"] = "Duyệt đánh giá";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-gavel me-2"></i>
+                    Duyệt đánh giá
+                </h4>
+            </div>
+            <div class="card-body">
+                <!-- Review Details -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Thông tin sách</h6>
+                        <p class="fw-bold">@Model.BookTitle</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Người đánh giá</h6>
+                        <p class="fw-bold">@Model.UserName</p>
+                    </div>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Đánh giá sao</h6>
+                        <div class="text-warning fs-4">@Model.RatingStars</div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Ngày tạo</h6>
+                        <p>@Model.CreatedAtFormatted</p>
+                        @if (Model.IsVerifiedPurchase)
+                        {
+                            <span class="badge bg-success">
+                                <i class="fas fa-check-circle me-1"></i>Đã mua hàng
+                            </span>
+                        }
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h6 class="text-muted">Nội dung đánh giá</h6>
+                    @if (!string.IsNullOrEmpty(Model.Comment))
+                    {
+                        <div class="border rounded p-3 bg-light">
+                            @Model.Comment
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted fst-italic">Không có nội dung bình luận</p>
+                    }
+                </div>
+
+                <div class="mb-4">
+                    <h6 class="text-muted">Trạng thái hiện tại</h6>
+                    <span class="badge @GetStatusBadgeClass(Model.CurrentStatus) fs-6">
+                        @GetStatusDisplayName(Model.CurrentStatus)
+                    </span>
+                    @if (!string.IsNullOrEmpty(Model.CurrentAdminNote))
+                    {
+                        <div class="mt-2">
+                            <small class="text-muted">Ghi chú trước đó:</small>
+                            <div class="border rounded p-2 bg-light">
+                                @Model.CurrentAdminNote
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Quyết định duyệt</h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="Moderate" method="post">
+                    @Html.AntiForgeryToken()
+                    <input asp-for="ReviewId" type="hidden" />
+                    <input asp-for="BookTitle" type="hidden" />
+                    <input asp-for="UserName" type="hidden" />
+                    <input asp-for="Rating" type="hidden" />
+                    <input asp-for="Comment" type="hidden" />
+                    <input asp-for="CreatedAt" type="hidden" />
+                    <input asp-for="IsVerifiedPurchase" type="hidden" />
+                    <input asp-for="CurrentStatus" type="hidden" />
+                    <input asp-for="CurrentAdminNote" type="hidden" />
+
+                    <div class="mb-3">
+                        <label asp-for="Status" class="form-label">
+                            <strong>Trạng thái <span class="text-danger">*</span></strong>
+                        </label>
+                        <select asp-for="Status" class="form-select">
+                            <option value="">-- Chọn trạng thái --</option>
+                            <option value="@BookStore.Core.Entities.ReviewStatus.Approved">Duyệt</option>
+                            <option value="@BookStore.Core.Entities.ReviewStatus.Rejected">Từ chối</option>
+                            <option value="@BookStore.Core.Entities.ReviewStatus.Hidden">Ẩn</option>
+                        </select>
+                        <span asp-validation-for="Status" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="AdminNote" class="form-label">
+                            <strong>Ghi chú của admin</strong>
+                        </label>
+                        <textarea asp-for="AdminNote" class="form-control" rows="4" 
+                                  placeholder="Ghi chú lý do duyệt/từ chối (tùy chọn)"></textarea>
+                        <span asp-validation-for="AdminNote" class="text-danger"></span>
+                        <div class="form-text">Tối đa 500 ký tự</div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Lưu ý:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li><strong>Duyệt:</strong> Đánh giá sẽ hiển thị công khai</li>
+                            <li><strong>Từ chối:</strong> Đánh giá bị từ chối, không hiển thị</li>
+                            <li><strong>Ẩn:</strong> Đánh giá bị ẩn tạm thời</li>
+                        </ul>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-check me-1"></i>Xác nhận duyệt
+                        </button>
+                        <a href="@Url.Action("Pending")" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Quay lại
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0">Thao tác nhanh</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-success btn-sm" onclick="quickApprove()">
+                        <i class="fas fa-thumbs-up me-1"></i>Duyệt nhanh
+                    </button>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="quickReject()">
+                        <i class="fas fa-thumbs-down me-1"></i>Từ chối nhanh
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function quickApprove() {
+            document.getElementById('Status').value = '@BookStore.Core.Entities.ReviewStatus.Approved';
+            document.getElementById('AdminNote').value = 'Đánh giá hợp lệ, được duyệt tự động.';
+        }
+
+        function quickReject() {
+            document.getElementById('Status').value = '@BookStore.Core.Entities.ReviewStatus.Rejected';
+            document.getElementById('AdminNote').value = 'Đánh giá không phù hợp, bị từ chối.';
+        }
+
+        // Character counter for admin note
+        $('#AdminNote').on('input', function() {
+            const maxLength = 500;
+            const currentLength = $(this).val().length;
+            const remaining = maxLength - currentLength;
+            
+            let counterText = `${currentLength}/${maxLength} ký tự`;
+            if (remaining < 50) {
+                counterText += ` (còn ${remaining})`;
+            }
+            
+            $(this).siblings('.form-text').text(counterText);
+        });
+    </script>
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+
+@functions {
+    string GetStatusBadgeClass(BookStore.Core.Entities.ReviewStatus status)
+    {
+        return status switch
+        {
+            BookStore.Core.Entities.ReviewStatus.Pending => "bg-warning",
+            BookStore.Core.Entities.ReviewStatus.Approved => "bg-success",
+            BookStore.Core.Entities.ReviewStatus.Rejected => "bg-danger",
+            BookStore.Core.Entities.ReviewStatus.Hidden => "bg-secondary",
+            _ => "bg-secondary"
+        };
+    }
+
+    string GetStatusDisplayName(BookStore.Core.Entities.ReviewStatus status)
+    {
+        return status switch
+        {
+            BookStore.Core.Entities.ReviewStatus.Pending => "Chờ duyệt",
+            BookStore.Core.Entities.ReviewStatus.Approved => "Đã duyệt",
+            BookStore.Core.Entities.ReviewStatus.Rejected => "Bị từ chối",
+            BookStore.Core.Entities.ReviewStatus.Hidden => "Đã ẩn",
+            _ => status.ToString()
+        };
+    }
+}

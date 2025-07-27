@@ -45,6 +45,8 @@ namespace BookStore.Core.DTOs
         [Required(ErrorMessage = "ID sách là bắt buộc")]
         public int BookId { get; set; }
 
+        public int UserId { get; set; } // Will be set from authentication context
+
         [Required(ErrorMessage = "Đánh giá sao là bắt buộc")]
         [Range(1, 5, ErrorMessage = "Đánh giá phải từ 1 đến 5 sao")]
         public int Rating { get; set; }
