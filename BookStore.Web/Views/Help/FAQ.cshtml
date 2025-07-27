@@ -1,0 +1,461 @@
+@model BookStore.Web.Models.HelpFAQViewModel
+@{
+    ViewData["Title"] = "Câu hỏi thường gặp - FAQ";
+}
+
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a asp-controller="Home" asp-action="Index">
+                <i class="fas fa-home"></i> Trang chủ
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a asp-controller="Help" asp-action="Index">
+                <i class="fas fa-question-circle"></i> Trợ giúp
+            </a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">FAQ</li>
+    </ol>
+</nav>
+
+<div class="container">
+    <!-- Page Header -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="faq-header text-center py-5 bg-primary text-white rounded">
+                <div class="faq-icon mb-3">
+                    <i class="fas fa-question-circle fa-4x"></i>
+                </div>
+                <h1 class="display-4 fw-bold mb-3">Câu hỏi thường gặp</h1>
+                <p class="lead">
+                    Tìm câu trả lời nhanh chóng cho các câu hỏi phổ biến về BookStore
+                </p>
+                @if (Model.FAQs.Any())
+                {
+                    <div class="badge bg-light text-primary fs-6">
+                        @Model.FAQs.Count câu hỏi
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            @if (Model.FAQs.Any())
+            {
+                <!-- Search FAQ -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-search"></i>
+                            </span>
+                            <input type="text" id="faqSearch" class="form-control" 
+                                   placeholder="Tìm kiếm trong FAQ...">
+                        </div>
+                        <small class="text-muted mt-2 d-block">
+                            Nhập từ khóa để tìm kiếm nhanh trong các câu hỏi thường gặp
+                        </small>
+                    </div>
+                </div>
+
+                <!-- FAQ Accordion -->
+                <div class="accordion" id="faqAccordion">
+                    @for (int i = 0; i < Model.FAQs.Count; i++)
+                    {
+                        var faq = Model.FAQs[i];
+                        var collapseId = $"collapse{i}";
+                        var headingId = $"heading{i}";
+                        
+                        <div class="accordion-item faq-item" data-faq-title="@faq.Title.ToLower()" data-faq-summary="@faq.Summary.ToLower()">
+                            <h2 class="accordion-header" id="@headingId">
+                                <button class="accordion-button @(i == 0 ? "" : "collapsed")" 
+                                        type="button" 
+                                        data-bs-toggle="collapse" 
+                                        data-bs-target="#@collapseId" 
+                                        aria-expanded="@(i == 0 ? "true" : "false")" 
+                                        aria-controls="@collapseId">
+                                    <div class="d-flex align-items-center w-100">
+                                        <div class="flex-grow-1">
+                                            <strong>@faq.Title</strong>
+                                            @if (!string.IsNullOrEmpty(faq.Summary))
+                                            {
+                                                <div class="text-muted small mt-1">@faq.Summary</div>
+                                            }
+                                        </div>
+                                        <div class="ms-3">
+                                            <span class="badge bg-@GetCategoryBadgeColor(faq.Category)">
+                                                @faq.CategoryName
+                                            </span>
+                                        </div>
+                                    </div>
+                                </button>
+                            </h2>
+                            <div id="@collapseId" 
+                                 class="accordion-collapse collapse @(i == 0 ? "show" : "")" 
+                                 aria-labelledby="@headingId" 
+                                 data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    <div class="faq-content">
+                                        <!-- Link to full article -->
+                                        <div class="mb-3">
+                                            <a asp-controller="Help" asp-action="Article" asp-route-slug="@faq.Slug" 
+                                               class="btn btn-outline-primary btn-sm">
+                                                <i class="fas fa-external-link-alt me-1"></i>
+                                                Xem bài viết đầy đủ
+                                            </a>
+                                        </div>
+                                        
+                                        <!-- FAQ Summary/Preview -->
+                                        <div class="faq-preview">
+                                            <p class="text-muted">@faq.Summary</p>
+                                        </div>
+                                        
+                                        <!-- FAQ Meta -->
+                                        <div class="faq-meta mt-3 pt-3 border-top">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-eye me-1"></i>
+                                                        @faq.ViewCount lượt xem
+                                                    </small>
+                                                </div>
+                                                <div class="col-md-6 text-md-end">
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-calendar me-1"></i>
+                                                        @faq.CreatedAtFormatted
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- No Search Results -->
+                <div id="noResults" class="text-center py-5" style="display: none;">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">Không tìm thấy kết quả</h4>
+                    <p class="text-muted">
+                        Thử tìm kiếm với từ khóa khác hoặc 
+                        <a href="#" onclick="clearSearch()">xóa bộ lọc</a> để xem tất cả FAQ.
+                    </p>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <div class="empty-state">
+                        <i class="fas fa-question-circle fa-4x text-muted mb-3"></i>
+                        <h4 class="text-muted">Chưa có FAQ nào</h4>
+                        <p class="text-muted">
+                            Hiện tại chưa có câu hỏi thường gặp nào. 
+                            Vui lòng quay lại sau hoặc liên hệ với chúng tôi.
+                        </p>
+                        <div class="mt-4">
+                            <a asp-controller="Help" asp-action="Contact" class="btn btn-primary me-2">
+                                <i class="fas fa-envelope me-1"></i>
+                                Liên hệ hỗ trợ
+                            </a>
+                            <a asp-controller="Help" asp-action="Index" class="btn btn-outline-primary">
+                                <i class="fas fa-arrow-left me-1"></i>
+                                Quay lại trang chủ trợ giúp
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <div class="help-sidebar">
+                <!-- FAQ Categories -->
+                @if (Model.FAQs.Any())
+                {
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-filter me-2"></i>Lọc theo danh mục
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group list-group-flush">
+                                <button class="list-group-item list-group-item-action category-filter active" 
+                                        data-category="all">
+                                    <i class="fas fa-list me-2"></i>
+                                    Tất cả (@Model.FAQs.Count)
+                                </button>
+                                @foreach (var categoryGroup in Model.FAQs.GroupBy(f => f.Category))
+                                {
+                                    <button class="list-group-item list-group-item-action category-filter" 
+                                            data-category="@categoryGroup.Key.ToString().ToLower()">
+                                        <i class="@GetCategoryIcon(categoryGroup.Key) me-2"></i>
+                                        @GetCategoryDisplayName(categoryGroup.Key) (@categoryGroup.Count())
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <!-- Quick Actions -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-bolt me-2"></i>Hành động nhanh
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a asp-controller="Help" asp-action="Search" class="btn btn-outline-primary">
+                                <i class="fas fa-search me-2"></i>Tìm kiếm nâng cao
+                            </a>
+                            <a asp-controller="Help" asp-action="Contact" class="btn btn-outline-success">
+                                <i class="fas fa-envelope me-2"></i>Liên hệ hỗ trợ
+                            </a>
+                            <a asp-controller="Help" asp-action="Index" class="btn btn-outline-info">
+                                <i class="fas fa-home me-2"></i>Trang chủ trợ giúp
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Help Info -->
+                <div class="card border-success">
+                    <div class="card-header bg-success text-white">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-lightbulb me-2"></i>Mẹo tìm kiếm
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled small mb-0">
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                Sử dụng từ khóa ngắn gọn
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                Thử các từ đồng nghĩa
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                Lọc theo danh mục cụ thể
+                            </li>
+                            <li>
+                                <i class="fas fa-check text-success me-2"></i>
+                                Liên hệ nếu không tìm thấy
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    string GetCategoryIcon(BookStore.Core.Entities.HelpArticleCategory category)
+    {
+        return category switch
+        {
+            BookStore.Core.Entities.HelpArticleCategory.General => "fas fa-home",
+            BookStore.Core.Entities.HelpArticleCategory.Account => "fas fa-user",
+            BookStore.Core.Entities.HelpArticleCategory.Orders => "fas fa-shopping-cart",
+            BookStore.Core.Entities.HelpArticleCategory.Payment => "fas fa-credit-card",
+            BookStore.Core.Entities.HelpArticleCategory.Shipping => "fas fa-truck",
+            BookStore.Core.Entities.HelpArticleCategory.Returns => "fas fa-undo",
+            BookStore.Core.Entities.HelpArticleCategory.Technical => "fas fa-cog",
+            BookStore.Core.Entities.HelpArticleCategory.Privacy => "fas fa-shield-alt",
+            BookStore.Core.Entities.HelpArticleCategory.Terms => "fas fa-file-contract",
+            BookStore.Core.Entities.HelpArticleCategory.Contact => "fas fa-envelope",
+            _ => "fas fa-question-circle"
+        };
+    }
+
+    string GetCategoryDisplayName(BookStore.Core.Entities.HelpArticleCategory category)
+    {
+        return category switch
+        {
+            BookStore.Core.Entities.HelpArticleCategory.General => "Tổng quan",
+            BookStore.Core.Entities.HelpArticleCategory.Account => "Tài khoản",
+            BookStore.Core.Entities.HelpArticleCategory.Orders => "Đơn hàng",
+            BookStore.Core.Entities.HelpArticleCategory.Payment => "Thanh toán",
+            BookStore.Core.Entities.HelpArticleCategory.Shipping => "Vận chuyển",
+            BookStore.Core.Entities.HelpArticleCategory.Returns => "Đổi trả",
+            BookStore.Core.Entities.HelpArticleCategory.Technical => "Kỹ thuật",
+            BookStore.Core.Entities.HelpArticleCategory.Privacy => "Bảo mật",
+            BookStore.Core.Entities.HelpArticleCategory.Terms => "Điều khoản",
+            BookStore.Core.Entities.HelpArticleCategory.Contact => "Liên hệ",
+            _ => "Khác"
+        };
+    }
+
+    string GetCategoryBadgeColor(BookStore.Core.Entities.HelpArticleCategory category)
+    {
+        return category switch
+        {
+            BookStore.Core.Entities.HelpArticleCategory.Orders => "primary",
+            BookStore.Core.Entities.HelpArticleCategory.Payment => "success",
+            BookStore.Core.Entities.HelpArticleCategory.Shipping => "info",
+            BookStore.Core.Entities.HelpArticleCategory.Returns => "warning",
+            BookStore.Core.Entities.HelpArticleCategory.Account => "secondary",
+            _ => "light"
+        };
+    }
+}
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('faqSearch');
+            const faqItems = document.querySelectorAll('.faq-item');
+            const noResults = document.getElementById('noResults');
+            const categoryFilters = document.querySelectorAll('.category-filter');
+
+            // Search functionality
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase();
+                    filterFAQs(searchTerm, getActiveCategory());
+                });
+            }
+
+            // Category filter functionality
+            categoryFilters.forEach(filter => {
+                filter.addEventListener('click', function() {
+                    // Update active filter
+                    categoryFilters.forEach(f => f.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const category = this.dataset.category;
+                    const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+                    filterFAQs(searchTerm, category);
+                });
+            });
+
+            function filterFAQs(searchTerm, category) {
+                let visibleCount = 0;
+
+                faqItems.forEach(item => {
+                    const title = item.dataset.faqTitle || '';
+                    const summary = item.dataset.faqSummary || '';
+                    const itemCategory = item.querySelector('.badge').textContent.toLowerCase();
+                    
+                    const matchesSearch = !searchTerm || 
+                        title.includes(searchTerm) || 
+                        summary.includes(searchTerm);
+                    
+                    const matchesCategory = category === 'all' || 
+                        itemCategory.includes(category) ||
+                        itemCategory.includes(getCategoryDisplayName(category));
+
+                    if (matchesSearch && matchesCategory) {
+                        item.style.display = 'block';
+                        visibleCount++;
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+
+                // Show/hide no results message
+                if (noResults) {
+                    noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+                }
+            }
+
+            function getActiveCategory() {
+                const activeFilter = document.querySelector('.category-filter.active');
+                return activeFilter ? activeFilter.dataset.category : 'all';
+            }
+
+            function getCategoryDisplayName(category) {
+                const categoryMap = {
+                    'general': 'tổng quan',
+                    'account': 'tài khoản',
+                    'orders': 'đơn hàng',
+                    'payment': 'thanh toán',
+                    'shipping': 'vận chuyển',
+                    'returns': 'đổi trả',
+                    'technical': 'kỹ thuật',
+                    'privacy': 'bảo mật',
+                    'terms': 'điều khoản',
+                    'contact': 'liên hệ'
+                };
+                return categoryMap[category] || category;
+            }
+        });
+
+        function clearSearch() {
+            const searchInput = document.getElementById('faqSearch');
+            if (searchInput) {
+                searchInput.value = '';
+                searchInput.dispatchEvent(new Event('input'));
+            }
+        }
+    </script>
+}
+
+@section Styles {
+    <style>
+        .faq-header {
+            background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+        }
+
+        .accordion-item {
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 1rem;
+            border-radius: 8px !important;
+            overflow: hidden;
+        }
+
+        .accordion-button {
+            background-color: #f8f9fa;
+            border: none;
+            padding: 1.25rem;
+        }
+
+        .accordion-button:not(.collapsed) {
+            background-color: #e7f3ff;
+            color: #0d6efd;
+            box-shadow: none;
+        }
+
+        .accordion-button:focus {
+            box-shadow: none;
+            border: none;
+        }
+
+        .accordion-body {
+            padding: 1.25rem;
+            background-color: white;
+        }
+
+        .category-filter {
+            border: none;
+            text-align: left;
+        }
+
+        .category-filter.active {
+            background-color: #0d6efd;
+            color: white;
+        }
+
+        .help-sidebar .card {
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .empty-state {
+            padding: 3rem 1rem;
+        }
+    </style>
+}

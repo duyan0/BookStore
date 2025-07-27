@@ -1,0 +1,322 @@
+@model BookStore.Web.Models.HelpCategoryViewModel
+@{
+    ViewData["Title"] = $"Trợ giúp - {Model.CategoryName}";
+}
+
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a asp-controller="Home" asp-action="Index">
+                <i class="fas fa-home"></i> Trang chủ
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a asp-controller="Help" asp-action="Index">
+                <i class="fas fa-question-circle"></i> Trợ giúp
+            </a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">@Model.CategoryName</li>
+    </ol>
+</nav>
+
+<div class="container">
+    <!-- Page Header -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="help-category-header text-center py-5 bg-light rounded">
+                <div class="category-icon mb-3">
+                    <i class="@GetCategoryIcon(Model.Category) fa-4x text-primary"></i>
+                </div>
+                <h1 class="display-4 fw-bold text-dark mb-3">@Model.CategoryName</h1>
+                <p class="lead text-muted">
+                    @GetCategoryDescription(Model.Category)
+                </p>
+                <div class="badge bg-primary fs-6">
+                    @Model.Articles.Count bài viết
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            @if (Model.Articles.Any())
+            {
+                <div class="help-articles-list">
+                    @foreach (var article in Model.Articles)
+                    {
+                        <div class="card mb-4 article-card">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <span class="badge bg-@GetTypeBadgeColor(article.Type) me-2">
+                                                @article.TypeName
+                                            </span>
+                                            <small class="text-muted">
+                                                <i class="fas fa-calendar me-1"></i>
+                                                @article.CreatedAtFormatted
+                                            </small>
+                                        </div>
+                                        
+                                        <h5 class="card-title">
+                                            <a asp-controller="Help" asp-action="Article" asp-route-slug="@article.Slug" 
+                                               class="text-decoration-none text-dark">
+                                                @article.Title
+                                            </a>
+                                        </h5>
+                                        
+                                        <p class="card-text text-muted">
+                                            @article.Summary
+                                        </p>
+                                        
+                                        <div class="article-meta">
+                                            <small class="text-muted">
+                                                <i class="fas fa-eye me-1"></i>
+                                                @article.ViewCount lượt xem
+                                            </small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 text-md-end">
+                                        <a asp-controller="Help" asp-action="Article" asp-route-slug="@article.Slug" 
+                                           class="btn btn-outline-primary">
+                                            <i class="fas fa-arrow-right me-1"></i>
+                                            Đọc tiếp
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <div class="empty-state">
+                        <i class="fas fa-folder-open fa-4x text-muted mb-3"></i>
+                        <h4 class="text-muted">Chưa có bài viết nào</h4>
+                        <p class="text-muted">
+                            Danh mục này hiện tại chưa có bài viết nào. 
+                            Vui lòng quay lại sau hoặc xem các danh mục khác.
+                        </p>
+                        <a asp-controller="Help" asp-action="Index" class="btn btn-primary">
+                            <i class="fas fa-arrow-left me-1"></i>
+                            Quay lại trang chủ trợ giúp
+                        </a>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <div class="help-sidebar">
+                <!-- Search -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-search me-2"></i>Tìm kiếm
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form asp-controller="Help" asp-action="Search" method="get">
+                            <div class="input-group">
+                                <input type="text" name="q" class="form-control" 
+                                       placeholder="Nhập từ khóa tìm kiếm..." 
+                                       value="@ViewBag.SearchQuery">
+                                <input type="hidden" name="category" value="@Model.Category.ToString().ToLower()">
+                                <button class="btn btn-primary" type="submit">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Other Categories -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-folder me-2"></i>Danh mục khác
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group list-group-flush">
+                            @foreach (var category in GetAllCategories())
+                            {
+                                @if (category != Model.Category)
+                                {
+                                    <a asp-controller="Help" asp-action="Category" 
+                                       asp-route-category="@category.ToString().ToLower()" 
+                                       class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                        <span>
+                                            <i class="@GetCategoryIcon(category) me-2"></i>
+                                            @GetCategoryDisplayName(category)
+                                        </span>
+                                        <i class="fas fa-chevron-right text-muted"></i>
+                                    </a>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-bolt me-2"></i>Hành động nhanh
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a asp-controller="Help" asp-action="FAQ" class="btn btn-outline-primary">
+                                <i class="fas fa-question-circle me-2"></i>Xem FAQ
+                            </a>
+                            <a asp-controller="Help" asp-action="Contact" class="btn btn-outline-success">
+                                <i class="fas fa-envelope me-2"></i>Liên hệ hỗ trợ
+                            </a>
+                            <a asp-controller="Help" asp-action="Index" class="btn btn-outline-info">
+                                <i class="fas fa-home me-2"></i>Trang chủ trợ giúp
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Help Info -->
+                <div class="card border-info">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-info-circle me-2"></i>Thông tin hữu ích
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text small">
+                            Không tìm thấy thông tin bạn cần? Hãy thử tìm kiếm với từ khóa khác 
+                            hoặc liên hệ với đội ngũ hỗ trợ của chúng tôi.
+                        </p>
+                        <div class="d-grid">
+                            <a asp-controller="Help" asp-action="Contact" class="btn btn-info btn-sm">
+                                <i class="fas fa-headset me-1"></i>Liên hệ hỗ trợ
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    string GetCategoryIcon(BookStore.Core.Entities.HelpArticleCategory category)
+    {
+        return category switch
+        {
+            BookStore.Core.Entities.HelpArticleCategory.General => "fas fa-home",
+            BookStore.Core.Entities.HelpArticleCategory.Account => "fas fa-user",
+            BookStore.Core.Entities.HelpArticleCategory.Orders => "fas fa-shopping-cart",
+            BookStore.Core.Entities.HelpArticleCategory.Payment => "fas fa-credit-card",
+            BookStore.Core.Entities.HelpArticleCategory.Shipping => "fas fa-truck",
+            BookStore.Core.Entities.HelpArticleCategory.Returns => "fas fa-undo",
+            BookStore.Core.Entities.HelpArticleCategory.Technical => "fas fa-cog",
+            BookStore.Core.Entities.HelpArticleCategory.Privacy => "fas fa-shield-alt",
+            BookStore.Core.Entities.HelpArticleCategory.Terms => "fas fa-file-contract",
+            BookStore.Core.Entities.HelpArticleCategory.Contact => "fas fa-envelope",
+            _ => "fas fa-question-circle"
+        };
+    }
+
+    string GetCategoryDescription(BookStore.Core.Entities.HelpArticleCategory category)
+    {
+        return category switch
+        {
+            BookStore.Core.Entities.HelpArticleCategory.General => "Thông tin tổng quan về BookStore và các dịch vụ",
+            BookStore.Core.Entities.HelpArticleCategory.Account => "Hướng dẫn quản lý tài khoản và thông tin cá nhân",
+            BookStore.Core.Entities.HelpArticleCategory.Orders => "Hướng dẫn đặt hàng, theo dõi và quản lý đơn hàng",
+            BookStore.Core.Entities.HelpArticleCategory.Payment => "Thông tin về các phương thức thanh toán",
+            BookStore.Core.Entities.HelpArticleCategory.Shipping => "Chính sách và thông tin về giao hàng",
+            BookStore.Core.Entities.HelpArticleCategory.Returns => "Hướng dẫn đổi trả và hoàn tiền",
+            BookStore.Core.Entities.HelpArticleCategory.Technical => "Hỗ trợ kỹ thuật và khắc phục sự cố",
+            BookStore.Core.Entities.HelpArticleCategory.Privacy => "Chính sách bảo mật và quyền riêng tư",
+            BookStore.Core.Entities.HelpArticleCategory.Terms => "Điều khoản sử dụng và quy định",
+            BookStore.Core.Entities.HelpArticleCategory.Contact => "Thông tin liên hệ và hỗ trợ",
+            _ => "Thông tin hỗ trợ khác"
+        };
+    }
+
+    string GetCategoryDisplayName(BookStore.Core.Entities.HelpArticleCategory category)
+    {
+        return category switch
+        {
+            BookStore.Core.Entities.HelpArticleCategory.General => "Tổng quan",
+            BookStore.Core.Entities.HelpArticleCategory.Account => "Tài khoản",
+            BookStore.Core.Entities.HelpArticleCategory.Orders => "Đơn hàng",
+            BookStore.Core.Entities.HelpArticleCategory.Payment => "Thanh toán",
+            BookStore.Core.Entities.HelpArticleCategory.Shipping => "Vận chuyển",
+            BookStore.Core.Entities.HelpArticleCategory.Returns => "Đổi trả",
+            BookStore.Core.Entities.HelpArticleCategory.Technical => "Kỹ thuật",
+            BookStore.Core.Entities.HelpArticleCategory.Privacy => "Bảo mật",
+            BookStore.Core.Entities.HelpArticleCategory.Terms => "Điều khoản",
+            BookStore.Core.Entities.HelpArticleCategory.Contact => "Liên hệ",
+            _ => "Khác"
+        };
+    }
+
+    string GetTypeBadgeColor(BookStore.Core.Entities.HelpArticleType type)
+    {
+        return type switch
+        {
+            BookStore.Core.Entities.HelpArticleType.FAQ => "primary",
+            BookStore.Core.Entities.HelpArticleType.Policy => "warning",
+            BookStore.Core.Entities.HelpArticleType.Guide => "success",
+            BookStore.Core.Entities.HelpArticleType.Tutorial => "info",
+            BookStore.Core.Entities.HelpArticleType.Announcement => "danger",
+            _ => "secondary"
+        };
+    }
+
+    IEnumerable<BookStore.Core.Entities.HelpArticleCategory> GetAllCategories()
+    {
+        return Enum.GetValues<BookStore.Core.Entities.HelpArticleCategory>();
+    }
+}
+
+@section Styles {
+    <style>
+        .help-category-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 1px solid #dee2e6;
+        }
+
+        .article-card {
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .article-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+
+        .article-card .card-title a:hover {
+            color: #0d6efd !important;
+        }
+
+        .help-sidebar .card {
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .list-group-item-action:hover {
+            background-color: #f8f9fa;
+        }
+
+        .empty-state {
+            padding: 3rem 1rem;
+        }
+    </style>
+}

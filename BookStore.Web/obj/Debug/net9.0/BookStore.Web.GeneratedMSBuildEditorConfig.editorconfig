@@ -276,8 +276,28 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGVidWdcQXBpVGVzdC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/BookStore/BookStore.Web/Views/Help/Article.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSGVscFxBcnRpY2xlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/BookStore/BookStore.Web/Views/Help/Category.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSGVscFxDYXRlZ29yeS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/BookStore/BookStore.Web/Views/Help/Contact.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSGVscFxDb250YWN0LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/BookStore/BookStore.Web/Views/Help/FAQ.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSGVscFxGQVEuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/BookStore/BookStore.Web/Views/Help/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSGVscFxJbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/BookStore/BookStore.Web/Views/Help/Search.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSGVscFxTZWFyY2guY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/BookStore/BookStore.Web/Views/Home/Index.cshtml]

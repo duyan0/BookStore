@@ -1,0 +1,266 @@
+@model BookStore.Web.Models.HelpArticleViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a asp-controller="Home" asp-action="Index">
+                <i class="fas fa-home"></i> Trang chủ
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a asp-controller="Help" asp-action="Index">
+                <i class="fas fa-question-circle"></i> Trợ giúp
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a asp-controller="Help" asp-action="Category" asp-route-category="@Model.Category.ToString().ToLower()">
+                @Model.CategoryName
+            </a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">@Model.Title</li>
+    </ol>
+</nav>
+
+<div class="container">
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <article class="help-article">
+                <!-- Article Header -->
+                <header class="mb-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <span class="badge bg-primary me-2">@Model.TypeName</span>
+                        <span class="badge bg-secondary">@Model.CategoryName</span>
+                    </div>
+                    
+                    <h1 class="display-5 fw-bold text-dark mb-3">@Model.Title</h1>
+                    
+                    <div class="article-meta text-muted mb-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <small>
+                                    <i class="fas fa-user me-1"></i>
+                                    Tác giả: <strong>@Model.AuthorName</strong>
+                                </small>
+                            </div>
+                            <div class="col-md-6 text-md-end">
+                                <small>
+                                    <i class="fas fa-calendar me-1"></i>
+                                    @Model.CreatedAtFormatted
+                                </small>
+                            </div>
+                        </div>
+                        @if (!string.IsNullOrEmpty(Model.UpdatedAtFormatted))
+                        {
+                            <div class="row mt-1">
+                                <div class="col-12">
+                                    <small>
+                                        <i class="fas fa-edit me-1"></i>
+                                        Cập nhật: @Model.UpdatedAtFormatted
+                                    </small>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    
+                    @if (!string.IsNullOrEmpty(Model.Summary))
+                    {
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Tóm tắt:</strong> @Model.Summary
+                        </div>
+                    }
+                </header>
+
+                <!-- Article Content -->
+                <div class="article-content">
+                    @Html.Raw(Model.Content)
+                </div>
+
+                <!-- Article Footer -->
+                <footer class="mt-5 pt-4 border-top">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <div class="text-muted">
+                                <i class="fas fa-eye me-1"></i>
+                                Đã xem: <strong>@Model.ViewCount</strong> lần
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            <div class="help-actions">
+                                <span class="text-muted me-3">Bài viết này có hữu ích không?</span>
+                                <button class="btn btn-sm btn-outline-success me-2" onclick="rateArticle(true)">
+                                    <i class="fas fa-thumbs-up me-1"></i>Có
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="rateArticle(false)">
+                                    <i class="fas fa-thumbs-down me-1"></i>Không
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+            </article>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <div class="help-sidebar">
+                <!-- Quick Actions -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-bolt me-2"></i>Hành động nhanh
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a asp-controller="Help" asp-action="FAQ" class="btn btn-outline-primary">
+                                <i class="fas fa-question-circle me-2"></i>Xem FAQ
+                            </a>
+                            <a asp-controller="Help" asp-action="Contact" class="btn btn-outline-success">
+                                <i class="fas fa-envelope me-2"></i>Liên hệ hỗ trợ
+                            </a>
+                            <a asp-controller="Help" asp-action="Search" class="btn btn-outline-info">
+                                <i class="fas fa-search me-2"></i>Tìm kiếm trợ giúp
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Related Articles -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-list me-2"></i>Bài viết liên quan
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group list-group-flush">
+                            <a asp-controller="Help" asp-action="Category" asp-route-category="@Model.Category.ToString().ToLower()" 
+                               class="list-group-item list-group-item-action">
+                                <i class="fas fa-folder me-2"></i>
+                                Xem tất cả bài viết trong <strong>@Model.CategoryName</strong>
+                            </a>
+                            <a asp-controller="Help" asp-action="Index" class="list-group-item list-group-item-action">
+                                <i class="fas fa-home me-2"></i>
+                                Quay lại trang chủ trợ giúp
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Support -->
+                <div class="card border-warning">
+                    <div class="card-header bg-warning text-dark">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-life-ring me-2"></i>Cần hỗ trợ thêm?
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text small">
+                            Nếu bài viết này chưa giải quyết được vấn đề của bạn, hãy liên hệ với chúng tôi.
+                        </p>
+                        <a asp-controller="Help" asp-action="Contact" class="btn btn-warning btn-sm">
+                            <i class="fas fa-envelope me-1"></i>Liên hệ ngay
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function rateArticle(isHelpful) {
+            // Placeholder for rating functionality
+            const message = isHelpful ? 
+                'Cảm ơn bạn đã đánh giá tích cực!' : 
+                'Cảm ơn phản hồi của bạn. Chúng tôi sẽ cải thiện nội dung.';
+            
+            // Show toast or alert
+            if (typeof showToast === 'function') {
+                showToast(message, isHelpful ? 'success' : 'info');
+            } else {
+                alert(message);
+            }
+            
+            // Disable buttons after rating
+            const buttons = document.querySelectorAll('.help-actions button');
+            buttons.forEach(btn => {
+                btn.disabled = true;
+                btn.classList.add('disabled');
+            });
+        }
+
+        // Auto-scroll to content on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Smooth scroll to article content if coming from external link
+            if (window.location.hash) {
+                const target = document.querySelector(window.location.hash);
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            }
+        });
+    </script>
+}
+
+@section Styles {
+    <style>
+        .help-article {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .article-content {
+            line-height: 1.8;
+            font-size: 1.1rem;
+        }
+
+        .article-content h3 {
+            color: #2c3e50;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .article-content h4 {
+            color: #34495e;
+            margin-top: 1.5rem;
+            margin-bottom: 0.8rem;
+            font-weight: 500;
+        }
+
+        .article-content ul, .article-content ol {
+            margin-bottom: 1.5rem;
+        }
+
+        .article-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .article-content p {
+            margin-bottom: 1.2rem;
+        }
+
+        .help-sidebar .card {
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .help-actions button:disabled {
+            opacity: 0.6;
+        }
+
+        .article-meta small {
+            font-size: 0.9rem;
+        }
+    </style>
+}

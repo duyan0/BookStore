@@ -1,0 +1,380 @@
+@model BookStore.Web.Models.ContactViewModel
+@{
+    ViewData["Title"] = "Liên hệ hỗ trợ";
+}
+
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a asp-controller="Home" asp-action="Index">
+                <i class="fas fa-home"></i> Trang chủ
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a asp-controller="Help" asp-action="Index">
+                <i class="fas fa-question-circle"></i> Trợ giúp
+            </a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">Liên hệ</li>
+    </ol>
+</nav>
+
+<div class="container">
+    <!-- Page Header -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="contact-header text-center py-5  text-white rounded">
+                <div class="contact-icon mb-3">
+                    <i class="fas fa-headset fa-4x"></i>
+                </div>
+                <h1 class="display-4 text-dark fw-bold mb-3">Liên hệ hỗ trợ</h1>
+                <p class="lead">
+                    Chúng tôi luôn sẵn sàng hỗ trợ bạn. Hãy để lại tin nhắn và chúng tôi sẽ phản hồi sớm nhất có thể.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Contact Form -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-envelope me-2 text-success"></i>
+                        Gửi tin nhắn cho chúng tôi
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Contact" method="post">
+                        @Html.AntiForgeryToken()
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Name" class="form-label">
+                                    <i class="fas fa-user me-1"></i>@Html.DisplayNameFor(m => m.Name)
+                                </label>
+                                <input asp-for="Name" class="form-control" placeholder="Nhập họ và tên của bạn">
+                                <span asp-validation-for="Name" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Email" class="form-label">
+                                    <i class="fas fa-envelope me-1"></i>@Html.DisplayNameFor(m => m.Email)
+                                </label>
+                                <input asp-for="Email" class="form-control" placeholder="Nhập địa chỉ email">
+                                <span asp-validation-for="Email" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Phone" class="form-label">
+                                    <i class="fas fa-phone me-1"></i>@Html.DisplayNameFor(m => m.Phone)
+                                </label>
+                                <input asp-for="Phone" class="form-control" placeholder="Nhập số điện thoại (tùy chọn)">
+                                <span asp-validation-for="Phone" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Type" class="form-label">
+                                    <i class="fas fa-tag me-1"></i>@Html.DisplayNameFor(m => m.Type)
+                                </label>
+                                <select asp-for="Type" class="form-select">
+                                    <option value="1">Câu hỏi chung</option>
+                                    <option value="2">Hỗ trợ kỹ thuật</option>
+                                    <option value="3">Khiếu nại</option>
+                                    <option value="4">Góp ý</option>
+                                    <option value="5">Hợp tác kinh doanh</option>
+                                </select>
+                                <span asp-validation-for="Type" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Subject" class="form-label">
+                                <i class="fas fa-heading me-1"></i>@Html.DisplayNameFor(m => m.Subject)
+                            </label>
+                            <input asp-for="Subject" class="form-control" placeholder="Nhập tiêu đề tin nhắn">
+                            <span asp-validation-for="Subject" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="Message" class="form-label">
+                                <i class="fas fa-comment me-1"></i>@Html.DisplayNameFor(m => m.Message)
+                            </label>
+                            <textarea asp-for="Message" class="form-control" rows="6" 
+                                      placeholder="Mô tả chi tiết vấn đề hoặc câu hỏi của bạn..."></textarea>
+                            <span asp-validation-for="Message" class="text-danger"></span>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Vui lòng mô tả chi tiết để chúng tôi có thể hỗ trợ bạn tốt nhất.
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-paper-plane me-2"></i>
+                                Gửi tin nhắn
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Info Sidebar -->
+        <div class="col-lg-4">
+            <div class="contact-sidebar">
+                <!-- Contact Information -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-info-circle me-2"></i>Thông tin liên hệ
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="contact-info">
+                            <div class="contact-item mb-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="contact-icon me-3">
+                                        <i class="fas fa-map-marker-alt fa-lg text-primary"></i>
+                                    </div>
+                                    <div>
+                                        <strong>Địa chỉ</strong>
+                                        <div class="text-muted">
+                                            95 Nguyễn Minh Hoàng<br>
+                                            Thành phố Hồ Chí Minh, Việt Nam
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="contact-item mb-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="contact-icon me-3">
+                                        <i class="fas fa-phone fa-lg text-success"></i>
+                                    </div>
+                                    <div>
+                                        <strong>Hotline</strong>
+                                        <div class="text-muted">
+                                            <a href="tel:1900xxxx" class="text-decoration-none">0355079864</a><br>
+                                            <small>(Miễn phí, 24/7)</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="contact-item mb-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="contact-icon me-3">
+                                        <i class="fas fa-envelope fa-lg text-info"></i>
+                                    </div>
+                                    <div>
+                                        <strong>Email</strong>
+                                        <div class="text-muted">
+                                            <a href="mailto:support@bookstore.com" class="text-decoration-none">
+                                               crandi21112004@gmail.com
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="contact-item">
+                                <div class="d-flex align-items-center">
+                                    <div class="contact-icon me-3">
+                                        <i class="fas fa-clock fa-lg text-warning"></i>
+                                    </div>
+                                    <div>
+                                        <strong>Giờ làm việc</strong>
+                                        <div class="text-muted">
+                                            Thứ 2 - Thứ 6: 8:00 - 18:00<br>
+                                            Thứ 7 - CN: 9:00 - 17:00
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Response Time -->
+                <div class="card mb-4 border-info">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-clock me-2"></i>Thời gian phản hồi
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled mb-0">
+                            <li class="mb-2">
+                                <i class="fas fa-bolt text-warning me-2"></i>
+                                <strong>Khẩn cấp:</strong> Trong 1 giờ
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-tachometer-alt text-success me-2"></i>
+                                <strong>Thường:</strong> Trong 4 giờ
+                            </li>
+                            <li>
+                                <i class="fas fa-calendar text-primary me-2"></i>
+                                <strong>Tư vấn:</strong> Trong 24 giờ
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- FAQ Link -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-question-circle me-2"></i>Trước khi liên hệ
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text small">
+                            Có thể câu hỏi của bạn đã được trả lời trong phần FAQ. 
+                            Hãy kiểm tra trước để có câu trả lời nhanh chóng.
+                        </p>
+                        <div class="d-grid">
+                            <a asp-controller="Help" asp-action="FAQ" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-search me-1"></i>Xem FAQ
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Social Media -->
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-share-alt me-2"></i>Kết nối với chúng tôi
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-around">
+                            <a href="#" class="btn btn-outline-primary btn-sm">
+                                <i class="fab fa-facebook-f"></i>
+                            </a>
+                            <a href="#" class="btn btn-outline-info btn-sm">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                            <a href="#" class="btn btn-outline-danger btn-sm">
+                                <i class="fab fa-youtube"></i>
+                            </a>
+                            <a href="#" class="btn btn-outline-success btn-sm">
+                                <i class="fab fa-whatsapp"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-fill user info if logged in
+            const userLoggedIn = document.querySelector('meta[name="user-logged-in"]')?.content === 'true';
+            
+            if (userLoggedIn) {
+                // You could make an AJAX call to get user info and pre-fill the form
+                // For now, we'll just add a helpful message
+                const nameField = document.querySelector('input[name="Name"]');
+                const emailField = document.querySelector('input[name="Email"]');
+                
+                if (nameField && nameField.value === '') {
+                    nameField.placeholder = 'Tên của bạn sẽ được tự động điền';
+                }
+                
+                if (emailField && emailField.value === '') {
+                    emailField.placeholder = 'Email của bạn sẽ được tự động điền';
+                }
+            }
+
+            // Form validation enhancement
+            const form = document.querySelector('form');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang gửi...';
+                        
+                        // Re-enable button after 5 seconds in case of error
+                        setTimeout(() => {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Gửi tin nhắn';
+                        }, 5000);
+                    }
+                });
+            }
+
+            // Character counter for message field
+            const messageField = document.querySelector('textarea[name="Message"]');
+            if (messageField) {
+                const maxLength = 2000;
+                const counter = document.createElement('div');
+                counter.className = 'form-text text-end';
+                counter.innerHTML = `<span id="charCount">0</span>/${maxLength} ký tự`;
+                messageField.parentNode.appendChild(counter);
+
+                messageField.addEventListener('input', function() {
+                    const currentLength = this.value.length;
+                    document.getElementById('charCount').textContent = currentLength;
+                    
+                    if (currentLength > maxLength * 0.9) {
+                        counter.classList.add('text-warning');
+                    } else {
+                        counter.classList.remove('text-warning');
+                    }
+                });
+            }
+        });
+    </script>
+}
+
+@section Styles {
+    <style>
+        .contact-header {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+
+        .contact-info .contact-item {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .contact-info .contact-item:last-child {
+            border-bottom: none;
+        }
+
+        .contact-icon {
+            width: 40px;
+            text-align: center;
+        }
+
+        .card {
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #28a745;
+            box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            border: none;
+        }
+
+        .btn-success:hover {
+            background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
+            transform: translateY(-1px);
+        }
+    </style>
+}

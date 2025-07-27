@@ -1,0 +1,474 @@
+@model BookStore.Web.Models.HelpSearchViewModel
+@{
+    ViewData["Title"] = string.IsNullOrEmpty(Model.Query) ? "Tìm kiếm trợ giúp" : $"Kết quả tìm kiếm: {Model.Query}";
+}
+
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a asp-controller="Home" asp-action="Index">
+                <i class="fas fa-home"></i> Trang chủ
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a asp-controller="Help" asp-action="Index">
+                <i class="fas fa-question-circle"></i> Trợ giúp
+            </a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">Tìm kiếm</li>
+    </ol>
+</nav>
+
+<div class="container">
+    <!-- Search Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="search-header text-center py-4 bg-light rounded">
+                <div class="search-icon mb-3">
+                    <i class="fas fa-search fa-3x text-primary"></i>
+                </div>
+                <h1 class="h2 fw-bold text-dark mb-3">Tìm kiếm trợ giúp</h1>
+                <p class="text-muted">
+                    Tìm kiếm trong hàng trăm bài viết hướng dẫn, FAQ và chính sách
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Advanced Search Form -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form asp-action="Search" method="get">
+                        <div class="row">
+                            <div class="col-lg-6 mb-3">
+                                <label for="searchQuery" class="form-label">
+                                    <i class="fas fa-search me-1"></i>Từ khóa tìm kiếm
+                                </label>
+                                <input type="text" name="q" id="searchQuery" class="form-control form-control-lg" 
+                                       value="@Model.Query" placeholder="Nhập từ khóa tìm kiếm...">
+                            </div>
+                            <div class="col-lg-3 mb-3">
+                                <label for="searchType" class="form-label">
+                                    <i class="fas fa-filter me-1"></i>Loại bài viết
+                                </label>
+                                <select name="type" id="searchType" class="form-select">
+                                    <option value="">Tất cả loại</option>
+                                    <option value="FAQ">FAQ</option>
+                                    <option value="Policy">Chính sách</option>
+                                    <option value="Guide">Hướng dẫn</option>
+                                    <option value="Tutorial">Tutorial</option>
+                                    <option value="Announcement">Thông báo</option>
+                                </select>
+                            </div>
+                            <div class="col-lg-3 mb-3">
+                                <label for="searchCategory" class="form-label">
+                                    <i class="fas fa-folder me-1"></i>Danh mục
+                                </label>
+                                <select name="category" id="searchCategory" class="form-select">
+                                    <option value="">Tất cả danh mục</option>
+                                    <option value="General">Tổng quan</option>
+                                    <option value="Account">Tài khoản</option>
+                                    <option value="Orders">Đơn hàng</option>
+                                    <option value="Payment">Thanh toán</option>
+                                    <option value="Shipping">Vận chuyển</option>
+                                    <option value="Returns">Đổi trả</option>
+                                    <option value="Technical">Kỹ thuật</option>
+                                    <option value="Privacy">Bảo mật</option>
+                                    <option value="Terms">Điều khoản</option>
+                                    <option value="Contact">Liên hệ</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary btn-lg me-2">
+                                    <i class="fas fa-search me-2"></i>Tìm kiếm
+                                </button>
+                                <a asp-action="Search" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-1"></i>Xóa bộ lọc
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Search Results -->
+        <div class="col-lg-8">
+            @if (!string.IsNullOrEmpty(Model.Query))
+            {
+                <!-- Search Results Header -->
+                <div class="search-results-header mb-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="mb-1">
+                                Kết quả tìm kiếm cho: <span class="text-primary">"@Model.Query"</span>
+                            </h3>
+                            <p class="text-muted mb-0">
+                                Tìm thấy <strong>@Model.TotalCount</strong> kết quả
+                            </p>
+                        </div>
+                        @if (Model.HasResults)
+                        {
+                            <div class="search-actions">
+                                <button class="btn btn-sm btn-outline-primary" onclick="sortResults('relevance')">
+                                    <i class="fas fa-sort me-1"></i>Liên quan
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="sortResults('date')">
+                                    <i class="fas fa-calendar me-1"></i>Mới nhất
+                                </button>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                @if (Model.HasResults)
+                {
+                    <!-- Search Results List -->
+                    <div class="search-results-list">
+                        @foreach (var article in Model.Results)
+                        {
+                            <div class="card mb-3 search-result-item">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-9">
+                                            <div class="d-flex align-items-center mb-2">
+                                                <span class="badge bg-@GetTypeBadgeColor(article.Type) me-2">
+                                                    @article.TypeName
+                                                </span>
+                                                <span class="badge bg-secondary me-2">
+                                                    @article.CategoryName
+                                                </span>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-calendar me-1"></i>
+                                                    @article.CreatedAtFormatted
+                                                </small>
+                                            </div>
+                                            
+                                            <h5 class="card-title">
+                                                <a asp-controller="Help" asp-action="Article" asp-route-slug="@article.Slug" 
+                                                   class="text-decoration-none text-dark search-result-title">
+                                                    @Html.Raw(HighlightSearchTerm(article.Title, Model.Query))
+                                                </a>
+                                            </h5>
+                                            
+                                            <p class="card-text text-muted">
+                                                @Html.Raw(HighlightSearchTerm(article.Summary, Model.Query))
+                                            </p>
+                                            
+                                            <div class="search-result-meta">
+                                                <small class="text-muted">
+                                                    <i class="fas fa-eye me-1"></i>
+                                                    @article.ViewCount lượt xem
+                                                </small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 text-md-end">
+                                            <a asp-controller="Help" asp-action="Article" asp-route-slug="@article.Slug" 
+                                               class="btn btn-outline-primary">
+                                                <i class="fas fa-arrow-right me-1"></i>
+                                                Xem chi tiết
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <!-- No Results -->
+                    <div class="no-results text-center py-5">
+                        <div class="no-results-icon mb-4">
+                            <i class="fas fa-search fa-4x text-muted"></i>
+                        </div>
+                        <h4 class="text-muted mb-3">Không tìm thấy kết quả nào</h4>
+                        <p class="text-muted mb-4">
+                            Không tìm thấy bài viết nào phù hợp với từ khóa "<strong>@Model.Query</strong>".
+                        </p>
+                        
+                        <div class="search-suggestions">
+                            <h6 class="text-muted mb-3">Gợi ý tìm kiếm:</h6>
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <i class="fas fa-lightbulb text-warning me-2"></i>
+                                    Thử sử dụng từ khóa ngắn gọn hơn
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-lightbulb text-warning me-2"></i>
+                                    Kiểm tra chính tả của từ khóa
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-lightbulb text-warning me-2"></i>
+                                    Thử tìm kiếm với từ đồng nghĩa
+                                </li>
+                                <li>
+                                    <i class="fas fa-lightbulb text-warning me-2"></i>
+                                    Sử dụng bộ lọc để thu hẹp kết quả
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="mt-4">
+                            <a asp-controller="Help" asp-action="FAQ" class="btn btn-primary me-2">
+                                <i class="fas fa-question-circle me-1"></i>
+                                Xem FAQ
+                            </a>
+                            <a asp-controller="Help" asp-action="Contact" class="btn btn-outline-success">
+                                <i class="fas fa-envelope me-1"></i>
+                                Liên hệ hỗ trợ
+                            </a>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <!-- Search Tips -->
+                <div class="search-tips">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-lightbulb me-2 text-warning"></i>
+                                Mẹo tìm kiếm hiệu quả
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="text-primary">Từ khóa phổ biến:</h6>
+                                    <div class="popular-keywords mb-3">
+                                        <a href="?q=đặt hàng" class="badge bg-light text-dark me-2 mb-2">đặt hàng</a>
+                                        <a href="?q=thanh toán" class="badge bg-light text-dark me-2 mb-2">thanh toán</a>
+                                        <a href="?q=giao hàng" class="badge bg-light text-dark me-2 mb-2">giao hàng</a>
+                                        <a href="?q=đổi trả" class="badge bg-light text-dark me-2 mb-2">đổi trả</a>
+                                        <a href="?q=tài khoản" class="badge bg-light text-dark me-2 mb-2">tài khoản</a>
+                                        <a href="?q=voucher" class="badge bg-light text-dark me-2 mb-2">voucher</a>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="text-success">Mẹo tìm kiếm:</h6>
+                                    <ul class="list-unstyled small">
+                                        <li class="mb-1">
+                                            <i class="fas fa-check text-success me-2"></i>
+                                            Sử dụng từ khóa cụ thể
+                                        </li>
+                                        <li class="mb-1">
+                                            <i class="fas fa-check text-success me-2"></i>
+                                            Kết hợp với bộ lọc danh mục
+                                        </li>
+                                        <li class="mb-1">
+                                            <i class="fas fa-check text-success me-2"></i>
+                                            Thử nhiều từ khóa khác nhau
+                                        </li>
+                                        <li>
+                                            <i class="fas fa-check text-success me-2"></i>
+                                            Liên hệ nếu không tìm thấy
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <div class="help-sidebar">
+                <!-- Quick Links -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-bolt me-2"></i>Liên kết nhanh
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a asp-controller="Help" asp-action="FAQ" class="btn btn-outline-primary">
+                                <i class="fas fa-question-circle me-2"></i>Câu hỏi thường gặp
+                            </a>
+                            <a asp-controller="Help" asp-action="Category" asp-route-category="orders" class="btn btn-outline-info">
+                                <i class="fas fa-shopping-cart me-2"></i>Hướng dẫn đặt hàng
+                            </a>
+                            <a asp-controller="Help" asp-action="Category" asp-route-category="payment" class="btn btn-outline-success">
+                                <i class="fas fa-credit-card me-2"></i>Thanh toán
+                            </a>
+                            <a asp-controller="Help" asp-action="Contact" class="btn btn-outline-warning">
+                                <i class="fas fa-envelope me-2"></i>Liên hệ hỗ trợ
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Categories -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-folder me-2"></i>Danh mục trợ giúp
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group list-group-flush">
+                            <a asp-controller="Help" asp-action="Category" asp-route-category="orders" 
+                               class="list-group-item list-group-item-action">
+                                <i class="fas fa-shopping-cart me-2"></i>Đơn hàng
+                            </a>
+                            <a asp-controller="Help" asp-action="Category" asp-route-category="payment" 
+                               class="list-group-item list-group-item-action">
+                                <i class="fas fa-credit-card me-2"></i>Thanh toán
+                            </a>
+                            <a asp-controller="Help" asp-action="Category" asp-route-category="shipping" 
+                               class="list-group-item list-group-item-action">
+                                <i class="fas fa-truck me-2"></i>Vận chuyển
+                            </a>
+                            <a asp-controller="Help" asp-action="Category" asp-route-category="returns" 
+                               class="list-group-item list-group-item-action">
+                                <i class="fas fa-undo me-2"></i>Đổi trả
+                            </a>
+                            <a asp-controller="Help" asp-action="Category" asp-route-category="account" 
+                               class="list-group-item list-group-item-action">
+                                <i class="fas fa-user me-2"></i>Tài khoản
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Help Info -->
+                <div class="card border-info">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-info-circle me-2"></i>Cần hỗ trợ thêm?
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text small">
+                            Không tìm thấy thông tin bạn cần? Đội ngũ hỗ trợ của chúng tôi luôn sẵn sàng giúp đỡ bạn.
+                        </p>
+                        <div class="d-grid">
+                            <a asp-controller="Help" asp-action="Contact" class="btn btn-info btn-sm">
+                                <i class="fas fa-headset me-1"></i>Liên hệ ngay
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    string GetTypeBadgeColor(BookStore.Core.Entities.HelpArticleType type)
+    {
+        return type switch
+        {
+            BookStore.Core.Entities.HelpArticleType.FAQ => "primary",
+            BookStore.Core.Entities.HelpArticleType.Policy => "warning",
+            BookStore.Core.Entities.HelpArticleType.Guide => "success",
+            BookStore.Core.Entities.HelpArticleType.Tutorial => "info",
+            BookStore.Core.Entities.HelpArticleType.Announcement => "danger",
+            _ => "secondary"
+        };
+    }
+
+    string HighlightSearchTerm(string text, string searchTerm)
+    {
+        if (string.IsNullOrEmpty(searchTerm) || string.IsNullOrEmpty(text))
+            return text;
+
+        return System.Text.RegularExpressions.Regex.Replace(
+            text, 
+            System.Text.RegularExpressions.Regex.Escape(searchTerm), 
+            $"<mark class=\"bg-warning\">$0</mark>", 
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase
+        );
+    }
+}
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Preserve form values from URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const typeSelect = document.getElementById('searchType');
+            const categorySelect = document.getElementById('searchCategory');
+            
+            if (typeSelect && urlParams.get('type')) {
+                typeSelect.value = urlParams.get('type');
+            }
+            
+            if (categorySelect && urlParams.get('category')) {
+                categorySelect.value = urlParams.get('category');
+            }
+
+            // Focus on search input
+            const searchInput = document.getElementById('searchQuery');
+            if (searchInput && !searchInput.value) {
+                searchInput.focus();
+            }
+        });
+
+        function sortResults(sortBy) {
+            // Placeholder for sorting functionality
+            console.log('Sorting by:', sortBy);
+            // You could implement AJAX sorting here
+        }
+    </script>
+}
+
+@section Styles {
+    <style>
+        .search-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 1px solid #dee2e6;
+        }
+
+        .search-result-item {
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .search-result-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+
+        .search-result-title:hover {
+            color: #0d6efd !important;
+        }
+
+        .popular-keywords .badge {
+            text-decoration: none;
+            border: 1px solid #dee2e6;
+        }
+
+        .popular-keywords .badge:hover {
+            background-color: #0d6efd !important;
+            color: white !important;
+            border-color: #0d6efd;
+        }
+
+        .help-sidebar .card {
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .no-results {
+            padding: 3rem 1rem;
+        }
+
+        mark {
+            padding: 0.1em 0.2em;
+            border-radius: 0.2em;
+        }
+    </style>
+}
