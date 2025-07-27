@@ -81,7 +81,7 @@
                                     <td>@book.AuthorName</td>
                                     <td>@book.CategoryName</td>
                                     <td>
-                                        <span class="fw-bold text-success">@CurrencyHelper.FormatVND(book.Price)</span>
+                                        <span class="fw-bold text-danger">@CurrencyHelper.FormatVND(book.Price)</span>
                                     </td>
                                     <td>
                                         <span class="badge @(book.Quantity > 10 ? "bg-success" : book.Quantity > 0 ? "bg-warning" : "bg-danger")">

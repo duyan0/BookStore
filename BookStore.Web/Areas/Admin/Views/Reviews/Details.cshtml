@@ -1,0 +1,363 @@
+@model BookStore.Web.Models.ReviewViewModel
+@{
+    ViewData["Title"] = "Chi tiết đánh giá";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">
+        <i class="fas fa-eye me-2"></i>
+        Chi tiết đánh giá
+    </h2>
+    <div>
+        <a href="@Url.Action("Pending")" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Quay lại
+        </a>
+        @if (Model.Status == BookStore.Core.Entities.ReviewStatus.Pending)
+        {
+            <a href="@Url.Action("Moderate", new { id = Model.Id })" class="btn btn-warning">
+                <i class="fas fa-gavel me-1"></i>Duyệt đánh giá
+            </a>
+        }
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Review Content -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-comment me-2"></i>
+                    Nội dung đánh giá
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- Book Information -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        @if (!string.IsNullOrEmpty(Model.BookImageUrl))
+                        {
+                            <img src="@Model.BookImageUrl" alt="@Model.BookTitle" 
+                                 class="img-fluid rounded shadow-sm">
+                        }
+                        else
+                        {
+                            <div class="bg-light rounded d-flex align-items-center justify-content-center" 
+                                 style="height: 200px;">
+                                <i class="fas fa-book fa-3x text-muted"></i>
+                            </div>
+                        }
+                    </div>
+                    <div class="col-md-9">
+                        <h4 class="mb-2">@Model.BookTitle</h4>
+                        @if (!string.IsNullOrEmpty(Model.BookAuthor))
+                        {
+                            <p class="text-muted mb-2">
+                                <i class="fas fa-user me-1"></i>Tác giả: @Model.BookAuthor
+                            </p>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.BookCategory))
+                        {
+                            <p class="text-muted mb-2">
+                                <i class="fas fa-tag me-1"></i>Thể loại: @Model.BookCategory
+                            </p>
+                        }
+                        <p class="text-primary mb-2">
+                            <i class="fas fa-money-bill me-1"></i>
+                            <strong>@Model.BookPriceFormatted</strong>
+                        </p>
+                        <a href="@Url.Action("Details", "Shop", new { id = Model.BookId, area = "" })" 
+                           class="btn btn-sm btn-outline-primary" target="_blank">
+                            <i class="fas fa-external-link-alt me-1"></i>Xem sách
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Rating and Comment -->
+                <div class="border-top pt-4">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Đánh giá sao</h6>
+                            <div class="text-warning fs-3 mb-2">@Model.RatingStars</div>
+                            <span class="badge bg-info">@Model.Rating/5 sao</span>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Ngày đánh giá</h6>
+                            <p class="mb-1">@Model.CreatedAtFormatted</p>
+                            <small class="text-muted">@Model.TimeAgo</small>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.Comment))
+                    {
+                        <div class="mb-3">
+                            <h6 class="text-muted">Bình luận</h6>
+                            <div class="border rounded p-3 bg-light">
+                                <p class="mb-0">@Model.Comment</p>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="mb-3">
+                            <h6 class="text-muted">Bình luận</h6>
+                            <p class="text-muted fst-italic">Người dùng không để lại bình luận</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Notes History -->
+        @if (!string.IsNullOrEmpty(Model.AdminNote) || Model.ReviewedAt.HasValue)
+        {
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history me-2"></i>
+                        Lịch sử xử lý
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.ReviewedAt.HasValue)
+                    {
+                        <div class="d-flex align-items-start mb-3">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-user-shield fa-2x text-primary"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="mb-1">
+                                    @(Model.ReviewedByAdminName ?? "Admin")
+                                    <span class="badge @GetStatusBadgeClass(Model.Status) ms-2">
+                                        @Model.StatusText
+                                    </span>
+                                </h6>
+                                <p class="text-muted mb-1">@Model.ReviewedAt.Value.ToString("dd/MM/yyyy HH:mm")</p>
+                                @if (!string.IsNullOrEmpty(Model.AdminNote))
+                                {
+                                    <div class="border-start border-primary border-3 ps-3 mt-2">
+                                        <p class="mb-0">@Model.AdminNote</p>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Review Status -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Trạng thái đánh giá</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <span class="badge @GetStatusBadgeClass(Model.Status) fs-6 px-3 py-2">
+                        @Model.StatusText
+                    </span>
+                </div>
+                
+                @if (Model.Status == BookStore.Core.Entities.ReviewStatus.Pending)
+                {
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-success" onclick="quickApprove(@Model.Id)">
+                            <i class="fas fa-thumbs-up me-1"></i>Duyệt nhanh
+                        </button>
+                        <button type="button" class="btn btn-danger" onclick="quickReject(@Model.Id)">
+                            <i class="fas fa-thumbs-down me-1"></i>Từ chối nhanh
+                        </button>
+                        <a href="@Url.Action("Moderate", new { id = Model.Id })" class="btn btn-warning">
+                            <i class="fas fa-gavel me-1"></i>Duyệt chi tiết
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <div class="d-grid">
+                        <a href="@Url.Action("Moderate", new { id = Model.Id })" class="btn btn-outline-primary">
+                            <i class="fas fa-edit me-1"></i>Chỉnh sửa
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- User Information -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Thông tin người đánh giá</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="flex-shrink-0">
+                        @if (!string.IsNullOrEmpty(Model.UserAvatarUrl))
+                        {
+                            <img src="@Model.UserAvatarUrl" alt="@Model.UserFullName"
+                                 class="rounded-circle" style="width: 50px; height: 50px; object-fit: cover;">
+                        }
+                        else
+                        {
+                            <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center"
+                                 style="width: 50px; height: 50px;">
+                                <span class="text-white fw-bold">@Model.UserFullName.Substring(0, 1).ToUpper()</span>
+                            </div>
+                        }
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-1">@Model.UserFullName</h6>
+                        <p class="text-muted mb-0">@Model.UserName</p>
+                    </div>
+                </div>
+
+                @if (Model.IsVerifiedPurchase)
+                {
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>Đã xác thực mua hàng</strong>
+                        <br><small>Người dùng đã mua sách này trước khi đánh giá</small>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Chưa xác thực mua hàng</strong>
+                        <br><small>Không tìm thấy đơn hàng cho sách này</small>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Review Statistics -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Thống kê tương tác</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="border-end">
+                            <h4 class="text-success mb-1">@Model.HelpfulCount</h4>
+                            <small class="text-muted">Hữu ích</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-danger mb-1">@Model.NotHelpfulCount</h4>
+                        <small class="text-muted">Không hữu ích</small>
+                    </div>
+                </div>
+                @if (Model.TotalVotes > 0)
+                {
+                    <div class="mt-3">
+                        <div class="progress">
+                            <div class="progress-bar bg-success" role="progressbar" 
+                                 style="width: @Model.HelpfulPercentage%">
+                                @Model.HelpfulPercentage.ToString("F1")%
+                            </div>
+                        </div>
+                        <small class="text-muted">@Model.TotalVotes lượt đánh giá</small>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Action Modals -->
+<div class="modal fade" id="quickApproveModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Xác nhận duyệt</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn duyệt đánh giá này không?</p>
+                <p><strong>Đánh giá sẽ được công khai cho tất cả người dùng.</strong></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <form id="quickApproveForm" method="post" style="display: inline;">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="reviewId" id="approveReviewId">
+                    <input type="hidden" name="action" value="approve">
+                    <button type="submit" class="btn btn-success">Duyệt</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="quickRejectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Xác nhận từ chối</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn từ chối đánh giá này không?</p>
+                <div class="mb-3">
+                    <label for="rejectReason" class="form-label">Lý do từ chối:</label>
+                    <textarea class="form-control" id="rejectReason" rows="3" required
+                              placeholder="Nhập lý do từ chối để gửi phản hồi cho người dùng..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <form id="quickRejectForm" method="post" style="display: inline;">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="reviewId" id="rejectReviewId">
+                    <input type="hidden" name="action" value="reject">
+                    <input type="hidden" name="adminNote" id="rejectAdminNote">
+                    <button type="submit" class="btn btn-danger">Từ chối</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function quickApprove(reviewId) {
+            $('#approveReviewId').val(reviewId);
+            $('#quickApproveForm').attr('action', '@Url.Action("QuickModerate")');
+            new bootstrap.Modal(document.getElementById('quickApproveModal')).show();
+        }
+
+        function quickReject(reviewId) {
+            $('#rejectReviewId').val(reviewId);
+            $('#quickRejectForm').attr('action', '@Url.Action("QuickModerate")');
+            new bootstrap.Modal(document.getElementById('quickRejectModal')).show();
+        }
+
+        // Handle reject reason
+        $('#quickRejectForm').on('submit', function(e) {
+            const reason = $('#rejectReason').val().trim();
+            if (!reason) {
+                e.preventDefault();
+                alert('Vui lòng nhập lý do từ chối!');
+                return false;
+            }
+            $('#rejectAdminNote').val(reason);
+        });
+    </script>
+}
+
+@functions {
+    string GetStatusBadgeClass(BookStore.Core.Entities.ReviewStatus status)
+    {
+        return status switch
+        {
+            BookStore.Core.Entities.ReviewStatus.Pending => "bg-warning",
+            BookStore.Core.Entities.ReviewStatus.Approved => "bg-success",
+            BookStore.Core.Entities.ReviewStatus.Rejected => "bg-danger",
+            BookStore.Core.Entities.ReviewStatus.Hidden => "bg-secondary",
+            _ => "bg-secondary"
+        };
+    }
+}

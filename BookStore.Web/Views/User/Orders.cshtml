@@ -29,7 +29,7 @@ Lịch sử đơn hàng                </h2>
         <div class="row">
             @foreach (var order in Model)
             {
-                <div class="col-lg-6 mb-4">
+                <div class="col-lg-4 mb-4">
                     <div class="card h-100">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <h6 class="mb-0">Đơn hàng #@order.Id</h6>
@@ -162,9 +162,19 @@ Lịch sử đơn hàng                </h2>
 
             // Show modal immediately with loading state
             const modal = new bootstrap.Modal(document.getElementById('reorderModal'));
+            document.getElementById('reorderModalBody').innerHTML = `
+                <div class="text-center py-4" id="reorderLoading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Đang tải...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Đang chuẩn bị danh sách sản phẩm...</p>
+                </div>
+            `;
             modal.show();
 
             try {
+                console.log('Starting reorder process for order:', orderId);
+
                 // Use the Web app's API proxy instead of direct API call
                 const response = await fetch(`/User/ReorderOrder/${orderId}`, {
                     method: 'POST',
@@ -174,7 +184,15 @@ Lịch sử đơn hàng                </h2>
                     }
                 });
 
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
                 const result = await response.json();
+                console.log('Reorder result:', result);
 
                 if (result.success) {
                     showReorderModal(result);
@@ -182,16 +200,41 @@ Lịch sử đơn hàng                </h2>
                     document.getElementById('reorderModalBody').innerHTML = `
                         <div class="alert alert-danger">
                             <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Không thể đặt lại đơn hàng</strong><br>
                             ${result.message || 'Có lỗi xảy ra khi chuẩn bị đặt lại đơn hàng'}
                         </div>
                     `;
                 }
             } catch (error) {
                 console.error('Reorder error:', error);
+
+                let errorMessage = 'Có lỗi xảy ra khi kết nối đến server';
+
+                if (error.message.includes('401')) {
+                    errorMessage = 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại';
+                } else if (error.message.includes('404')) {
+                    errorMessage = 'Không tìm thấy đơn hàng';
+                } else if (error.message.includes('403')) {
+                    errorMessage = 'Bạn không có quyền truy cập đơn hàng này';
+                } else if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
+                    errorMessage = 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng';
+                }
+
                 document.getElementById('reorderModalBody').innerHTML = `
                     <div class="alert alert-danger">
                         <i class="fas fa-exclamation-triangle me-2"></i>
-                        Có lỗi xảy ra khi kết nối đến server
+                        <strong>Lỗi kết nối</strong><br>
+                        ${errorMessage}
+                        <hr>
+                        <small class="text-muted">Chi tiết lỗi: ${error.message}</small>
+                    </div>
+                    <div class="text-center mt-3">
+                        <button type="button" class="btn btn-primary" onclick="reorderItems(${orderId})">
+                            <i class="fas fa-redo me-1"></i>Thử lại
+                        </button>
+                        <button type="button" class="btn btn-secondary ms-2" data-bs-dismiss="modal">
+                            Đóng
+                        </button>
                     </div>
                 `;
             } finally {

@@ -133,17 +133,24 @@ namespace BookStore.Infrastructure.Services
 
         public async Task<VoucherValidationResultDto> ValidateVoucherAsync(VoucherValidationDto validationDto)
         {
+            _logger.LogInformation("Validating voucher: Code={Code}, OrderAmount={OrderAmount}, UserId={UserId}",
+                validationDto.Code, validationDto.OrderAmount, validationDto.UserId);
+
             var voucher = await _context.Vouchers
                 .FirstOrDefaultAsync(v => v.Code == validationDto.Code.ToUpper());
 
             if (voucher == null)
             {
+                _logger.LogWarning("Voucher not found: {Code}", validationDto.Code);
                 return new VoucherValidationResultDto
                 {
                     IsValid = false,
                     Message = "Mã voucher không tồn tại"
                 };
             }
+
+            _logger.LogInformation("Found voucher: Id={Id}, Code={Code}, Type={Type}, Value={Value}, IsActive={IsActive}, IsValid={IsValid}",
+                voucher.Id, voucher.Code, voucher.Type, voucher.Value, voucher.IsActive, voucher.IsValid);
 
             if (!voucher.IsValid)
             {
@@ -182,6 +189,9 @@ namespace BookStore.Infrastructure.Services
 
             var discountAmount = voucher.CalculateDiscount(validationDto.OrderAmount);
             var freeShipping = voucher.Type == VoucherType.FreeShipping;
+
+            _logger.LogInformation("Voucher validation successful: DiscountAmount={DiscountAmount}, FreeShipping={FreeShipping}",
+                discountAmount, freeShipping);
 
             return new VoucherValidationResultDto
             {

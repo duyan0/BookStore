@@ -122,6 +122,26 @@
 
 @section Scripts {
     <script>
+        // Debug information
+        console.log('Create Review Page Loaded');
+        console.log('Book ID:', @Model.BookId);
+        console.log('User logged in:', @(ViewContext.HttpContext.Session.GetString("Token") != null ? "true" : "false"));
+
+        // Check session debug info
+        fetch('/Reviews/DebugSession')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Session Debug:', data);
+                if (!data.HasToken) {
+                    console.error('❌ No authentication token found!');
+                } else {
+                    console.log('✅ Token found, length:', data.TokenLength);
+                }
+            })
+            .catch(error => {
+                console.error('Error checking session:', error);
+            });
+
         $(document).ready(function() {
             const ratingTexts = {
                 1: "Rất tệ - Không khuyến khích",
@@ -134,6 +154,7 @@
             $('input[name="Rating"]').change(function() {
                 const rating = $(this).val();
                 $('#ratingText').text(ratingTexts[rating] || "Chọn số sao để đánh giá");
+                console.log('Rating selected:', rating);
             });
 
             // Character counter for comment
@@ -141,13 +162,36 @@
                 const maxLength = 1000;
                 const currentLength = $(this).val().length;
                 const remaining = maxLength - currentLength;
-                
+
                 let counterText = `${currentLength}/${maxLength} ký tự`;
                 if (remaining < 100) {
                     counterText += ` (còn ${remaining})`;
                 }
-                
+
                 $(this).siblings('.form-text').text(counterText);
+            });
+
+            // Form submission handling
+            $('form[asp-action="Create"]').on('submit', function(e) {
+                const rating = $('input[name="Rating"]:checked').val();
+                if (!rating) {
+                    e.preventDefault();
+                    alert('Vui lòng chọn số sao đánh giá!');
+                    return false;
+                }
+
+                console.log('Form submitting with data:', {
+                    BookId: $('input[name="BookId"]').val(),
+                    Rating: rating,
+                    Comment: $('textarea[name="Comment"]').val()
+                });
+
+                // Show loading state
+                const submitBtn = $(this).find('button[type="submit"]');
+                if (submitBtn.length) {
+                    submitBtn.prop('disabled', true);
+                    submitBtn.html('<i class="fas fa-spinner fa-spin me-1"></i>Đang gửi...');
+                }
             });
         });
     </script>

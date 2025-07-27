@@ -33,6 +33,9 @@ namespace BookStore.Web.Models
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
 
+        // Additional properties for admin views
+        public string UserAvatarUrl { get; set; } = string.Empty;
+
         // Computed properties
         public string StatusText => Status switch
         {
@@ -47,6 +50,29 @@ namespace BookStore.Web.Models
         public int TotalVotes => HelpfulCount + NotHelpfulCount;
         public double HelpfulPercentage => TotalVotes > 0 ? (double)HelpfulCount / TotalVotes * 100 : 0;
         public string CreatedAtFormatted => CreatedAt.ToString("dd/MM/yyyy HH:mm");
+
+        public string TimeAgo
+        {
+            get
+            {
+                var timeSpan = DateTime.Now - CreatedAt;
+
+                if (timeSpan.TotalMinutes < 1)
+                    return "Vừa xong";
+                if (timeSpan.TotalMinutes < 60)
+                    return $"{(int)timeSpan.TotalMinutes} phút trước";
+                if (timeSpan.TotalHours < 24)
+                    return $"{(int)timeSpan.TotalHours} giờ trước";
+                if (timeSpan.TotalDays < 7)
+                    return $"{(int)timeSpan.TotalDays} ngày trước";
+                if (timeSpan.TotalDays < 30)
+                    return $"{(int)(timeSpan.TotalDays / 7)} tuần trước";
+                if (timeSpan.TotalDays < 365)
+                    return $"{(int)(timeSpan.TotalDays / 30)} tháng trước";
+
+                return $"{(int)(timeSpan.TotalDays / 365)} năm trước";
+            }
+        }
         public string BookPriceFormatted => BookPrice > 0 ? BookPrice.ToString("N0") + " VND" : "Chưa có giá";
     }
 

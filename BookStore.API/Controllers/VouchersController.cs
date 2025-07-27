@@ -123,6 +123,7 @@ namespace BookStore.API.Controllers
 
         // POST: api/vouchers/validate
         [HttpPost("validate")]
+        [AllowAnonymous] // Allow anonymous access for voucher validation
         public async Task<ActionResult<VoucherValidationResultDto>> ValidateVoucher(VoucherValidationDto validationDto)
         {
             try

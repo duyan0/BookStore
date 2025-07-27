@@ -736,10 +736,13 @@ namespace BookStore.Web.Controllers
                     UserId = userId
                 };
 
-                var result = await _apiService.PostAsync<dynamic>("vouchers/validate", validationDto);
+                var result = await _apiService.PostAsync<VoucherValidationResultDto>("vouchers/validate", validationDto);
 
                 if (result != null)
                 {
+                    _logger.LogInformation("Voucher validation result: IsValid={IsValid}, Message={Message}, DiscountAmount={DiscountAmount}, FreeShipping={FreeShipping}",
+                        result.IsValid, result.Message, result.DiscountAmount, result.FreeShipping);
+
                     return Json(new {
                         success = result.IsValid,
                         message = result.Message,

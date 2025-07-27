@@ -77,6 +77,7 @@ namespace BookStore.Web.Areas.Admin.Controllers
                 }
 
                 var reviewViewModel = MapToViewModel(review);
+                reviewViewModel = await EnhanceReviewViewModel(reviewViewModel);
                 return View(reviewViewModel);
             }
             catch (UnauthorizedAccessException)
@@ -155,12 +156,20 @@ namespace BookStore.Web.Areas.Admin.Controllers
                 var moderatedReview = await _apiService.PostAsync<ReviewDto>($"reviews/{id}/moderate", moderateDto);
                 if (moderatedReview != null)
                 {
-                    TempData["Success"] = "Đánh giá đã được duyệt thành công!";
+                    string successMessage = moderateDto.Status switch
+                    {
+                        ReviewStatus.Approved => "Đánh giá đã được duyệt và công khai thành công!",
+                        ReviewStatus.Rejected => "Đánh giá đã được từ chối thành công!",
+                        ReviewStatus.Hidden => "Đánh giá đã được ẩn thành công!",
+                        _ => "Đánh giá đã được cập nhật thành công!"
+                    };
+
+                    TempData["Success"] = successMessage;
                     return RedirectToAction(nameof(Pending));
                 }
                 else
                 {
-                    TempData["Error"] = "Không thể duyệt đánh giá. Vui lòng thử lại.";
+                    TempData["Error"] = "Không thể xử lý đánh giá. Vui lòng kiểm tra kết nối và thử lại.";
                 }
             }
             catch (UnauthorizedAccessException)
@@ -174,6 +183,62 @@ namespace BookStore.Web.Areas.Admin.Controllers
             }
 
             return View(model);
+        }
+
+        // POST: Admin/Reviews/QuickModerate
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> QuickModerate(int reviewId, string action, string adminNote = "")
+        {
+            try
+            {
+                ReviewStatus status;
+                string successMessage;
+
+                switch (action.ToLower())
+                {
+                    case "approve":
+                        status = ReviewStatus.Approved;
+                        successMessage = "Đánh giá đã được duyệt thành công!";
+                        adminNote = string.IsNullOrEmpty(adminNote) ? "Đánh giá hợp lệ, được duyệt tự động." : adminNote;
+                        break;
+                    case "reject":
+                        status = ReviewStatus.Rejected;
+                        successMessage = "Đánh giá đã được từ chối!";
+                        adminNote = string.IsNullOrEmpty(adminNote) ? "Đánh giá không phù hợp." : adminNote;
+                        break;
+                    default:
+                        TempData["Error"] = "Hành động không hợp lệ.";
+                        return RedirectToAction(nameof(Pending));
+                }
+
+                var moderateDto = new ModerateReviewDto
+                {
+                    Status = status,
+                    AdminNote = adminNote
+                };
+
+                var moderatedReview = await _apiService.PostAsync<ReviewDto>($"reviews/{reviewId}/moderate", moderateDto);
+                if (moderatedReview != null)
+                {
+                    TempData["Success"] = successMessage;
+                }
+                else
+                {
+                    TempData["Error"] = "Không thể xử lý đánh giá. Vui lòng thử lại.";
+                }
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return RedirectToAction("Login", "Account", new { area = "" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in quick moderate for review {ReviewId}", reviewId);
+                TempData["Error"] = "Có lỗi xảy ra khi xử lý đánh giá.";
+            }
+
+            return RedirectToAction(nameof(Pending));
         }
 
         // POST: Admin/Reviews/Delete/5
@@ -271,9 +336,14 @@ namespace BookStore.Web.Areas.Admin.Controllers
                 Id = dto.Id,
                 BookId = dto.BookId,
                 BookTitle = dto.BookTitle,
+                BookImageUrl = "", // Will be populated separately if needed
+                BookPrice = 0, // Will be populated separately if needed
+                BookAuthor = "", // Will be populated separately if needed
+                BookCategory = "", // Will be populated separately if needed
                 UserId = dto.UserId,
                 UserName = dto.UserName,
                 UserFullName = dto.UserFullName,
+                UserAvatarUrl = "", // Will be populated separately if needed
                 Rating = dto.Rating,
                 Comment = dto.Comment,
                 Status = dto.Status,
@@ -288,6 +358,32 @@ namespace BookStore.Web.Areas.Admin.Controllers
                 CreatedAt = dto.CreatedAt,
                 UpdatedAt = dto.UpdatedAt
             };
+        }
+
+        private async Task<ReviewViewModel> EnhanceReviewViewModel(ReviewViewModel viewModel)
+        {
+            try
+            {
+                // Get book information
+                var book = await _apiService.GetAsync<BookDto>($"books/{viewModel.BookId}");
+                if (book != null)
+                {
+                    viewModel.BookImageUrl = book.ImageUrl;
+                    viewModel.BookPrice = book.Price;
+                    viewModel.BookAuthor = book.AuthorName;
+                    viewModel.BookCategory = book.CategoryName;
+                }
+
+                // Note: UserAvatarUrl would need to be fetched from User API if available
+                // For now, we'll leave it empty as there's no User API endpoint that returns avatar
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to enhance review view model for review {ReviewId}", viewModel.Id);
+                // Continue with basic view model if enhancement fails
+            }
+
+            return viewModel;
         }
 
         private static string GetStatusDisplayName(string status)

@@ -293,14 +293,22 @@ namespace BookStore.API.Controllers
         {
             try
             {
+                _logger.LogInformation("Processing reorder request for order {OrderId}", id);
+
                 // Get current user ID from token
                 var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
                 if (!int.TryParse(userIdClaim, out int userId))
                 {
+                    _logger.LogWarning("Invalid user token for reorder request");
                     return Unauthorized(new { message = "Invalid user token" });
                 }
 
+                _logger.LogInformation("User {UserId} requesting reorder for order {OrderId}", userId, id);
+
                 var result = await _orderService.ReorderAsync(id, userId);
+
+                _logger.LogInformation("Reorder service result for order {OrderId}: Success={Success}, Message={Message}",
+                    id, result.Success, result.Message);
 
                 if (result.Success)
                 {
@@ -313,6 +321,7 @@ namespace BookStore.API.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error processing reorder for order {OrderId}", id);
                 return StatusCode(500, new { message = "Error processing reorder", error = ex.Message });
             }
         }

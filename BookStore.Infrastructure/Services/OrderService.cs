@@ -326,12 +326,31 @@ namespace BookStore.Infrastructure.Services
             {
                 // Get the original order
                 var originalOrder = await _orderRepository.GetOrderWithDetailsAsync(orderId);
-                if (originalOrder == null || originalOrder.UserId != userId)
+                if (originalOrder == null)
                 {
                     return new ReorderResultDto
                     {
                         Success = false,
-                        Message = "Không tìm thấy đơn hàng hoặc bạn không có quyền truy cập"
+                        Message = "Không tìm thấy đơn hàng"
+                    };
+                }
+
+                if (originalOrder.UserId != userId)
+                {
+                    return new ReorderResultDto
+                    {
+                        Success = false,
+                        Message = "Bạn không có quyền truy cập đơn hàng này"
+                    };
+                }
+
+                // Check if order is completed
+                if (originalOrder.Status != "Completed")
+                {
+                    return new ReorderResultDto
+                    {
+                        Success = false,
+                        Message = "Chỉ có thể đặt lại đơn hàng đã hoàn thành"
                     };
                 }
 

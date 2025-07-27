@@ -187,17 +187,79 @@ namespace BookStore.Web.Controllers
         {
             try
             {
-                var result = await _apiService.PostAsync<object>($"orders/{id}/reorder", new { });
-                return Json(result);
+                if (!IsUserLoggedIn())
+                {
+                    return Json(new { success = false, message = "Bạn cần đăng nhập để thực hiện chức năng này" });
+                }
+
+                _logger.LogInformation("Starting reorder process for order {OrderId}", id);
+
+                // Call the correct API endpoint
+                var result = await _apiService.PostAsync<ReorderResultDto>($"orders/{id}/reorder", new { });
+
+                if (result != null)
+                {
+                    _logger.LogInformation("Reorder API call successful for order {OrderId}. Success: {Success}", id, result.Success);
+
+                    // Return the result in the format expected by the frontend
+                    return Json(new
+                    {
+                        success = result.Success,
+                        message = result.Message,
+                        originalOrderId = result.OriginalOrderId,
+                        reorderItems = result.ReorderItems,
+                        unavailableItems = result.UnavailableItems,
+                        priceChangedItems = result.PriceChangedItems,
+                        totalAmount = result.TotalAmount,
+                        originalTotalAmount = result.OriginalTotalAmount
+                    });
+                }
+                else
+                {
+                    _logger.LogWarning("Reorder API returned null result for order {OrderId}", id);
+                    return Json(new { success = false, message = "Không nhận được phản hồi từ server" });
+                }
             }
             catch (UnauthorizedAccessException)
             {
+                _logger.LogWarning("Unauthorized access attempt for reorder order {OrderId}", id);
                 return Json(new { success = false, message = "Bạn cần đăng nhập để thực hiện chức năng này" });
+            }
+            catch (HttpRequestException httpEx)
+            {
+                _logger.LogError(httpEx, "HTTP error when reordering order {OrderId}: {Message}", id, httpEx.Message);
+
+                if (httpEx.Message.Contains("401"))
+                {
+                    return Json(new { success = false, message = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại" });
+                }
+                else if (httpEx.Message.Contains("404"))
+                {
+                    return Json(new { success = false, message = "Không tìm thấy đơn hàng" });
+                }
+                else if (httpEx.Message.Contains("400"))
+                {
+                    // Try to extract error message from HTTP exception
+                    var errorMessage = "Không thể đặt lại đơn hàng";
+                    if (httpEx.Message.Contains(":"))
+                    {
+                        var parts = httpEx.Message.Split(':', 2);
+                        if (parts.Length > 1)
+                        {
+                            errorMessage = parts[1].Trim();
+                        }
+                    }
+                    return Json(new { success = false, message = errorMessage });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "Có lỗi xảy ra khi kết nối đến server" });
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error reordering order ID: {OrderId}", id);
-                return Json(new { success = false, message = "Có lỗi xảy ra khi mua lại đơn hàng" });
+                _logger.LogError(ex, "Unexpected error when reordering order {OrderId}", id);
+                return Json(new { success = false, message = "Có lỗi không mong muốn xảy ra. Vui lòng thử lại sau" });
             }
         }
 

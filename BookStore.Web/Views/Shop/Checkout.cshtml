@@ -349,6 +349,11 @@
         // Global variables
         let addressSearchTimeout = null;
 
+        // Utility function to format currency
+        function formatCurrency(amount) {
+            return `${Math.round(amount).toLocaleString()} VNĐ`;
+        }
+
         // Initialize when page loads
         document.addEventListener('DOMContentLoaded', function() {
             initializeAddressAutocomplete();
@@ -672,33 +677,7 @@
             });
         }
 
-        function updateVoucherUI(discountAmount, freeShipping, subtotalAmount) {
-            // Update discount display
-            const voucherDiscountRow = document.getElementById('voucher-discount-row');
-            const voucherDiscountAmount = document.getElementById('voucher-discount-amount');
-
-            if (discountAmount > 0) {
-                voucherDiscountRow.classList.remove('d-none');
-                voucherDiscountAmount.textContent = `-${discountAmount.toLocaleString()} VNĐ`;
-            } else {
-                voucherDiscountRow.classList.add('d-none');
-            }
-
-            // Update shipping fee display
-            const shippingFeeElement = document.getElementById('shipping-fee');
-            if (freeShipping) {
-                shippingFeeElement.innerHTML = '<span class="text-success">Miễn phí</span> <small class="text-success">(Voucher)</small>';
-            }
-
-            // Calculate and update final amount
-            let finalAmount = subtotalAmount - discountAmount;
-            if (!freeShipping && subtotalAmount < 500000) {
-                finalAmount += 30000; // Add shipping fee if not free shipping
-            }
-
-            const finalAmountElement = document.getElementById('final-amount');
-            finalAmountElement.textContent = `${finalAmount.toLocaleString()} VNĐ`;
-        }
+        // Function removed - using the improved version below
 
         function showVoucherMessage(message, type) {
             const messageDiv = document.getElementById('voucher-message');
@@ -739,21 +718,6 @@
                 }
             }, 5000);
         }
-
-        function initializeVoucherFeatures() {
-            // Allow Enter key to apply voucher
-            const voucherInput = document.getElementById('voucherCode');
-            if (voucherInput) {
-                voucherInput.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        applyVoucher();
-                    }
-                });
-            }
-        }
-
-
 
         function updateVoucherUI(discountAmount, freeShipping, subtotalAmount) {
             console.log('updateVoucherUI called with:', { discountAmount, freeShipping, subtotalAmount });

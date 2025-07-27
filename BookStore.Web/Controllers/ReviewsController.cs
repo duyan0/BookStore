@@ -190,6 +190,12 @@ namespace BookStore.Web.Controllers
         {
             try
             {
+                if (!IsUserLoggedIn())
+                {
+                    TempData["Warning"] = "Vui lòng đăng nhập để gửi đánh giá.";
+                    return RedirectToAction("Login", "Account");
+                }
+
                 if (!ModelState.IsValid)
                 {
                     // Reload book info for display
@@ -209,28 +215,79 @@ namespace BookStore.Web.Controllers
                     Comment = model.Comment
                 };
 
+                _logger.LogInformation("Creating review for book {BookId} by user {UserId}", model.BookId, HttpContext.Session.GetInt32("UserId"));
+
                 var createdReview = await _apiService.PostAsync<ReviewDto>("reviews", createDto);
                 if (createdReview != null)
                 {
                     TempData["Success"] = "Đánh giá của bạn đã được gửi và đang chờ duyệt!";
-                    return RedirectToAction("Book", new { id = model.BookId });
+                    return RedirectToAction("Details", "Shop", new { id = model.BookId });
                 }
                 else
                 {
-                    TempData["Error"] = "Không thể tạo đánh giá. Vui lòng thử lại.";
+                    TempData["Error"] = "Không thể gửi đánh giá. Vui lòng kiểm tra kết nối và thử lại.";
+                    return View(model);
                 }
             }
             catch (UnauthorizedAccessException)
             {
-                return HandleUnauthorized();
+                TempData["Warning"] = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
+                return RedirectToAction("Login", "Account");
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "HTTP error when creating review for book {BookId}", model.BookId);
+
+                if (ex.Message.Contains("401"))
+                {
+                    TempData["Warning"] = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
+                    return RedirectToAction("Login", "Account");
+                }
+                else if (ex.Message.Contains("400"))
+                {
+                    if (ex.Message.Contains("Bạn đã đánh giá sách này rồi"))
+                    {
+                        TempData["Warning"] = "Bạn đã đánh giá sách này rồi.";
+                        return RedirectToAction("Details", "Shop", new { id = model.BookId });
+                    }
+                    else
+                    {
+                        TempData["Error"] = "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại thông tin.";
+                    }
+                }
+                else
+                {
+                    TempData["Error"] = "Có lỗi xảy ra khi gửi đánh giá. Vui lòng thử lại sau.";
+                }
+
+                return View(model);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating review");
-                TempData["Error"] = "Có lỗi xảy ra khi tạo đánh giá.";
+                _logger.LogError(ex, "Unexpected error when creating review for book {BookId}", model.BookId);
+                TempData["Error"] = "Có lỗi không mong muốn xảy ra. Vui lòng thử lại sau.";
+                return View(model);
             }
+        }
 
-            return View(model);
+        // GET: Reviews/DebugSession - For debugging authentication issues
+        [HttpGet]
+        public IActionResult DebugSession()
+        {
+            var token = HttpContext.Session.GetString("Token");
+            var userId = HttpContext.Session.GetInt32("UserId");
+            var username = HttpContext.Session.GetString("Username");
+
+            return Json(new
+            {
+                HasToken = !string.IsNullOrEmpty(token),
+                TokenLength = token?.Length ?? 0,
+                UserId = userId,
+                Username = username,
+                IsLoggedIn = IsUserLoggedIn(),
+                SessionId = HttpContext.Session.Id,
+                TokenPreview = !string.IsNullOrEmpty(token) ? token.Substring(0, Math.Min(20, token.Length)) + "..." : null
+            });
         }
 
         // GET: Reviews/Edit/5
@@ -401,9 +458,14 @@ namespace BookStore.Web.Controllers
                 Id = dto.Id,
                 BookId = dto.BookId,
                 BookTitle = dto.BookTitle,
+                BookImageUrl = "", // Will be populated separately if needed
+                BookPrice = 0, // Will be populated separately if needed
+                BookAuthor = "", // Will be populated separately if needed
+                BookCategory = "", // Will be populated separately if needed
                 UserId = dto.UserId,
                 UserName = dto.UserName,
                 UserFullName = dto.UserFullName,
+                UserAvatarUrl = "", // Will be populated separately if needed
                 Rating = dto.Rating,
                 Comment = dto.Comment,
                 Status = dto.Status,

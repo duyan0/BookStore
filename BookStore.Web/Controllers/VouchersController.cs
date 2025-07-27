@@ -119,17 +119,20 @@ namespace BookStore.Web.Controllers
                     UserId = userId
                 };
 
-                var result = await _apiService.PostAsync<dynamic>("vouchers/validate", validationDto);
-                
+                var result = await _apiService.PostAsync<VoucherValidationResultDto>("vouchers/validate", validationDto);
+
                 if (result != null)
                 {
-                    return Json(new { 
-                        success = result.isValid, 
-                        message = result.message,
-                        discountAmount = result.discountAmount,
-                        freeShipping = result.freeShipping,
-                        voucherName = result.voucherName,
-                        voucherType = result.voucherType
+                    _logger.LogInformation("Voucher validation result: IsValid={IsValid}, Message={Message}, DiscountAmount={DiscountAmount}, FreeShipping={FreeShipping}",
+                        result.IsValid, result.Message, result.DiscountAmount, result.FreeShipping);
+
+                    return Json(new {
+                        success = result.IsValid,
+                        message = result.Message,
+                        discountAmount = result.DiscountAmount,
+                        freeShipping = result.FreeShipping,
+                        voucherName = result.Voucher?.Name ?? "",
+                        voucherType = result.Voucher?.TypeName ?? ""
                     });
                 }
                 else

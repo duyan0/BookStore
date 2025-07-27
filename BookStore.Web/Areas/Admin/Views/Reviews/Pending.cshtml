@@ -1,0 +1,357 @@
+@model IEnumerable<BookStore.Web.Models.ReviewViewModel>
+@{
+    ViewData["Title"] = "Đánh giá chờ duyệt";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">
+        <i class="fas fa-clock me-2 text-warning"></i>
+        Đánh giá chờ duyệt
+    </h2>
+    <div>
+        <a href="@Url.Action("Index")" class="btn btn-secondary">
+            <i class="fas fa-list me-1"></i>Tất cả đánh giá
+        </a>
+        <a href="@Url.Action("Statistics")" class="btn btn-info">
+            <i class="fas fa-chart-bar me-1"></i>Thống kê
+        </a>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">@Model.Count()</h4>
+                        <p class="mb-0">Chờ duyệt</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">@Model.Count(r => r.IsVerifiedPurchase)</h4>
+                        <p class="mb-0">Đã mua hàng</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">@(Model.Any() ? Model.Average(r => r.Rating).ToString("F1") : "0")</h4>
+                        <p class="mb-0">Đánh giá TB</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-star fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">@Model.Count(r => !string.IsNullOrEmpty(r.Comment))</h4>
+                        <p class="mb-0">Có bình luận</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-comment fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="text-center py-5">
+        <i class="fas fa-clock fa-3x text-muted mb-3"></i>
+        <h4 class="text-muted">Không có đánh giá nào chờ duyệt</h4>
+        <p class="text-muted">Tất cả đánh giá đã được xử lý hoặc chưa có đánh giá mới nào.</p>
+        <a href="@Url.Action("Index")" class="btn btn-primary">
+            <i class="fas fa-list me-1"></i>Xem tất cả đánh giá
+        </a>
+    </div>
+}
+else
+{
+    <!-- Bulk Actions -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="selectAll">
+                        <label class="form-check-label" for="selectAll">
+                            Chọn tất cả (@Model.Count() đánh giá)
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-6 text-end">
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-success" onclick="bulkApprove()" disabled id="bulkApproveBtn">
+                            <i class="fas fa-thumbs-up me-1"></i>Duyệt hàng loạt
+                        </button>
+                        <button type="button" class="btn btn-danger" onclick="bulkReject()" disabled id="bulkRejectBtn">
+                            <i class="fas fa-thumbs-down me-1"></i>Từ chối hàng loạt
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reviews List -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="pendingReviewsTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th width="50">
+                                <input type="checkbox" id="selectAllHeader" class="form-check-input">
+                            </th>
+                            <th>Sách</th>
+                            <th>Người đánh giá</th>
+                            <th>Đánh giá</th>
+                            <th>Ngày tạo</th>
+                            <th width="150">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var review in Model.OrderByDescending(r => r.CreatedAt))
+                        {
+                            <tr>
+                                <td>
+                                    <input type="checkbox" class="form-check-input review-checkbox" value="@review.Id">
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        @if (!string.IsNullOrEmpty(review.BookImageUrl))
+                                        {
+                                            <img src="@review.BookImageUrl" alt="@review.BookTitle" 
+                                                 class="rounded me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                        }
+                                        <div>
+                                            <div class="fw-bold">@review.BookTitle</div>
+                                            @if (!string.IsNullOrEmpty(review.BookAuthor))
+                                            {
+                                                <small class="text-muted">@review.BookAuthor</small>
+                                            }
+                                            @if (review.IsVerifiedPurchase)
+                                            {
+                                                <br><span class="badge bg-success">
+                                                    <i class="fas fa-check-circle me-1"></i>Đã mua
+                                                </span>
+                                            }
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="fw-bold">@review.UserFullName</div>
+                                    <small class="text-muted">@review.UserName</small>
+                                </td>
+                                <td>
+                                    <div class="text-warning fs-5 mb-1">@review.RatingStars</div>
+                                    @if (!string.IsNullOrEmpty(review.Comment))
+                                    {
+                                        <div class="text-muted small" style="max-width: 200px;">
+                                            @(review.Comment.Length > 100 ? review.Comment.Substring(0, 100) + "..." : review.Comment)
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <small class="text-muted fst-italic">Không có bình luận</small>
+                                    }
+                                </td>
+                                <td>
+                                    <div>@review.CreatedAtFormatted</div>
+                                    <small class="text-muted">@review.TimeAgo</small>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="@Url.Action("Moderate", new { id = review.Id })" 
+                                           class="btn btn-sm btn-warning" title="Duyệt đánh giá">
+                                            <i class="fas fa-gavel"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-success" 
+                                                onclick="quickApprove(@review.Id)" title="Duyệt nhanh">
+                                            <i class="fas fa-thumbs-up"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-danger" 
+                                                onclick="quickReject(@review.Id)" title="Từ chối nhanh">
+                                            <i class="fas fa-thumbs-down"></i>
+                                        </button>
+                                        <a href="@Url.Action("Details", new { id = review.Id })" 
+                                           class="btn btn-sm btn-info" title="Xem chi tiết">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Quick Action Modals -->
+<div class="modal fade" id="quickApproveModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Xác nhận duyệt</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn duyệt đánh giá này không?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <form id="quickApproveForm" method="post" style="display: inline;">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="reviewId" id="approveReviewId">
+                    <input type="hidden" name="action" value="approve">
+                    <button type="submit" class="btn btn-success">Duyệt</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="quickRejectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Xác nhận từ chối</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn từ chối đánh giá này không?</p>
+                <div class="mb-3">
+                    <label for="rejectReason" class="form-label">Lý do từ chối (tùy chọn):</label>
+                    <textarea class="form-control" id="rejectReason" rows="3" 
+                              placeholder="Nhập lý do từ chối để gửi phản hồi cho người dùng..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <form id="quickRejectForm" method="post" style="display: inline;">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="reviewId" id="rejectReviewId">
+                    <input type="hidden" name="action" value="reject">
+                    <input type="hidden" name="adminNote" id="rejectAdminNote">
+                    <button type="submit" class="btn btn-danger">Từ chối</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Initialize DataTable
+            $('#pendingReviewsTable').DataTable({
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.13.7/i18n/vi.json"
+                },
+                "pageLength": 25,
+                "order": [[4, "desc"]], // Sort by created date descending
+                "columnDefs": [
+                    { "orderable": false, "targets": [0, 5] } // Disable sorting for checkbox and actions columns
+                ]
+            });
+
+            // Handle select all functionality
+            $('#selectAll, #selectAllHeader').change(function() {
+                const isChecked = $(this).is(':checked');
+                $('.review-checkbox').prop('checked', isChecked);
+                $('#selectAll, #selectAllHeader').prop('checked', isChecked);
+                updateBulkActionButtons();
+            });
+
+            $('.review-checkbox').change(function() {
+                updateBulkActionButtons();
+                const totalCheckboxes = $('.review-checkbox').length;
+                const checkedCheckboxes = $('.review-checkbox:checked').length;
+                $('#selectAll, #selectAllHeader').prop('checked', totalCheckboxes === checkedCheckboxes);
+            });
+
+            function updateBulkActionButtons() {
+                const checkedCount = $('.review-checkbox:checked').length;
+                $('#bulkApproveBtn, #bulkRejectBtn').prop('disabled', checkedCount === 0);
+            }
+        });
+
+        function quickApprove(reviewId) {
+            $('#approveReviewId').val(reviewId);
+            $('#quickApproveForm').attr('action', '@Url.Action("QuickModerate")');
+            new bootstrap.Modal(document.getElementById('quickApproveModal')).show();
+        }
+
+        function quickReject(reviewId) {
+            $('#rejectReviewId').val(reviewId);
+            $('#quickRejectForm').attr('action', '@Url.Action("QuickModerate")');
+            new bootstrap.Modal(document.getElementById('quickRejectModal')).show();
+        }
+
+        // Handle reject reason
+        $('#quickRejectModal').on('show.bs.modal', function() {
+            $('#rejectReason').val('');
+        });
+
+        $('#quickRejectForm').on('submit', function() {
+            $('#rejectAdminNote').val($('#rejectReason').val() || 'Đánh giá không phù hợp.');
+        });
+
+        function bulkApprove() {
+            const selectedIds = $('.review-checkbox:checked').map(function() {
+                return $(this).val();
+            }).get();
+            
+            if (selectedIds.length === 0) return;
+            
+            if (confirm(`Bạn có chắc chắn muốn duyệt ${selectedIds.length} đánh giá đã chọn?`)) {
+                // Implementation for bulk approve
+                console.log('Bulk approve:', selectedIds);
+            }
+        }
+
+        function bulkReject() {
+            const selectedIds = $('.review-checkbox:checked').map(function() {
+                return $(this).val();
+            }).get();
+            
+            if (selectedIds.length === 0) return;
+            
+            if (confirm(`Bạn có chắc chắn muốn từ chối ${selectedIds.length} đánh giá đã chọn?`)) {
+                // Implementation for bulk reject
+                console.log('Bulk reject:', selectedIds);
+            }
+        }
+    </script>
+}

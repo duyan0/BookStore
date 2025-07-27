@@ -149,23 +149,44 @@ namespace BookStore.Web.Services
                 _logger.LogInformation("Request body: {Body}", json);
 
                 var response = await _httpClient.PostAsync(endpoint, content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                _logger.LogInformation("Response status: {StatusCode}", response.StatusCode);
+                _logger.LogInformation("Response content: {Content}", responseContent);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var responseContent = await response.Content.ReadAsStringAsync();
                     return JsonConvert.DeserializeObject<T>(responseContent);
                 }
 
-                // Handle 401 Unauthorized
+                // Handle specific error cases
                 if (response.StatusCode == HttpStatusCode.Unauthorized)
                 {
                     HandleUnauthorized();
                     throw new UnauthorizedAccessException("Token đã hết hạn hoặc không hợp lệ. Vui lòng đăng nhập lại.");
                 }
 
+                if (response.StatusCode == HttpStatusCode.BadRequest)
+                {
+                    // Try to parse error message from response
+                    try
+                    {
+                        var errorResponse = JsonConvert.DeserializeObject<Dictionary<string, object>>(responseContent);
+                        if (errorResponse?.ContainsKey("message") == true)
+                        {
+                            throw new HttpRequestException($"400: {errorResponse["message"]}");
+                        }
+                    }
+                    catch (JsonException)
+                    {
+                        // If can't parse JSON, use raw content
+                    }
+
+                    throw new HttpRequestException($"400: {responseContent}");
+                }
+
                 // Log error response
-                var errorContent = await response.Content.ReadAsStringAsync();
-                throw new HttpRequestException($"API POST call failed with status {response.StatusCode}: {errorContent}");
+                throw new HttpRequestException($"API POST call failed with status {response.StatusCode}: {responseContent}");
             }
             catch (UnauthorizedAccessException)
             {
@@ -177,6 +198,7 @@ namespace BookStore.Web.Services
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error calling API endpoint {Endpoint}", endpoint);
                 throw new HttpRequestException($"Error calling API endpoint {endpoint}: {ex.Message}", ex);
             }
         }
