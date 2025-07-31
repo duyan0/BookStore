@@ -67,16 +67,16 @@ Map<String, dynamic> _$OrderDetailModelToJson(OrderDetailModel instance) =>
 
 CreateOrderModel _$CreateOrderModelFromJson(Map<String, dynamic> json) =>
     CreateOrderModel(
-      userId: (json['userId'] as num).toInt(),
-      shippingAddress: json['shippingAddress'] as String,
-      paymentMethod: json['paymentMethod'] as String,
-      voucherCode: json['voucherCode'] as String?,
-      voucherDiscount: (json['voucherDiscount'] as num).toDouble(),
-      freeShipping: json['freeShipping'] as bool,
-      shippingFee: (json['shippingFee'] as num).toDouble(),
-      subTotal: (json['subTotal'] as num).toDouble(),
+      userId: (json['UserId'] as num).toInt(),
+      shippingAddress: json['ShippingAddress'] as String,
+      paymentMethod: json['PaymentMethod'] as String,
+      voucherCode: json['VoucherCode'] as String?,
+      voucherDiscount: (json['VoucherDiscount'] as num).toDouble(),
+      freeShipping: json['FreeShipping'] as bool,
+      shippingFee: (json['ShippingFee'] as num).toDouble(),
+      subTotal: (json['SubTotal'] as num).toDouble(),
       orderDetails:
-          (json['orderDetails'] as List<dynamic>)
+          (json['OrderDetails'] as List<dynamic>)
               .map(
                 (e) =>
                     CreateOrderDetailModel.fromJson(e as Map<String, dynamic>),
@@ -86,29 +86,29 @@ CreateOrderModel _$CreateOrderModelFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$CreateOrderModelToJson(CreateOrderModel instance) =>
     <String, dynamic>{
-      'userId': instance.userId,
-      'shippingAddress': instance.shippingAddress,
-      'paymentMethod': instance.paymentMethod,
-      'voucherCode': instance.voucherCode,
-      'voucherDiscount': instance.voucherDiscount,
-      'freeShipping': instance.freeShipping,
-      'shippingFee': instance.shippingFee,
-      'subTotal': instance.subTotal,
-      'orderDetails': instance.orderDetails,
+      'UserId': instance.userId,
+      'ShippingAddress': instance.shippingAddress,
+      'PaymentMethod': instance.paymentMethod,
+      'VoucherCode': instance.voucherCode,
+      'VoucherDiscount': instance.voucherDiscount,
+      'FreeShipping': instance.freeShipping,
+      'ShippingFee': instance.shippingFee,
+      'SubTotal': instance.subTotal,
+      'OrderDetails': instance.orderDetails,
     };
 
 CreateOrderDetailModel _$CreateOrderDetailModelFromJson(
   Map<String, dynamic> json,
 ) => CreateOrderDetailModel(
-  bookId: (json['bookId'] as num).toInt(),
-  quantity: (json['quantity'] as num).toInt(),
-  unitPrice: (json['unitPrice'] as num).toDouble(),
+  bookId: (json['BookId'] as num).toInt(),
+  quantity: (json['Quantity'] as num).toInt(),
+  unitPrice: (json['UnitPrice'] as num).toDouble(),
 );
 
 Map<String, dynamic> _$CreateOrderDetailModelToJson(
   CreateOrderDetailModel instance,
 ) => <String, dynamic>{
-  'bookId': instance.bookId,
-  'quantity': instance.quantity,
-  'unitPrice': instance.unitPrice,
+  'BookId': instance.bookId,
+  'Quantity': instance.quantity,
+  'UnitPrice': instance.unitPrice,
 };

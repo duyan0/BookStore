@@ -51,13 +51,18 @@ class ApiClient {
     );
 
     // Logging interceptor (only in debug mode)
-    _dio.interceptors.add(
-      LogInterceptor(
-        requestBody: true,
-        responseBody: true,
-        logPrint: (obj) => debugPrint(obj.toString()),
-      ),
-    );
+    if (kDebugMode) {
+      _dio.interceptors.add(
+        LogInterceptor(
+          requestBody: true,
+          responseBody: true,
+          requestHeader: true,
+          responseHeader: true,
+          error: true,
+          logPrint: (obj) => debugPrint('[API] $obj'),
+        ),
+      );
+    }
   }
 
   ApiException _handleError(DioException error) {
@@ -79,7 +84,37 @@ class ApiClient {
 
   String _extractErrorMessage(dynamic data) {
     if (data is Map<String, dynamic>) {
-      return data['message'] ?? data['error'] ?? 'Unknown error occurred';
+      // Try to get detailed error message
+      if (data.containsKey('message')) {
+        return data['message'].toString();
+      }
+      if (data.containsKey('error')) {
+        return data['error'].toString();
+      }
+      if (data.containsKey('details')) {
+        return data['details'].toString();
+      }
+      // If it's a validation error, try to extract field errors
+      if (data.containsKey('errors')) {
+        final errors = data['errors'];
+        if (errors is Map<String, dynamic>) {
+          final errorMessages = <String>[];
+          errors.forEach((field, messages) {
+            if (messages is List) {
+              errorMessages.addAll(messages.map((m) => '$field: $m'));
+            } else {
+              errorMessages.add('$field: $messages');
+            }
+          });
+          if (errorMessages.isNotEmpty) {
+            return errorMessages.join(', ');
+          }
+        }
+      }
+      return 'Unknown error occurred';
+    }
+    if (data is String && data.isNotEmpty) {
+      return data;
     }
     return 'Unknown error occurred';
   }

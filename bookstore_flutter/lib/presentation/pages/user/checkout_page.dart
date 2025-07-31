@@ -78,9 +78,20 @@ class _CheckoutPageState extends State<CheckoutPage> {
     });
 
     try {
+      // Debug logging
+      print('Starting order creation...');
+      print('User ID: ${authProvider.user!.id}');
+      print('Cart items count: ${cartProvider.cart.items.length}');
+      print('Shipping address: ${_addressController.text.trim()}');
+      print('Sub total: ${cartProvider.subTotal}');
+      print('Shipping fee: ${cartProvider.shippingFee}');
+
       // Create order details from cart items
       final orderDetails =
           cartProvider.cart.items.map((item) {
+            print(
+              'Order detail - Book ID: ${item.bookId}, Quantity: ${item.quantity}, Unit Price: ${item.unitPrice}',
+            );
             return CreateOrderDetailModel(
               bookId: item.bookId,
               quantity: item.quantity,
@@ -88,24 +99,40 @@ class _CheckoutPageState extends State<CheckoutPage> {
             );
           }).toList();
 
+      // Validate required fields
+      if (_addressController.text.trim().isEmpty) {
+        throw Exception('Địa chỉ giao hàng không được để trống');
+      }
+
+      if (orderDetails.isEmpty) {
+        throw Exception('Không có sản phẩm nào trong đơn hàng');
+      }
+
       // Create order with COD payment
       final orderData = CreateOrderModel(
         userId: authProvider.user!.id,
         shippingAddress: _addressController.text.trim(),
-        paymentMethod: 'Thanh toán khi nhận hàng (COD)',
+        paymentMethod: 'COD', // Simplified payment method
         voucherCode: null,
-        voucherDiscount: 0,
+        voucherDiscount: 0.0,
         freeShipping: false,
         shippingFee: cartProvider.shippingFee,
         subTotal: cartProvider.subTotal,
         orderDetails: orderDetails,
       );
 
+      print('Order data JSON: ${orderData.toJson()}');
+
+      print('Order data created, calling API...');
       final newOrder = await orderProvider.createOrder(orderData);
+      print('API call completed. New order: ${newOrder?.id}');
 
       if (newOrder != null) {
+        print('Order created successfully with ID: ${newOrder.id}');
+
         // Clear cart after successful order
         await cartProvider.clearCart();
+        print('Cart cleared');
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -118,9 +145,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
           );
 
           // Navigate to order detail
+          print('Navigating to order detail: ${newOrder.id}');
           context.go(AppRoutes.orderDetailPath(newOrder.id));
         }
       } else {
+        print('Order creation failed. Error: ${orderProvider.errorMessage}');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -131,6 +160,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         }
       }
     } catch (e) {
+      print('Exception during order creation: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

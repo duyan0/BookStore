@@ -89,6 +89,10 @@ class CartPage extends StatelessWidget {
       backgroundColor: AppColors.scaffoldBackground,
       appBar: AppBar(
         title: const Text(AppStrings.cart),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
         actions: [
           Consumer<CartProvider>(
             builder: (context, cartProvider, child) {

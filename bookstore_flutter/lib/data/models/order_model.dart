@@ -124,7 +124,7 @@ class OrderDetailModel extends Equatable {
   ];
 }
 
-@JsonSerializable()
+@JsonSerializable(fieldRename: FieldRename.pascal)
 class CreateOrderModel extends Equatable {
   final int userId;
   final String shippingAddress;
@@ -167,7 +167,7 @@ class CreateOrderModel extends Equatable {
   ];
 }
 
-@JsonSerializable()
+@JsonSerializable(fieldRename: FieldRename.pascal)
 class CreateOrderDetailModel extends Equatable {
   final int bookId;
   final int quantity;
